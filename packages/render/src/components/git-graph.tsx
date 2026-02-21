@@ -118,7 +118,9 @@ export function GitGraph(props: GitGraphProps) {
 						{(line) => <GraphLine line={line} />}
 					</For>
 				</scrollbox>
-			<text fg={theme.fg_dim} content={`(${props.graph!.total_lines} commits)`} />
+			<box height={1}>
+				<text fg={theme.fg_dim} content={`(${props.graph!.total_lines} commits)`} />
+			</box>
 			</Show>
 		</box>
 	);
