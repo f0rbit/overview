@@ -7,6 +7,10 @@ export type GitGraphError =
 
 const DEFAULT_LIMIT = 40;
 
+// Strip ANSI escape codes in case git config forces color
+const ANSI_RE = /\x1b\[[0-9;]*m/g;
+const stripAnsi = (s: string): string => s.replace(ANSI_RE, "");
+
 const stripTrailingEmpty = (lines: string[]): string[] => {
 	let end = lines.length;
 	while (end > 0 && lines[end - 1]!.trim() === "") end--;
@@ -25,17 +29,16 @@ const isGitRepo = async (path: string): Promise<boolean> => {
 
 export async function captureGraph(
 	repoPath: string,
-	options?: { limit?: number; colorize?: boolean },
+	options?: { limit?: number },
 ): Promise<Result<GitGraphOutput, GitGraphError>> {
 	if (!(await isGitRepo(repoPath))) {
 		return err({ kind: "not_a_repo", path: repoPath });
 	}
 
 	const limit = options?.limit ?? DEFAULT_LIMIT;
-	const color = options?.colorize === false ? "--color=never" : "--color=always";
 
 	const proc = Bun.spawn(
-		["git", "log", "--graph", "--all", "--decorate", "--oneline", `-n`, `${limit}`, color],
+		["git", "log", "--graph", "--all", "--decorate", "--oneline", `-n`, `${limit}`, "--color=never"],
 		{
 			cwd: repoPath,
 			stdout: "pipe",
@@ -57,7 +60,7 @@ export async function captureGraph(
 		return err({ kind: "graph_failed", path: repoPath, cause: stderr.trim() });
 	}
 
-	const lines = stripTrailingEmpty(stdout.split("\n"));
+	const lines = stripTrailingEmpty(stdout.split("\n").map(stripAnsi));
 
 	return ok({
 		lines,
