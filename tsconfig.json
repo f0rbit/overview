@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "moduleResolution": "bundler",
+    "target": "esnext",
+    "module": "esnext",
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "noUncheckedIndexedAccess": true,
+    "paths": {
+      "@overview/core": ["./packages/core/src/index.ts"],
+      "@overview/core/*": ["./packages/core/src/*"]
+    }
+  },
+  "include": ["packages/core/src/**/*", "packages/render/src/**/*"]
+}

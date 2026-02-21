@@ -1,0 +1,15 @@
+{
+  "name": "@overview/render",
+  "version": "0.1.0",
+  "main": "src/overview.tsx",
+  "scripts": {
+    "dev": "bun run src/overview.tsx",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@opentui/core": "^0.1.80",
+    "@opentui/solid": "^0.1.80",
+    "solid-js": "^1.9.11",
+    "@overview/core": "workspace:*"
+  }
+}

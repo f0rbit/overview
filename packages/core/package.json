@@ -1,0 +1,12 @@
+{
+  "name": "@overview/core",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@f0rbit/corpus": "link:@f0rbit/corpus"
+  }
+}
