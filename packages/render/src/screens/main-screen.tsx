@@ -1,8 +1,10 @@
-import { createSignal, createEffect, createMemo, onMount, Show } from "solid-js";
-import { useKeyboard, useTerminalDimensions } from "@opentui/solid";
+import { createSignal, createEffect, createMemo, onMount, onCleanup, Show } from "solid-js";
+import { useKeyboard, useTerminalDimensions, useRenderer } from "@opentui/solid";
 import type { RepoNode, GitGraphOutput, OverviewConfig, HealthStatus } from "@overview/core";
-import { scanAndCollect, captureGraph, collectStats } from "@overview/core";
-import { RepoList, GitGraph, StatsPanel, StatusBar, type AppMode } from "../components";
+import { scanAndCollect, captureGraph, collectStats, collectStatus, createRepoWatcher } from "@overview/core";
+import { RepoList, GitGraph, StatsPanel, StatusBar, HelpOverlay, type AppMode } from "../components";
+import { filterTree, sortTree, nextFilter, nextSort, type SortMode, type FilterMode } from "../lib/filter";
+import { launchGgi, launchEditor, launchSessionizer } from "../lib/actions";
 import { theme } from "../theme";
 
 interface MainScreenProps {
@@ -23,6 +25,22 @@ function countByHealth(nodes: RepoNode[], pred: (h: HealthStatus) => boolean): n
 	}, 0);
 }
 
+function collectRepoPaths(nodes: RepoNode[]): string[] {
+	return nodes.flatMap((n) =>
+		n.type === "directory" ? collectRepoPaths(n.children) : [n.path],
+	);
+}
+
+function updateRepoStatus(nodes: RepoNode[], repoPath: string, status: RepoNode["status"]): void {
+	for (const n of nodes) {
+		if (n.type === "directory") {
+			updateRepoStatus(n.children, repoPath, status);
+		} else if (n.path === repoPath) {
+			n.status = status;
+		}
+	}
+}
+
 export function MainScreen(props: MainScreenProps) {
 	const [repos, setRepos] = createSignal<RepoNode[]>([]);
 	const [selectedNode, setSelectedNode] = createSignal<RepoNode | null>(null);
@@ -33,9 +51,28 @@ export function MainScreen(props: MainScreenProps) {
 	const [mode, setMode] = createSignal<AppMode>("NORMAL");
 	const [focusPanel, setFocusPanel] = createSignal<"list" | "graph" | "stats">("list");
 	const [message, setMessage] = createSignal<string | null>(null);
+	const [sortMode, setSortMode] = createSignal<SortMode>(props.config.sort);
+	const [filterMode, setFilterMode] = createSignal<FilterMode>(props.config.filter);
+	const [showHelp, setShowHelp] = createSignal(false);
+
+	const renderer = useRenderer();
 
 	const dimensions = useTerminalDimensions();
 	const leftWidth = createMemo(() => Math.floor(dimensions().width * props.config.layout.left_width_pct / 100));
+
+	const processedRepos = createMemo(() => {
+		let result = repos();
+		result = filterTree(result, filterMode());
+		result = sortTree(result, sortMode());
+		return result;
+	});
+
+	const statusMessage = createMemo(() => {
+		const parts: string[] = [];
+		if (filterMode() !== "all") parts.push(`filter: ${filterMode()}`);
+		if (sortMode() !== "name") parts.push(`sort: ${sortMode()}`);
+		return parts.length > 0 ? parts.join("  ") : message();
+	});
 
 	const repoCount = createMemo(() => countNodes(repos()));
 	const dirtyCount = createMemo(() => countByHealth(repos(), (h) => h !== "clean"));
@@ -75,6 +112,18 @@ export function MainScreen(props: MainScreenProps) {
 		fetchDetails(node);
 	});
 
+	const watcher = createRepoWatcher({
+		debounce_ms: 500,
+		on_change: (repoPath) => {
+			collectStatus(repoPath, props.config.scan_dirs[0]!).then((result) => {
+				if (result.ok) {
+					updateRepoStatus(repos(), repoPath, result.value);
+					setRepos([...repos()]);
+				}
+			});
+		},
+	});
+
 	async function performScan() {
 		setScanning(true);
 		for (const dir of props.config.scan_dirs) {
@@ -84,6 +133,7 @@ export function MainScreen(props: MainScreenProps) {
 			});
 			if (result.ok) {
 				setRepos(result.value);
+				watcher.watch(collectRepoPaths(result.value));
 			}
 		}
 		setScanning(false);
@@ -92,6 +142,8 @@ export function MainScreen(props: MainScreenProps) {
 	onMount(() => {
 		performScan();
 	});
+
+	onCleanup(() => watcher.close());
 
 	const FOCUS_ORDER = ["list", "graph", "stats"] as const;
 
@@ -127,20 +179,42 @@ export function MainScreen(props: MainScreenProps) {
 					}
 					break;
 				}
-				case "g":
-					setMessage("ggi: not yet implemented");
-					setTimeout(() => setMessage(null), 2000);
-					break;
 				case "r":
 					fetchDetails(selectedNode());
 					break;
 				case "R":
 					performScan();
 					break;
-				case "?":
-					setMessage("help: not yet implemented");
-					setTimeout(() => setMessage(null), 2000);
+				case "f":
+					setFilterMode(nextFilter(filterMode()));
 					break;
+				case "s":
+					setSortMode(nextSort(sortMode()));
+					break;
+				case "o": {
+					const node = selectedNode();
+					if (node?.type === "repo" || node?.type === "worktree") {
+						launchEditor(node.path, props.config.actions.editor, {
+							onSuspend: () => renderer.suspend(),
+							onResume: () => renderer.resume(),
+						});
+					}
+					break;
+				}
+				case "t": {
+					const node = selectedNode();
+					if ((node?.type === "repo" || node?.type === "worktree") && props.config.actions.sessionizer) {
+						launchSessionizer(node.path, props.config.actions.sessionizer, {
+							onSuspend: () => renderer.suspend(),
+							onResume: () => renderer.resume(),
+						});
+					}
+					break;
+				}
+			}
+
+			if (key.raw === "?") {
+				setShowHelp(!showHelp());
 			}
 			return;
 		}
@@ -158,10 +232,36 @@ export function MainScreen(props: MainScreenProps) {
 				case "l":
 					setFocusPanel("stats");
 					break;
-				case "g":
-					setMessage("ggi: not yet implemented");
-					setTimeout(() => setMessage(null), 2000);
+				case "g": {
+					const node = selectedNode();
+					if (node?.type === "repo" || node?.type === "worktree") {
+						launchGgi(node.path, props.config.actions.ggi, {
+							onSuspend: () => renderer.suspend(),
+							onResume: () => renderer.resume(),
+						});
+					}
 					break;
+				}
+				case "o": {
+					const node = selectedNode();
+					if (node?.type === "repo" || node?.type === "worktree") {
+						launchEditor(node.path, props.config.actions.editor, {
+							onSuspend: () => renderer.suspend(),
+							onResume: () => renderer.resume(),
+						});
+					}
+					break;
+				}
+				case "t": {
+					const node = selectedNode();
+					if ((node?.type === "repo" || node?.type === "worktree") && props.config.actions.sessionizer) {
+						launchSessionizer(node.path, props.config.actions.sessionizer, {
+							onSuspend: () => renderer.suspend(),
+							onResume: () => renderer.resume(),
+						});
+					}
+					break;
+				}
 				case "r":
 					fetchDetails(selectedNode());
 					break;
@@ -186,7 +286,7 @@ export function MainScreen(props: MainScreenProps) {
 				{/* Left panel */}
 				<box width={leftWidth()} flexDirection="column" borderStyle="rounded" borderColor={theme.border}>
 					<RepoList
-						repos={repos()}
+						repos={processedRepos()}
 						focused={focusPanel() === "list"}
 						onSelect={handleSelect}
 						width={leftWidth()}
@@ -219,8 +319,10 @@ export function MainScreen(props: MainScreenProps) {
 				dirtyCount={dirtyCount()}
 				aheadCount={aheadCount()}
 				scanning={scanning()}
-				message={message()}
+				message={statusMessage()}
 			/>
+
+			<HelpOverlay visible={showHelp()} onClose={() => setShowHelp(false)} />
 		</box>
 	);
 }
