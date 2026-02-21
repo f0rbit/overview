@@ -11,6 +11,8 @@ export * from "./git-status";
 export * from "./git-graph";
 export * from "./git-stats";
 export * from "./watcher";
+export * from "./cache";
+export * from "./github";
 
 export type ScanAndCollectError = ScanError;
 
