@@ -7,3 +7,5 @@ import "./branch-list";
 import "./github-prs";
 import "./github-ci";
 import "./github-release";
+import "./devpad-tasks";
+import "./devpad-milestones";

@@ -7,6 +7,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@f0rbit/corpus": "link:@f0rbit/corpus"
+    "@f0rbit/corpus": "link:@f0rbit/corpus",
+    "@devpad/api": "link:@devpad/api"
   }
 }

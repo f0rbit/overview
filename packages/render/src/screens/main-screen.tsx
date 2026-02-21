@@ -5,7 +5,7 @@ import { scanAndCollect, captureGraph, collectStats, collectStatus, createRepoWa
 import { RepoList, GitGraph, WidgetContainer, StatusBar, HelpOverlay, type AppMode } from "../components";
 import { filterTree, sortTree, nextFilter, nextSort, type SortMode, type FilterMode } from "../lib/filter";
 import { launchGgi, launchEditor, launchSessionizer } from "../lib/actions";
-import { loadWidgetState, defaultWidgetConfig } from "../lib/widget-state";
+import { loadWidgetState, defaultWidgetConfig, updateWidgetState } from "../lib/widget-state";
 import { theme } from "../theme";
 
 interface MainScreenProps {
@@ -144,7 +144,10 @@ export function MainScreen(props: MainScreenProps) {
 	onMount(() => {
 		performScan();
 		loadWidgetState().then((result) => {
-			if (result.ok) setWidgetConfigs(result.value.widgets);
+			if (result.ok) {
+				setWidgetConfigs(result.value.widgets);
+				updateWidgetState(result.value);
+			}
 		});
 	});
 

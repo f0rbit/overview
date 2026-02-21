@@ -13,6 +13,7 @@ export * from "./git-stats";
 export * from "./watcher";
 export * from "./cache";
 export * from "./github";
+export * from "./devpad";
 
 export type ScanAndCollectError = ScanError;
 

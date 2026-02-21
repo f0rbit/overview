@@ -1,4 +1,5 @@
 import { ok, err, try_catch, type Result } from "@f0rbit/corpus";
+import { createSignal } from "solid-js";
 import type { WidgetConfig } from "@overview/core";
 import { join } from "path";
 import { homedir } from "os";
@@ -13,6 +14,16 @@ export interface WidgetStateFile {
 }
 
 const STATE_PATH = join(homedir(), ".config", "overview", "widgets.json");
+
+const [_widgetState, _setWidgetState] = createSignal<WidgetStateFile>({ widgets: [] });
+
+export function getWidgetState(): WidgetStateFile {
+	return _widgetState();
+}
+
+export function updateWidgetState(state: WidgetStateFile): void {
+	_setWidgetState(state);
+}
 
 export function defaultWidgetConfig(): WidgetConfig[] {
 	return [
