@@ -10,6 +10,7 @@ interface StatusBarProps {
 	aheadCount: number;
 	scanning: boolean;
 	message: string | null;
+	widgetSummary?: string;
 }
 
 const KEY_HINTS: Record<AppMode, string> = {
@@ -46,6 +47,9 @@ export function StatusBar(props: StatusBarProps) {
 				<text fg={theme.yellow} content={` ${props.message}`} />
 			</Show>
 			<box flexGrow={1} />
+			<Show when={props.widgetSummary}>
+				<text fg={theme.fg_dim} content={`${props.widgetSummary}  `} />
+			</Show>
 			<text fg={summaryColor()} content={summaryText()} />
 		</box>
 	);

@@ -39,6 +39,14 @@ const SECTIONS = [
 		],
 	},
 	{
+		title: "Widgets (stats panel focused)",
+		items: [
+			{ key: "j / k", desc: "Navigate between widgets" },
+			{ key: "c", desc: "Collapse/expand focused widget" },
+			{ key: "C", desc: "Collapse/expand all widgets" },
+		],
+	},
+	{
 		title: "General",
 		items: [
 			{ key: "q", desc: "Quit / back" },

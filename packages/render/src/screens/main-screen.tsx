@@ -5,7 +5,7 @@ import { scanAndCollect, captureGraph, collectStats, collectStatus, createRepoWa
 import { RepoList, GitGraph, WidgetContainer, StatusBar, HelpOverlay, type AppMode } from "../components";
 import { filterTree, sortTree, nextFilter, nextSort, type SortMode, type FilterMode } from "../lib/filter";
 import { launchGgi, launchEditor, launchSessionizer } from "../lib/actions";
-import { loadWidgetState, defaultWidgetConfig, updateWidgetState } from "../lib/widget-state";
+import { loadWidgetState, saveWidgetState, defaultWidgetConfig, getWidgetState, updateWidgetState } from "../lib/widget-state";
 import { theme } from "../theme";
 
 interface MainScreenProps {
@@ -79,6 +79,19 @@ export function MainScreen(props: MainScreenProps) {
 	const repoCount = createMemo(() => countNodes(repos()));
 	const dirtyCount = createMemo(() => countByHealth(repos(), (h) => h !== "clean"));
 	const aheadCount = createMemo(() => countByHealth(repos(), (h) => h === "ahead" || h === "diverged"));
+
+	const widgetSummary = createMemo(() => {
+		const configs = widgetConfigs();
+		const enabled = configs.filter((c) => c.enabled).length;
+		return `${enabled}/${configs.length} widgets`;
+	});
+
+	async function handleWidgetConfigChange(configs: WidgetConfig[]) {
+		setWidgetConfigs(configs);
+		const state = { ...getWidgetState(), widgets: configs };
+		updateWidgetState(state);
+		await saveWidgetState(state);
+	}
 
 	async function fetchDetails(node: RepoNode | null) {
 		if (!node || node.type === "directory") {
@@ -316,6 +329,7 @@ export function MainScreen(props: MainScreenProps) {
 						focused={focusPanel() === "stats"}
 						height="50%"
 						widgetConfigs={widgetConfigs()}
+						onWidgetConfigChange={handleWidgetConfigChange}
 					/>
 				</box>
 			</box>
@@ -328,6 +342,7 @@ export function MainScreen(props: MainScreenProps) {
 				aheadCount={aheadCount()}
 				scanning={scanning()}
 				message={statusMessage()}
+				widgetSummary={widgetSummary()}
 			/>
 
 			<HelpOverlay visible={showHelp()} onClose={() => setShowHelp(false)} />
