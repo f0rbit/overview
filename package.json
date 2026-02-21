@@ -6,7 +6,8 @@
     "dev": "bun run --filter @overview/render dev",
     "typecheck": "bun run --filter '*' typecheck",
     "lint": "biome check .",
-    "test": "bun test"
+    "test": "bun test",
+    "build": "bun build packages/render/src/overview.tsx --compile --outfile overview"
   },
   "devDependencies": {
     "typescript": "^5.7.0",
