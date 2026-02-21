@@ -115,6 +115,48 @@ function parseTotalCommits(output: string): number {
 	return isNaN(n) ? 0 : n;
 }
 
+export interface CommitActivity {
+	daily_counts: number[];
+	total_this_week: number;
+	total_last_week: number;
+}
+
+function bucketIntoDays(timestamps: number[]): number[] {
+	const now = new Date();
+	const today_start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+	const counts = new Array<number>(14).fill(0);
+
+	for (const ts of timestamps) {
+		const ms = ts * 1000;
+		const days_ago = Math.floor((today_start - ms) / (24 * 60 * 60 * 1000));
+		const index = 13 - days_ago;
+		if (index >= 0 && index < 14) counts[index] = (counts[index] ?? 0) + 1;
+	}
+
+	return counts;
+}
+
+export async function collectCommitActivity(
+	repo_path: string,
+): Promise<Result<CommitActivity, GitStatsError>> {
+	const log_r = await git(["log", "--format=%at", "--since=14 days ago", "--all"], repo_path);
+
+	if (!log_r.ok) return err(log_r.error);
+
+	const timestamps = log_r.value
+		.split("\n")
+		.map((l) => l.trim())
+		.filter((l) => l.length > 0)
+		.map((l) => parseInt(l, 10))
+		.filter((n) => !isNaN(n));
+
+	const daily_counts = bucketIntoDays(timestamps);
+	const total_last_week = daily_counts.slice(0, 7).reduce((a, b) => a + b, 0);
+	const total_this_week = daily_counts.slice(7).reduce((a, b) => a + b, 0);
+
+	return ok({ daily_counts, total_this_week, total_last_week });
+}
+
 export async function collectStats(
 	repoPath: string,
 ): Promise<Result<ExtendedStats, GitStatsError>> {

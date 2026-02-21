@@ -9,3 +9,5 @@ import "./github-ci";
 import "./github-release";
 import "./devpad-tasks";
 import "./devpad-milestones";
+import "./github-issues";
+import "./commit-activity";
