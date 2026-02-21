@@ -1,3 +1,4 @@
+import { For } from "solid-js";
 import type { RepoStatus } from "@overview/core";
 import { theme } from "../theme";
 
@@ -50,10 +51,10 @@ export function StatusBadge(props: StatusBadgeProps) {
 	};
 
 	return (
-		<text>
-			{parts().map((p) => (
-				<text fg={p.color}>{p.text}</text>
-			))}
-		</text>
+		<box flexDirection="row">
+			<For each={parts()}>
+				{(p) => <text fg={p.color} content={p.text} />}
+			</For>
+		</box>
 	);
 }

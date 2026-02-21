@@ -275,7 +275,7 @@ export function MainScreen(props: MainScreenProps) {
 			<box height={1} width="100%" backgroundColor={theme.bg_dark} paddingLeft={1}>
 				<text fg={theme.blue}>overview</text>
 				<box flexGrow={1} />
-				<text fg={theme.fg_dim}>{props.config.scan_dirs[0]} — {repoCount()} repos</text>
+				<text fg={theme.fg_dim} content={`${props.config.scan_dirs[0]} — ${repoCount()} repos`} />
 				<Show when={scanning()}>
 					<text fg={theme.yellow}> scanning...</text>
 				</Show>

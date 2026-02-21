@@ -116,7 +116,7 @@ export function RepoList(props: RepoListProps) {
 							height={1}
 							backgroundColor={selected() ? theme.selection : undefined}
 						>
-							<text fg={selected() ? theme.fg : theme.fg_dark}>{label}</text>
+							<text fg={selected() ? theme.fg : theme.fg_dark} content={label} />
 							<box flexGrow={1} />
 							<StatusBadge status={entry.node.status} />
 						</box>

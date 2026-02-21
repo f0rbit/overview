@@ -24,9 +24,7 @@ export function GitGraph(props: GitGraphProps) {
 			<Show
 				when={!props.loading && props.graph && props.graph.lines.length > 0}
 				fallback={
-					<text fg={theme.fg_dim}>
-						{props.loading ? "loading..." : "(no commits)"}
-					</text>
+				<text fg={theme.fg_dim} content={props.loading ? "loading..." : "(no commits)"} />
 				}
 			>
 				<scrollbox
@@ -35,12 +33,10 @@ export function GitGraph(props: GitGraphProps) {
 					flexGrow={1}
 				>
 					<For each={props.graph!.lines}>
-						{(line) => <text fg={theme.fg}>{line}</text>}
+						{(line) => <text fg={theme.fg} content={line} />}
 					</For>
 				</scrollbox>
-				<text fg={theme.fg_dim}>
-					({props.graph!.total_lines} commits)
-				</text>
+			<text fg={theme.fg_dim} content={`(${props.graph!.total_lines} commits)`} />
 			</Show>
 		</box>
 	);

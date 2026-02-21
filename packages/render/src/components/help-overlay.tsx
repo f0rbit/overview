@@ -51,12 +51,12 @@ const SECTIONS = [
 function Section(props: { title: string; items: ReadonlyArray<{ key: string; desc: string }> }) {
 	return (
 		<box flexDirection="column">
-			<text fg={theme.yellow}>{props.title}</text>
+			<text fg={theme.yellow} content={props.title} />
 			<For each={props.items}>
 				{(item) => (
 					<box flexDirection="row" height={1}>
-						<text fg={theme.blue}>{item.key.padEnd(16)}</text>
-						<text fg={theme.fg}>{item.desc}</text>
+					<text fg={theme.blue} content={item.key.padEnd(16)} />
+					<text fg={theme.fg} content={item.desc} />
 					</box>
 				)}
 			</For>

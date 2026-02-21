@@ -41,12 +41,12 @@ export function StatusBar(props: StatusBarProps) {
 
 	return (
 		<box height={1} width="100%" backgroundColor={theme.bg_dark} flexDirection="row" paddingLeft={1} paddingRight={1}>
-			<text fg={theme.blue}>[{props.mode}]</text>
-			<Show when={props.message} fallback={<text fg={theme.fg_dim}> {keyHints()}</text>}>
-				<text fg={theme.yellow}> {props.message}</text>
+			<text fg={theme.blue} content={`[${props.mode}]`} />
+			<Show when={props.message} fallback={<text fg={theme.fg_dim} content={` ${keyHints()}`} />}>
+				<text fg={theme.yellow} content={` ${props.message}`} />
 			</Show>
 			<box flexGrow={1} />
-			<text fg={summaryColor()}>{summaryText()}</text>
+			<text fg={summaryColor()} content={summaryText()} />
 		</box>
 	);
 }

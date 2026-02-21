@@ -13,5 +13,11 @@
     "typescript": "^5.7.0",
     "@types/bun": "latest",
     "@biomejs/biome": "^1.9.0"
+  },
+  "dependencies": {
+    "@f0rbit/corpus": "^0.3.5",
+    "@opentui/core": "^0.1.80",
+    "@opentui/solid": "^0.1.80",
+    "solid-js": "^1.9.11"
   }
 }

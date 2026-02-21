@@ -30,8 +30,8 @@ function formatRelativeTime(timestamp: number): string {
 function StatRow(props: { label: string; value: string; color?: string }) {
 	return (
 		<box flexDirection="row" height={1}>
-			<text fg={theme.fg_dim}>{props.label.padEnd(12)}</text>
-			<text fg={props.color ?? theme.fg}>{props.value}</text>
+			<text fg={theme.fg_dim} content={props.label.padEnd(12)} />
+			<text fg={props.color ?? theme.fg} content={props.value} />
 		</box>
 	);
 }
@@ -58,8 +58,8 @@ function StatusDetails(props: { status: RepoStatus }) {
 
 			<Show when={props.status.ahead > 0 || props.status.behind > 0}>
 				<box flexDirection="row" height={1} gap={2}>
-					<text fg={theme.status.ahead}>↑ {props.status.ahead} ahead</text>
-					<text fg={theme.status.behind}>↓ {props.status.behind} behind</text>
+					<text fg={theme.status.ahead} content={`↑ ${props.status.ahead} ahead`} />
+					<text fg={theme.status.behind} content={`↓ ${props.status.behind} behind`} />
 				</box>
 			</Show>
 
@@ -74,21 +74,21 @@ function StatusDetails(props: { status: RepoStatus }) {
 				<box flexDirection="column">
 					<Show when={props.status.modified_count > 0 || props.status.staged_count > 0}>
 						<box flexDirection="row" height={1} gap={2}>
-							<text fg={theme.status.modified}>~ {props.status.modified_count} modified</text>
-							<text fg={theme.green}>+ {props.status.staged_count} staged</text>
+							<text fg={theme.status.modified} content={`~ ${props.status.modified_count} modified`} />
+							<text fg={theme.green} content={`+ ${props.status.staged_count} staged`} />
 						</box>
 					</Show>
 					<Show when={props.status.untracked_count > 0 || props.status.conflict_count > 0}>
 						<box flexDirection="row" height={1} gap={2}>
-							<text fg={theme.status.untracked}>? {props.status.untracked_count} untracked</text>
-							<text fg={theme.status.conflict}>! {props.status.conflict_count} conflicts</text>
+							<text fg={theme.status.untracked} content={`? ${props.status.untracked_count} untracked`} />
+							<text fg={theme.status.conflict} content={`! ${props.status.conflict_count} conflicts`} />
 						</box>
 					</Show>
 				</box>
 			</Show>
 
 			<Show when={props.status.stash_count > 0}>
-				<text fg={theme.status.stash}>✂ {props.status.stash_count} stashes</text>
+				<text fg={theme.status.stash} content={`✂ ${props.status.stash_count} stashes`} />
 			</Show>
 
 			<StatRow label="last commit" value={formatRelativeTime(props.status.head_time)} />
