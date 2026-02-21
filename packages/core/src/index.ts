@@ -10,6 +10,7 @@ export * from "./worktree";
 export * from "./git-status";
 export * from "./git-graph";
 export * from "./git-stats";
+export * from "./watcher";
 
 export type ScanAndCollectError = ScanError;
 
