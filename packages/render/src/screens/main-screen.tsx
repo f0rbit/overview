@@ -1,10 +1,11 @@
 import { createSignal, createEffect, createMemo, onMount, onCleanup, Show } from "solid-js";
 import { useKeyboard, useTerminalDimensions, useRenderer } from "@opentui/solid";
-import type { RepoNode, GitGraphOutput, OverviewConfig, HealthStatus } from "@overview/core";
+import type { RepoNode, GitGraphOutput, OverviewConfig, HealthStatus, WidgetConfig } from "@overview/core";
 import { scanAndCollect, captureGraph, collectStats, collectStatus, createRepoWatcher } from "@overview/core";
-import { RepoList, GitGraph, StatsPanel, StatusBar, HelpOverlay, type AppMode } from "../components";
+import { RepoList, GitGraph, WidgetContainer, StatusBar, HelpOverlay, type AppMode } from "../components";
 import { filterTree, sortTree, nextFilter, nextSort, type SortMode, type FilterMode } from "../lib/filter";
 import { launchGgi, launchEditor, launchSessionizer } from "../lib/actions";
+import { loadWidgetState, defaultWidgetConfig } from "../lib/widget-state";
 import { theme } from "../theme";
 
 interface MainScreenProps {
@@ -54,6 +55,7 @@ export function MainScreen(props: MainScreenProps) {
 	const [sortMode, setSortMode] = createSignal<SortMode>(props.config.sort);
 	const [filterMode, setFilterMode] = createSignal<FilterMode>(props.config.filter);
 	const [showHelp, setShowHelp] = createSignal(false);
+	const [widgetConfigs, setWidgetConfigs] = createSignal<WidgetConfig[]>(defaultWidgetConfig());
 
 	const renderer = useRenderer();
 
@@ -141,6 +143,9 @@ export function MainScreen(props: MainScreenProps) {
 
 	onMount(() => {
 		performScan();
+		loadWidgetState().then((result) => {
+			if (result.ok) setWidgetConfigs(result.value.widgets);
+		});
 	});
 
 	onCleanup(() => watcher.close());
@@ -301,12 +306,13 @@ export function MainScreen(props: MainScreenProps) {
 						focused={focusPanel() === "graph"}
 						height="50%"
 					/>
-					<StatsPanel
+					<WidgetContainer
 						status={selectedNode()?.status ?? null}
 						repoName={selectedNode()?.name ?? ""}
 						loading={statsLoading()}
 						focused={focusPanel() === "stats"}
 						height="50%"
+						widgetConfigs={widgetConfigs()}
 					/>
 				</box>
 			</box>

@@ -109,6 +109,40 @@ export interface RepoNode {
 	expanded: boolean;
 }
 
+// Widget system
+export type WidgetId =
+	| "git-status"
+	| "recent-commits"
+	| "branch-list"
+	| "github-prs"
+	| "github-issues"
+	| "github-ci"
+	| "devpad-tasks"
+	| "devpad-milestones"
+	| "repo-meta"
+	| "file-changes"
+	| "commit-activity"
+	| "github-release";
+
+export interface WidgetConfig {
+	id: WidgetId;
+	enabled: boolean;
+	priority: number;
+	collapsed: boolean;
+}
+
+export interface WidgetSizeRequest {
+	min_rows: number;
+	preferred_rows: number;
+	max_rows: number;
+}
+
+export interface WidgetRenderProps {
+	allocated_rows: number;
+	width: number;
+	focused: boolean;
+}
+
 // Config
 export interface OverviewConfig {
 	scan_dirs: string[];
