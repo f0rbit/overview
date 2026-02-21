@@ -289,7 +289,6 @@ export function MainScreen(props: MainScreenProps) {
 						repos={processedRepos()}
 						focused={focusPanel() === "list"}
 						onSelect={handleSelect}
-						width={leftWidth()}
 					/>
 				</box>
 

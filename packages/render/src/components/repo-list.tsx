@@ -8,7 +8,6 @@ interface RepoListProps {
 	repos: RepoNode[];
 	focused: boolean;
 	onSelect: (node: RepoNode) => void;
-	width: number;
 }
 
 interface FlatNode {
@@ -100,7 +99,7 @@ export function RepoList(props: RepoListProps) {
 	});
 
 	return (
-		<box flexDirection="column" width={props.width} height="100%">
+		<box flexDirection="column" width="100%" height="100%">
 			<For each={visible()}>
 				{(entry, i) => {
 					const selected = () => i() === selectedIndex();
