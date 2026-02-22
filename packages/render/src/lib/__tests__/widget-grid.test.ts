@@ -13,11 +13,11 @@ import {
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
-function makeWidget(id: WidgetId, span: "full" | "half" | "auto", enabled = true, collapsed = false): GridWidget {
+function makeWidget(id: WidgetId, span: "full" | "half" | "auto", enabled = true, collapsed = false, priority = 0): GridWidget {
 	return {
 		id,
 		size_hint: { span, min_height: 2 },
-		config: { id, enabled, priority: 0, collapsed },
+		config: { id, enabled, priority, collapsed },
 	};
 }
 
@@ -32,12 +32,16 @@ describe("resolveSpan", () => {
 		expect(resolveSpan("half", 60)).toBe("half");
 	});
 
-	test("half at 49 cols → full", () => {
-		expect(resolveSpan("half", 49)).toBe("full");
+	test("half at 50 cols → half", () => {
+		expect(resolveSpan("half", 50)).toBe("half");
 	});
 
-	test("half at 50 cols → half (boundary)", () => {
-		expect(resolveSpan("half", 50)).toBe("half");
+	test("half at 40 cols → half (boundary)", () => {
+		expect(resolveSpan("half", 40)).toBe("half");
+	});
+
+	test("half at 39 cols → full", () => {
+		expect(resolveSpan("half", 39)).toBe("full");
 	});
 
 	test("full at any width → full", () => {
@@ -58,8 +62,8 @@ describe("resolveSpan", () => {
 describe("computeRows", () => {
 	test("two half-width widgets at wide panel → 1 two-column row", () => {
 		const widgets = [
-			makeWidget("git-status", "half"),
-			makeWidget("repo-meta", "half"),
+			makeWidget("git-status", "half", true, false, 0),
+			makeWidget("repo-meta", "half", true, false, 1),
 		];
 		const rows = computeRows(widgets, 80);
 
@@ -70,10 +74,10 @@ describe("computeRows", () => {
 		expect(rows[0].widgets[1].id).toBe("repo-meta");
 	});
 
-	test("half + full → half alone in row 1, full in row 2", () => {
+	test("half + full → sorted by priority: half(p0) before full(p1)", () => {
 		const widgets = [
-			makeWidget("git-status", "half"),
-			makeWidget("recent-commits", "full"),
+			makeWidget("git-status", "half", true, false, 0),
+			makeWidget("recent-commits", "full", true, false, 1),
 		];
 		const rows = computeRows(widgets, 80);
 
@@ -84,11 +88,11 @@ describe("computeRows", () => {
 		expect(rows[1].widgets[0].id).toBe("recent-commits");
 	});
 
-	test("full + half + half → full in row 1, half+half in row 2", () => {
+	test("full + half + half → full(p0) first, half pair(p1) second", () => {
 		const widgets = [
-			makeWidget("recent-commits", "full"),
-			makeWidget("git-status", "half"),
-			makeWidget("repo-meta", "half"),
+			makeWidget("recent-commits", "full", true, false, 0),
+			makeWidget("git-status", "half", true, false, 1),
+			makeWidget("repo-meta", "half", true, false, 2),
 		];
 		const rows = computeRows(widgets, 80);
 
@@ -102,9 +106,9 @@ describe("computeRows", () => {
 
 	test("three half-width → 2-column row + 1-column row", () => {
 		const widgets = [
-			makeWidget("git-status", "half"),
-			makeWidget("repo-meta", "half"),
-			makeWidget("branch-list", "half"),
+			makeWidget("git-status", "half", true, false, 0),
+			makeWidget("repo-meta", "half", true, false, 1),
+			makeWidget("branch-list", "half", true, false, 2),
 		];
 		const rows = computeRows(widgets, 80);
 
@@ -125,13 +129,13 @@ describe("computeRows", () => {
 		expect(rows[0].widgets[0].id).toBe("recent-commits");
 	});
 
-	test("narrow panel (< 50) → all half become full, each own row", () => {
+	test("narrow panel (< 40) → all half become full, each own row", () => {
 		const widgets = [
-			makeWidget("git-status", "half"),
-			makeWidget("repo-meta", "half"),
-			makeWidget("branch-list", "half"),
+			makeWidget("git-status", "half", true, false, 0),
+			makeWidget("repo-meta", "half", true, false, 1),
+			makeWidget("branch-list", "half", true, false, 2),
 		];
-		const rows = computeRows(widgets, 40);
+		const rows = computeRows(widgets, 39);
 
 		expect(rows).toHaveLength(3);
 		rows.forEach((r) => {
@@ -146,9 +150,9 @@ describe("computeRows", () => {
 
 	test("disabled widgets are excluded from rows", () => {
 		const widgets = [
-			makeWidget("git-status", "half"),
-			makeWidget("repo-meta", "half", false),
-			makeWidget("branch-list", "half"),
+			makeWidget("git-status", "half", true, false, 0),
+			makeWidget("repo-meta", "half", false, false, 1),
+			makeWidget("branch-list", "half", true, false, 2),
 		];
 		const rows = computeRows(widgets, 80);
 
@@ -158,12 +162,12 @@ describe("computeRows", () => {
 		expect(rows[0].widgets[1].id).toBe("branch-list");
 	});
 
-	test("order is preserved", () => {
+	test("order is preserved for same-type widgets", () => {
 		const widgets = [
-			makeWidget("github-prs", "half"),
-			makeWidget("github-issues", "half"),
-			makeWidget("github-ci", "half"),
-			makeWidget("devpad-tasks", "half"),
+			makeWidget("github-prs", "half", true, false, 0),
+			makeWidget("github-issues", "half", true, false, 1),
+			makeWidget("github-ci", "half", true, false, 2),
+			makeWidget("devpad-tasks", "half", true, false, 3),
 		];
 		const rows = computeRows(widgets, 80);
 
@@ -172,6 +176,60 @@ describe("computeRows", () => {
 		expect(rows[0].widgets[1].id).toBe("github-issues");
 		expect(rows[1].widgets[0].id).toBe("github-ci");
 		expect(rows[1].widgets[1].id).toBe("devpad-tasks");
+	});
+
+	test("non-contiguous halfs pair together", () => {
+		const widgets = [
+			makeWidget("git-status", "half", true, false, 0),
+			makeWidget("recent-commits", "full", true, false, 1),
+			makeWidget("repo-meta", "half", true, false, 2),
+		];
+		const rows = computeRows(widgets, 80);
+
+		expect(rows).toHaveLength(2);
+		// half pair has min priority 0, full has priority 1 → pair first
+		expect(rows[0].columns).toBe(2);
+		expect(rows[0].widgets[0].id).toBe("git-status");
+		expect(rows[0].widgets[1].id).toBe("repo-meta");
+		expect(rows[1].columns).toBe(1);
+		expect(rows[1].widgets[0].id).toBe("recent-commits");
+	});
+
+	test("full-width at priority 0 comes before halfs at priority 3+4", () => {
+		const widgets = [
+			makeWidget("recent-commits", "full", true, false, 0),
+			makeWidget("git-status", "half", true, false, 3),
+			makeWidget("repo-meta", "half", true, false, 4),
+		];
+		const rows = computeRows(widgets, 80);
+
+		expect(rows).toHaveLength(2);
+		expect(rows[0].columns).toBe(1);
+		expect(rows[0].widgets[0].id).toBe("recent-commits");
+		expect(rows[1].columns).toBe(2);
+		expect(rows[1].widgets[0].id).toBe("git-status");
+		expect(rows[1].widgets[1].id).toBe("repo-meta");
+	});
+
+	test("odd number of halfs → trailing half gets 1-column row", () => {
+		const widgets = [
+			makeWidget("git-status", "half", true, false, 0),
+			makeWidget("repo-meta", "half", true, false, 1),
+			makeWidget("branch-list", "half", true, false, 2),
+			makeWidget("recent-commits", "half", true, false, 3),
+			makeWidget("github-prs", "half", true, false, 4),
+		];
+		const rows = computeRows(widgets, 80);
+
+		expect(rows).toHaveLength(3);
+		expect(rows[0].columns).toBe(2);
+		expect(rows[0].widgets[0].id).toBe("git-status");
+		expect(rows[0].widgets[1].id).toBe("repo-meta");
+		expect(rows[1].columns).toBe(2);
+		expect(rows[1].widgets[0].id).toBe("branch-list");
+		expect(rows[1].widgets[1].id).toBe("recent-commits");
+		expect(rows[2].columns).toBe(1);
+		expect(rows[2].widgets[0].id).toBe("github-prs");
 	});
 });
 
@@ -356,8 +414,8 @@ describe("contentWidth", () => {
 		expect(contentWidth("half", 60)).toBe(28);
 	});
 
-	test("half span at 49 → 47 (falls back to full)", () => {
-		expect(contentWidth("half", 49)).toBe(47);
+	test("half span at 39 → 37 (falls back to full)", () => {
+		expect(contentWidth("half", 39)).toBe(37);
 	});
 
 	test("returns at least 1 for very small widths", () => {

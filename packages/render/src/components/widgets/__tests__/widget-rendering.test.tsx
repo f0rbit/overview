@@ -152,8 +152,8 @@ describe("grid layout rendering", () => {
 
 	test("narrow panel falls back to single column", () => {
 		// pure function — no rendering needed
-		expect(resolveSpan("half", 40)).toBe("full");
-		expect(resolveSpan("half", 49)).toBe("full");
+		expect(resolveSpan("half", 39)).toBe("full");
+		expect(resolveSpan("half", 40)).toBe("half");
 		expect(resolveSpan("half", 50)).toBe("half");
 		expect(resolveSpan("half", 100)).toBe("half");
 		expect(resolveSpan("full", 100)).toBe("full");

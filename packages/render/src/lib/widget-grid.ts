@@ -24,40 +24,46 @@ export interface GridLayout {
 // ── Span resolution ──
 
 export function resolveSpan(span: WidgetSpan, panel_width: number): "full" | "half" {
-	if (span === "half" && panel_width >= 50) return "half";
+	if (span === "half" && panel_width >= 40) return "half";
 	return "full";
 }
 
 // ── Row computation ──
 
 export function computeRows(widgets: GridWidget[], panel_width: number): GridRow[] {
-	const rows: GridRow[] = [];
-	let pending_half: GridWidget | null = null;
+	const enabled = widgets.filter((w) => w.config.enabled);
 
-	for (const widget of widgets) {
-		if (!widget.config.enabled) continue;
+	const fulls: GridWidget[] = [];
+	const halfs: GridWidget[] = [];
 
+	for (const widget of enabled) {
 		const effective = resolveSpan(widget.size_hint.span, panel_width);
-
 		if (effective === "full") {
-			if (pending_half) {
-				rows.push({ widgets: [pending_half], columns: 1 });
-				pending_half = null;
-			}
-			rows.push({ widgets: [widget], columns: 1 });
+			fulls.push(widget);
 		} else {
-			if (pending_half) {
-				rows.push({ widgets: [pending_half, widget], columns: 2 });
-				pending_half = null;
-			} else {
-				pending_half = widget;
-			}
+			halfs.push(widget);
 		}
 	}
 
-	if (pending_half) {
-		rows.push({ widgets: [pending_half], columns: 1 });
+	const rows: GridRow[] = [];
+
+	for (const widget of fulls) {
+		rows.push({ widgets: [widget], columns: 1 });
 	}
+
+	for (let i = 0; i < halfs.length; i += 2) {
+		if (i + 1 < halfs.length) {
+			rows.push({ widgets: [halfs[i]!, halfs[i + 1]!], columns: 2 });
+		} else {
+			rows.push({ widgets: [halfs[i]!], columns: 1 });
+		}
+	}
+
+	rows.sort((a, b) => {
+		const min_a = Math.min(...a.widgets.map((w) => w.config.priority));
+		const min_b = Math.min(...b.widgets.map((w) => w.config.priority));
+		return min_a - min_b;
+	});
 
 	return rows;
 }
