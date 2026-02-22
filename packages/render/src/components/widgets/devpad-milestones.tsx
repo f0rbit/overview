@@ -1,4 +1,4 @@
-import { For, Show, createMemo } from "solid-js";
+import { For, Show, Switch, Match, createMemo } from "solid-js";
 import type { WidgetRenderProps, RepoStatus, DevpadMilestone } from "@overview/core";
 import { registerWidget } from "./registry";
 import { theme } from "../../theme";
@@ -22,53 +22,53 @@ function DevpadMilestonesWidget(props: WidgetRenderProps & { status: RepoStatus 
 
 	return (
 		<box flexDirection="column">
-			<Show when={devpad.error() === "devpad not configured"}>
-				<text fg={theme.fg_dim} content="devpad not configured" />
-			</Show>
+			<Switch
+				fallback={
+					<Show
+						when={milestones().length > 0}
+						fallback={<text fg={theme.fg_dim} content="no milestones" />}
+					>
+						<For each={milestones()}>
+							{(ms) => {
+								const pct = () =>
+									ms.goals_total > 0
+										? Math.round((ms.goals_completed / ms.goals_total) * 100)
+										: 0;
+								const bar_width = 12;
+								const label = () => {
+									const version_str = ms.target_version ? ` (${ms.target_version})` : "";
+									return truncate(`${ms.name}${version_str}`, Math.max(1, props.width - bar_width - 8));
+								};
+								const bar = () => progressBar(ms.goals_total, ms.goals_completed, bar_width);
+								const bar_color = () => (pct() === 100 ? theme.green : theme.blue);
 
-			<Show when={devpad.loading() && !devpad.data()}>
-				<text fg={theme.fg_dim} content="loading…" />
-			</Show>
-
-			<Show when={!devpad.error() && !devpad.loading() && !devpad.data()?.project}>
-				<text fg={theme.fg_dim} content="no devpad project" />
-			</Show>
-
-			<Show when={!devpad.error() && devpad.data()?.project}>
-				<Show
-					when={milestones().length > 0}
-					fallback={<text fg={theme.fg_dim} content="no milestones" />}
-				>
-					<For each={milestones()}>
-						{(ms) => {
-							const pct = () =>
-								ms.goals_total > 0
-									? Math.round((ms.goals_completed / ms.goals_total) * 100)
-									: 0;
-							const bar_width = 12;
-							const label = () => {
-								const version_str = ms.target_version ? ` (${ms.target_version})` : "";
-								return truncate(`${ms.name}${version_str}`, Math.max(1, props.width - bar_width - 8));
-							};
-							const bar = () => progressBar(ms.goals_total, ms.goals_completed, bar_width);
-							const bar_color = () => (pct() === 100 ? theme.green : theme.blue);
-
-							return (
-								<box flexDirection="column">
-									<box flexDirection="row" height={1}>
-										<text content={label()} />
-										<text fg={theme.fg_dim} content={` ${ms.goals_completed}/${ms.goals_total}`} />
+								return (
+									<box flexDirection="column">
+										<box flexDirection="row" height={1}>
+											<text content={label()} />
+											<text fg={theme.fg_dim} content={` ${ms.goals_completed}/${ms.goals_total}`} />
+										</box>
+										<box flexDirection="row" height={1}>
+											<text fg={bar_color()} content={bar()} />
+											<text fg={theme.fg_dim} content={` ${pct()}%`} />
+										</box>
 									</box>
-									<box flexDirection="row" height={1}>
-										<text fg={bar_color()} content={bar()} />
-										<text fg={theme.fg_dim} content={` ${pct()}%`} />
-									</box>
-								</box>
-							);
-						}}
-					</For>
-				</Show>
-			</Show>
+								);
+							}}
+						</For>
+					</Show>
+				}
+			>
+				<Match when={devpad.error()}>
+					{(err) => <text fg={theme.fg_dim} content={err()} />}
+				</Match>
+				<Match when={devpad.loading() && !devpad.data()}>
+					<text fg={theme.fg_dim} content="loading…" />
+				</Match>
+				<Match when={!devpad.data()?.project && devpad.data() !== null}>
+					<text fg={theme.fg_dim} content="no devpad project" />
+				</Match>
+			</Switch>
 		</box>
 	);
 }

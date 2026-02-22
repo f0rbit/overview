@@ -148,6 +148,7 @@ export function useDevpad(
 	createEffect(() => {
 		remote_url();
 		repo_name();
+		getWidgetState();
 		fetchData();
 	});
 

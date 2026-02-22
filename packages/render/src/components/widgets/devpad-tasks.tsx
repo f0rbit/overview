@@ -1,4 +1,4 @@
-import { For, Show, createMemo } from "solid-js";
+import { For, Show, Switch, Match, createMemo } from "solid-js";
 import type { WidgetRenderProps, RepoStatus, DevpadTask } from "@overview/core";
 import { registerWidget } from "./registry";
 import { theme } from "../../theme";
@@ -31,43 +31,45 @@ function DevpadTasksWidget(props: WidgetRenderProps & { status: RepoStatus | nul
 
 	return (
 		<box flexDirection="column">
-			<Show when={devpad.error() === "devpad not configured"}>
-				<text fg={theme.fg_dim} content="devpad not configured" />
-			</Show>
-
-			<Show when={devpad.loading() && !devpad.data()}>
-				<text fg={theme.fg_dim} content="loading…" />
-			</Show>
-
-			<Show when={!devpad.error() && !devpad.loading() && !devpad.data()?.project}>
-				<text fg={theme.fg_dim} content="no devpad project" />
-			</Show>
-
-			<Show when={!devpad.error() && devpad.data()?.project}>
-				<text fg={theme.fg_dark} content={`Tasks (${tasks().length})`} />
-				<Show
-					when={tasks().length > 0}
-					fallback={<text fg={theme.fg_dim} content="(no open tasks)" />}
-				>
-					<For each={visible()}>
-						{(task) => {
-							const pi = () => priority_indicator[task.priority];
-							const si = () => progress_indicator[task.progress];
-							const available = () => Math.max(1, props.width - 4);
-							return (
-								<box flexDirection="row" height={1}>
-									<text fg={si().color} content={`${si().char} `} />
-									<text fg={pi().color} content={`${pi().char} `} />
-									<text content={truncate(task.title, available())} />
-								</box>
-							);
-						}}
-					</For>
-					<Show when={overflow() > 0}>
-						<text fg={theme.fg_dim} content={`+${overflow()} more`} />
-					</Show>
-				</Show>
-			</Show>
+			<Switch
+				fallback={
+					<>
+						<text fg={theme.fg_dark} content={`Tasks (${tasks().length})`} />
+						<Show
+							when={tasks().length > 0}
+							fallback={<text fg={theme.fg_dim} content="(no open tasks)" />}
+						>
+							<For each={visible()}>
+								{(task) => {
+									const pi = () => priority_indicator[task.priority];
+									const si = () => progress_indicator[task.progress];
+									const available = () => Math.max(1, props.width - 4);
+									return (
+										<box flexDirection="row" height={1}>
+											<text fg={si().color} content={`${si().char} `} />
+											<text fg={pi().color} content={`${pi().char} `} />
+											<text content={truncate(task.title, available())} />
+										</box>
+									);
+								}}
+							</For>
+							<Show when={overflow() > 0}>
+								<text fg={theme.fg_dim} content={`+${overflow()} more`} />
+							</Show>
+						</Show>
+					</>
+				}
+			>
+				<Match when={devpad.error()}>
+					{(err) => <text fg={theme.fg_dim} content={err()} />}
+				</Match>
+				<Match when={devpad.loading() && !devpad.data()}>
+					<text fg={theme.fg_dim} content="loading…" />
+				</Match>
+				<Match when={!devpad.data()?.project && devpad.data() !== null}>
+					<text fg={theme.fg_dim} content="no devpad project" />
+				</Match>
+			</Switch>
 		</box>
 	);
 }
