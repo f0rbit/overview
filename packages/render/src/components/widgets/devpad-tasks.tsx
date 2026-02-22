@@ -31,35 +31,7 @@ function DevpadTasksWidget(props: WidgetRenderProps & { status: RepoStatus | nul
 
 	return (
 		<box flexDirection="column">
-			<Switch
-				fallback={
-					<>
-						<text fg={theme.fg_dark} content={`Tasks (${tasks().length})`} />
-						<Show
-							when={tasks().length > 0}
-							fallback={<text fg={theme.fg_dim} content="(no open tasks)" />}
-						>
-							<For each={visible()}>
-								{(task) => {
-									const pi = () => priority_indicator[task.priority];
-									const si = () => progress_indicator[task.progress];
-									const available = () => Math.max(1, props.width - 4);
-									return (
-										<box flexDirection="row" height={1}>
-											<text fg={si().color} content={`${si().char} `} />
-											<text fg={pi().color} content={`${pi().char} `} />
-											<text content={truncate(task.title, available())} />
-										</box>
-									);
-								}}
-							</For>
-							<Show when={overflow() > 0}>
-								<text fg={theme.fg_dim} content={`+${overflow()} more`} />
-							</Show>
-						</Show>
-					</>
-				}
-			>
+			<Switch>
 				<Match when={devpad.error()}>
 					{(err) => <text fg={theme.fg_dim} content={err()} />}
 				</Match>
@@ -68,6 +40,31 @@ function DevpadTasksWidget(props: WidgetRenderProps & { status: RepoStatus | nul
 				</Match>
 				<Match when={!devpad.data()?.project && devpad.data() !== null}>
 					<text fg={theme.fg_dim} content="no devpad project" />
+				</Match>
+				<Match when={true}>
+					<text fg={theme.fg_dark} content={`Tasks (${tasks().length})`} />
+					<Show
+						when={tasks().length > 0}
+						fallback={<text fg={theme.fg_dim} content="(no open tasks)" />}
+					>
+						<For each={visible()}>
+							{(task) => {
+								const pi = () => priority_indicator[task.priority];
+								const si = () => progress_indicator[task.progress];
+								const available = () => Math.max(1, props.width - 4);
+								return (
+									<box flexDirection="row" height={1}>
+										<text fg={si().color} content={`${si().char} `} />
+										<text fg={pi().color} content={`${pi().char} `} />
+										<text content={truncate(task.title, available())} />
+									</box>
+								);
+							}}
+						</For>
+						<Show when={overflow() > 0}>
+							<text fg={theme.fg_dim} content={`+${overflow()} more`} />
+						</Show>
+					</Show>
 				</Match>
 			</Switch>
 		</box>

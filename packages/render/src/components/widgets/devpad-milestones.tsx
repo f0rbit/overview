@@ -19,16 +19,28 @@ function DevpadMilestonesWidget(props: WidgetRenderProps & { status: RepoStatus 
 	const devpad = useDevpad(remote_url, repo_name);
 
 	const milestones = createMemo(() => devpad.data()?.milestones ?? []);
+	const visible_count = () => Math.max(0, Math.floor(props.allocated_rows / 2));
+	const visible = () => milestones().slice(0, visible_count());
+	const overflow = () => Math.max(0, milestones().length - visible_count());
 
 	return (
 		<box flexDirection="column">
-			<Switch
-				fallback={
+			<Switch>
+				<Match when={devpad.error()}>
+					{(err) => <text fg={theme.fg_dim} content={err()} />}
+				</Match>
+				<Match when={devpad.loading() && !devpad.data()}>
+					<text fg={theme.fg_dim} content="loading…" />
+				</Match>
+				<Match when={!devpad.data()?.project && devpad.data() !== null}>
+					<text fg={theme.fg_dim} content="no devpad project" />
+				</Match>
+				<Match when={true}>
 					<Show
 						when={milestones().length > 0}
 						fallback={<text fg={theme.fg_dim} content="no milestones" />}
 					>
-						<For each={milestones()}>
+						<For each={visible()}>
 							{(ms) => {
 								const pct = () =>
 									ms.goals_total > 0
@@ -43,7 +55,7 @@ function DevpadMilestonesWidget(props: WidgetRenderProps & { status: RepoStatus 
 								const bar_color = () => (pct() === 100 ? theme.green : theme.blue);
 
 								return (
-									<box flexDirection="column">
+									<box flexDirection="column" height={2}>
 										<box flexDirection="row" height={1}>
 											<text content={label()} />
 											<text fg={theme.fg_dim} content={` ${ms.goals_completed}/${ms.goals_total}`} />
@@ -56,17 +68,10 @@ function DevpadMilestonesWidget(props: WidgetRenderProps & { status: RepoStatus 
 								);
 							}}
 						</For>
+						<Show when={overflow() > 0}>
+							<text fg={theme.fg_dim} content={`+${overflow()} more`} />
+						</Show>
 					</Show>
-				}
-			>
-				<Match when={devpad.error()}>
-					{(err) => <text fg={theme.fg_dim} content={err()} />}
-				</Match>
-				<Match when={devpad.loading() && !devpad.data()}>
-					<text fg={theme.fg_dim} content="loading…" />
-				</Match>
-				<Match when={!devpad.data()?.project && devpad.data() !== null}>
-					<text fg={theme.fg_dim} content="no devpad project" />
 				</Match>
 			</Switch>
 		</box>

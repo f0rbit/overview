@@ -37,7 +37,7 @@ export function allocateWidgets(
 
 	// Phase 1: minimum allocation
 	for (const { config, request } of effective) {
-		if (remaining < request.min_rows) break;
+		if (remaining < request.min_rows) continue;
 		allocations.set(config.id, request.min_rows);
 		remaining -= request.min_rows;
 	}

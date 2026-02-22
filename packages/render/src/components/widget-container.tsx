@@ -125,16 +125,16 @@ export function WidgetContainer(props: WidgetContainerProps) {
 											</box>
 										}
 									>
-										<box height={entry.alloc.rows} flexDirection="column">
+										<box height={entry.alloc.rows} flexDirection="column" overflow="hidden">
 											<Show when={is_focused()}>
 												<text fg={theme.yellow} content={`▸ ${entry.def.label}`} />
 											</Show>
-											<entry.def.component
-												allocated_rows={entry.alloc.rows}
-												width={contentWidth()}
-												focused={props.focused}
-												status={props.status}
-											/>
+										<entry.def.component
+											allocated_rows={is_focused() ? entry.alloc.rows - 1 : entry.alloc.rows}
+											width={contentWidth()}
+											focused={props.focused}
+											status={props.status}
+										/>
 										</box>
 									</Show>
 								</>
