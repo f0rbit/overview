@@ -173,6 +173,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 																</Show>
 																<box
 																	width={content_box_width()}
+																	overflow="hidden"
 																	backgroundColor={focused() ? theme.bg_highlight : undefined}
 																	flexDirection="column"
 																	minHeight={gw.size_hint.min_height}

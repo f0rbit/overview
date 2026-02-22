@@ -386,16 +386,16 @@ describe("buildBorderLineWithTitle", () => {
 // ── contentWidth ───────────────────────────────────────────────────────────
 
 describe("contentWidth", () => {
-	test("full span at 60 → 58", () => {
-		expect(contentWidth("full", 60)).toBe(58);
+	test("full span at 60 → 57", () => {
+		expect(contentWidth("full", 60)).toBe(57);
 	});
 
-	test("half span at 60 → 28", () => {
-		expect(contentWidth("half", 60)).toBe(28);
+	test("half span at 60 → 27", () => {
+		expect(contentWidth("half", 60)).toBe(27);
 	});
 
-	test("half span at 39 → 37 (falls back to full)", () => {
-		expect(contentWidth("half", 39)).toBe(37);
+	test("half span at 39 → 36 (falls back to full)", () => {
+		expect(contentWidth("half", 39)).toBe(36);
 	});
 
 	test("returns at least 1 for very small widths", () => {

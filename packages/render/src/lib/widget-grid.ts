@@ -151,11 +151,11 @@ export function buildBorderLineWithTitle(line: string, title: string): string {
 export function contentWidth(span: WidgetSpan, panel_width: number): number {
 	const resolved = resolveSpan(span, panel_width);
 	if (resolved === "full") {
-		return Math.max(1, panel_width - 2);
+		return Math.max(1, panel_width - 3);
 	}
 	// For half-width, return the smaller (right) column width as conservative estimate
 	// Layout: │ left_content │ right_content │
-	// right_content_width = panel_width - junction - 2
+	// right_content_width = panel_width - junction - 3
 	const junction = Math.floor(panel_width / 2);
-	return Math.max(1, panel_width - junction - 2);
+	return Math.max(1, panel_width - junction - 3);
 }
