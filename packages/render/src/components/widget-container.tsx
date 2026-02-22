@@ -1,14 +1,15 @@
-import { For, Show, createMemo, createSignal } from "solid-js";
+import { For, Show, createMemo, createSignal, createEffect, on } from "solid-js";
 import { useKeyboard } from "@opentui/solid";
+import type { ScrollBoxRenderable } from "@opentui/core";
 import type { RepoStatus, WidgetConfig, WidgetId } from "@overview/core";
 import { getWidget } from "./widgets/registry";
 import "./widgets/index";
 import { theme } from "../theme";
+import { BorderChars } from "@opentui/core";
 import {
 	computeGridLayout,
 	buildBorderLine,
 	buildBorderLineWithTitle,
-	getWidgetBorderSides,
 	contentWidth,
 	type GridWidget,
 	type GridRow,
@@ -27,6 +28,7 @@ interface WidgetContainerProps {
 
 export function WidgetContainer(props: WidgetContainerProps) {
 	const [focused_idx, setFocusedIdx] = createSignal(0);
+	let scrollbox_ref: ScrollBoxRenderable | undefined;
 
 	const enabled_widgets = createMemo(() => {
 		const configs = props.widgetConfigs
@@ -47,6 +49,26 @@ export function WidgetContainer(props: WidgetContainerProps) {
 		computeGridLayout(enabled_widgets(), props.availableWidth),
 	);
 
+	function scrollToFocused() {
+		if (!scrollbox_ref) return;
+		const focused_id = flat_widget_ids()[focused_idx()];
+		if (!focused_id) return;
+
+		const rows = grid_layout().rows;
+		let row_offset = 0;
+		for (const row of rows) {
+			const is_in_row = row.widgets.some((w) => w.id === focused_id);
+			if (is_in_row) {
+				scrollbox_ref.scrollTo({ x: 0, y: row_offset });
+				return;
+			}
+			const content_height = Math.max(...row.widgets.map((w) => w.size_hint.min_height));
+			row_offset += 1 + content_height + 1; // border line + content + label
+		}
+	}
+
+	createEffect(on(focused_idx, () => scrollToFocused()));
+
 	useKeyboard((key) => {
 		if (!props.focused) return;
 
@@ -55,9 +77,11 @@ export function WidgetContainer(props: WidgetContainerProps) {
 
 		switch (key.name) {
 			case "j":
+			case "l":
 				setFocusedIdx(Math.min(focused_idx() + 1, ids.length - 1));
 				return;
 			case "k":
+			case "h":
 				setFocusedIdx(Math.max(focused_idx() - 1, 0));
 				return;
 		}
@@ -103,7 +127,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 					when={props.status}
 					fallback={<text fg={theme.fg_dim} content="(select a repo)" />}
 				>
-					<scrollbox flexGrow={1}>
+					<scrollbox ref={scrollbox_ref} flexGrow={1}>
 						<box flexDirection="column">
 							<For each={grid_layout().rows}>
 								{(row, row_index) => {
@@ -126,48 +150,58 @@ export function WidgetContainer(props: WidgetContainerProps) {
 											<text fg={theme.border} content={top_line()} />
 
 											<box flexDirection="row" alignItems="stretch">
+												<text fg={theme.border} content={BorderChars.rounded.vertical} />
 												<For each={row.widgets}>
 													{(gw, widget_idx) => {
 														const def = getWidget(gw.id);
 														if (!def) return null;
 
 														const focused = () => isFocused(gw.id);
-														const width_pct = row.columns === 2 ? "50%" : "100%";
+														const junction_col = () => Math.floor(props.availableWidth / 2);
+														const content_box_width = () => {
+															if (row.columns === 1) return props.availableWidth - 2;
+															if (widget_idx() === 0) return junction_col() - 1;
+															return props.availableWidth - junction_col() - 2;
+														};
 														const widget_content_width = () =>
 															contentWidth(gw.size_hint.span, props.availableWidth);
 
 														return (
-															<box
-																width={width_pct}
-																border={getWidgetBorderSides(row, widget_idx())}
-																borderStyle="rounded"
-																borderColor={focused() ? theme.border_highlight : theme.border}
-																flexDirection="column"
-																minHeight={gw.size_hint.min_height}
-															>
-																<Show
-																	when={!gw.config.collapsed}
-																	fallback={
+															<>
+																<Show when={widget_idx() > 0}>
+																	<text fg={theme.border} content={BorderChars.rounded.vertical} />
+																</Show>
+																<box
+																	width={content_box_width()}
+																	backgroundColor={focused() ? theme.bg_highlight : undefined}
+																	flexDirection="column"
+																	minHeight={gw.size_hint.min_height}
+																>
+																	<Show
+																		when={!gw.config.collapsed}
+																		fallback={
+																			<text
+																				fg={focused() ? theme.yellow : theme.fg_dim}
+																				content={focused() ? `▸ [>] ${def.label} (collapsed)` : `[>] ${def.label} (collapsed)`}
+																			/>
+																		}
+																	>
 																		<text
 																			fg={focused() ? theme.yellow : theme.fg_dim}
-																			content={`[>] ${def.label} (collapsed)`}
+																			content={focused() ? `▸ ${def.label}` : `  ${def.label}`}
 																		/>
-																	}
-																>
-																	<text
-																		fg={focused() ? theme.yellow : theme.fg_dim}
-																		content={focused() ? `▸ ${def.label}` : def.label}
-																	/>
-																	<def.component
-																		width={widget_content_width()}
-																		focused={focused()}
-																		status={props.status}
-																	/>
-																</Show>
-															</box>
+																		<def.component
+																			width={widget_content_width()}
+																			focused={focused()}
+																			status={props.status}
+																		/>
+																	</Show>
+																</box>
+															</>
 														);
 													}}
 												</For>
+												<text fg={theme.border} content={BorderChars.rounded.vertical} />
 											</box>
 
 											<Show when={is_last()}>

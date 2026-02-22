@@ -3,7 +3,6 @@ import type { WidgetId } from "@overview/core";
 import {
 	resolveSpan,
 	computeRows,
-	getWidgetBorderSides,
 	buildBorderLine,
 	buildBorderLineWithTitle,
 	contentWidth,
@@ -230,25 +229,6 @@ describe("computeRows", () => {
 		expect(rows[1].widgets[1].id).toBe("recent-commits");
 		expect(rows[2].columns).toBe(1);
 		expect(rows[2].widgets[0].id).toBe("github-prs");
-	});
-});
-
-// ── getWidgetBorderSides ───────────────────────────────────────────────────
-
-describe("getWidgetBorderSides", () => {
-	test("1-column row → [left, right]", () => {
-		const r = row(1, makeWidget("git-status", "full"));
-		expect(getWidgetBorderSides(r, 0)).toEqual(["left", "right"]);
-	});
-
-	test("2-column row, index 0 → [left]", () => {
-		const r = row(2, makeWidget("git-status", "half"), makeWidget("repo-meta", "half"));
-		expect(getWidgetBorderSides(r, 0)).toEqual(["left"]);
-	});
-
-	test("2-column row, index 1 → [left, right]", () => {
-		const r = row(2, makeWidget("git-status", "half"), makeWidget("repo-meta", "half"));
-		expect(getWidgetBorderSides(r, 1)).toEqual(["left", "right"]);
 	});
 });
 

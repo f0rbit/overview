@@ -60,11 +60,11 @@ export function MainScreen(props: MainScreenProps) {
 	const renderer = useRenderer();
 
 	const dimensions = useTerminalDimensions();
-	const leftWidth = createMemo(() => Math.floor(dimensions().width * props.config.layout.left_width_pct / 100));
+	const leftWidth = () => 40;
 
 	const rightPanelWidth = createMemo(() => {
 		const w = dimensions().width - leftWidth() - 2; // subtract left panel border
-		return Math.max(10, w - 2); // subtract widget container border (left + right)
+		return Math.max(10, w);
 	});
 
 	const processedRepos = createMemo(() => {

@@ -1,6 +1,9 @@
 import { describe, test, expect } from "bun:test";
+import { BorderChars } from "@opentui/core";
 import { testRender } from "@opentui/solid";
 import { buildBorderLine, resolveSpan, type GridRow } from "../../../lib/widget-grid";
+
+const V = BorderChars.rounded.vertical;
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -12,19 +15,23 @@ const oneColRow: GridRow = { widgets: [{} as any], columns: 1 };
 describe("grid layout rendering", () => {
 	test("two half-width widgets render side-by-side with shared border", async () => {
 		const width = 60;
+		const junction_col = Math.floor(width / 2);
 		const { renderOnce, captureCharFrame } = await testRender(
 			() => (
 				<box flexDirection="column" width={width}>
 					<text content={buildBorderLine("top", width, null, twoColRow)} />
 					<box flexDirection="row" alignItems="stretch">
-						<box width="50%" border={["left"]} borderStyle="rounded" flexDirection="column">
+						<text content={V} />
+						<box width={junction_col - 1} flexDirection="column">
 							<text content="Widget A" />
 							<text content="content a" />
 						</box>
-						<box width="50%" border={["left", "right"]} borderStyle="rounded" flexDirection="column">
+						<text content={V} />
+						<box width={width - junction_col - 2} flexDirection="column">
 							<text content="Widget B" />
 							<text content="content b" />
 						</box>
+						<text content={V} />
 					</box>
 					<text content={buildBorderLine("bottom", width, twoColRow, null)} />
 				</box>
@@ -57,10 +64,12 @@ describe("grid layout rendering", () => {
 				<box flexDirection="column" width={width}>
 					<text content={buildBorderLine("top", width, null, oneColRow)} />
 					<box flexDirection="row">
-						<box width="100%" border={["left", "right"]} borderStyle="rounded" flexDirection="column">
+						<text content={V} />
+						<box width={width - 2} flexDirection="column">
 							<text content="Full Widget" />
 							<text content="full content" />
 						</box>
+						<text content={V} />
 					</box>
 					<text content={buildBorderLine("bottom", width, oneColRow, null)} />
 				</box>
@@ -94,23 +103,29 @@ describe("grid layout rendering", () => {
 
 	test("mixed layout — half-width row followed by full-width row", async () => {
 		const width = 60;
+		const junction_col = Math.floor(width / 2);
 		const { renderOnce, captureCharFrame } = await testRender(
 			() => (
 				<box flexDirection="column" width={width}>
 					<text content={buildBorderLine("top", width, null, twoColRow)} />
 					<box flexDirection="row" alignItems="stretch">
-						<box width="50%" border={["left"]} borderStyle="rounded" flexDirection="column">
+						<text content={V} />
+						<box width={junction_col - 1} flexDirection="column">
 							<text content="Half A" />
 						</box>
-						<box width="50%" border={["left", "right"]} borderStyle="rounded" flexDirection="column">
+						<text content={V} />
+						<box width={width - junction_col - 2} flexDirection="column">
 							<text content="Half B" />
 						</box>
+						<text content={V} />
 					</box>
 					<text content={buildBorderLine("mid", width, twoColRow, oneColRow)} />
 					<box flexDirection="row">
-						<box width="100%" border={["left", "right"]} borderStyle="rounded" flexDirection="column">
+						<text content={V} />
+						<box width={width - 2} flexDirection="column">
 							<text content="Full C" />
 						</box>
+						<text content={V} />
 					</box>
 					<text content={buildBorderLine("bottom", width, oneColRow, null)} />
 				</box>
@@ -160,12 +175,15 @@ describe("grid layout rendering", () => {
 	});
 
 	test("collapsed widget shows label text", async () => {
+		const width = 40;
 		const { renderOnce, captureCharFrame } = await testRender(
 			() => (
-				<box width={40}>
-					<box width="100%" border={["left", "right"]} borderStyle="rounded" flexDirection="column" minHeight={1}>
+				<box width={width}>
+					<text content={V} />
+					<box width={width - 2} flexDirection="column" minHeight={1}>
 						<text content="[>] Widget Name (collapsed)" />
 					</box>
+					<text content={V} />
 				</box>
 			),
 			{ width: 60, height: 20 },
