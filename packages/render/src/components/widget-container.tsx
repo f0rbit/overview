@@ -68,8 +68,10 @@ export function WidgetContainer(props: WidgetContainerProps) {
 		const child_bottom = child.y + child.height + padding;
 
 		const viewport_top = scrollbox.scrollTop;
-		const viewport_height = scrollbox.viewport.height;
+		const viewport_height = scrollbox.viewport?.height ?? scrollbox.height;
 		const viewport_bottom = viewport_top + viewport_height;
+
+		if (viewport_height <= 0) return;
 
 		if (child_top < viewport_top) {
 			scrollbox.scrollTo({ x: scrollbox.scrollLeft, y: Math.max(0, child_top) });
@@ -83,26 +85,31 @@ export function WidgetContainer(props: WidgetContainerProps) {
 		const focused_id = flat_widget_ids()[focused_idx()];
 		if (!focused_id) return;
 
-		// Defer to next tick so yoga layout has been computed
-		setTimeout(() => {
-			if (!scrollbox_ref) return;
-
-			const rows = grid_layout().rows;
-			let target_row_index = -1;
-			for (let i = 0; i < rows.length; i++) {
-				if (rows[i]!.widgets.some((w) => w.id === focused_id)) {
-					target_row_index = i;
-					break;
-				}
+		const rows = grid_layout().rows;
+		let target_row_index = -1;
+		for (let i = 0; i < rows.length; i++) {
+			if (rows[i]!.widgets.some((w) => w.id === focused_id)) {
+				target_row_index = i;
+				break;
 			}
-			if (target_row_index < 0) return;
+		}
+		if (target_row_index < 0) return;
 
-			const row_el = row_refs.get(target_row_index);
-			if (!row_el) return;
+		// First/last row: just scroll to absolute top/bottom
+		if (target_row_index === 0) {
+			scrollbox_ref.scrollTo({ x: 0, y: 0 });
+			return;
+		}
+		if (target_row_index === rows.length - 1) {
+			scrollbox_ref.scrollTo({ x: 0, y: scrollbox_ref.scrollHeight });
+			return;
+		}
 
-			// padding=1 accounts for the border <text> line above and below
-			scrollChildIntoView(scrollbox_ref, row_el, 1);
-		}, 0);
+		// Middle rows: use layout-based scroll-into-view
+		const row_el = row_refs.get(target_row_index);
+		if (!row_el || row_el.height === 0) return;
+
+		scrollChildIntoView(scrollbox_ref, row_el, 1);
 	}
 
 	createEffect(on(focused_idx, () => scrollToFocused()));
