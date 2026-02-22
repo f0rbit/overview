@@ -12,15 +12,10 @@ interface WidgetContainerProps {
 	loading: boolean;
 	focused: boolean;
 	height: number | `${number}%` | "auto";
+	availableRows: number;
+	availableWidth: number;
 	widgetConfigs: WidgetConfig[];
 	onWidgetConfigChange?: (configs: WidgetConfig[]) => void;
-}
-
-const DEFAULT_AVAILABLE_ROWS = 20;
-
-function estimateRows(height: number | `${number}%` | "auto"): number {
-	if (typeof height === "number") return height;
-	return DEFAULT_AVAILABLE_ROWS;
 }
 
 export function WidgetContainer(props: WidgetContainerProps) {
@@ -71,8 +66,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 			}
 		}
 
-		const available = estimateRows(props.height);
-		return allocateWidgets(available, props.widgetConfigs, size_requests);
+		return allocateWidgets(props.availableRows, props.widgetConfigs, size_requests);
 	});
 
 	const widgetEntries = createMemo(() =>
@@ -112,7 +106,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 							return (
 								<>
 									<Show when={index() > 0}>
-										<text fg={theme.border} content={"─".repeat(40)} />
+										<text fg={theme.border} content={"─".repeat(props.availableWidth)} />
 									</Show>
 									<Show
 										when={!entry.config.collapsed}
@@ -131,7 +125,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 											</Show>
 											<entry.def.component
 												allocated_rows={entry.alloc.rows}
-												width={40}
+												width={props.availableWidth}
 												focused={props.focused}
 												status={props.status}
 											/>
