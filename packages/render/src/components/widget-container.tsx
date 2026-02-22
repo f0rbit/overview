@@ -43,7 +43,16 @@ export function WidgetContainer(props: WidgetContainerProps) {
 			.filter((gw): gw is GridWidget => gw !== null);
 	});
 
-	const flat_widget_ids = createMemo(() => enabled_widgets().map((gw) => gw.id));
+	const flat_widget_ids = createMemo(() => {
+		const rows = grid_layout().rows;
+		const ids: WidgetId[] = [];
+		for (const row of rows) {
+			for (const w of row.widgets) {
+				ids.push(w.id);
+			}
+		}
+		return ids;
+	});
 
 	const grid_layout = createMemo(() =>
 		computeGridLayout(enabled_widgets(), props.availableWidth),
@@ -63,7 +72,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 				return;
 			}
 			const content_height = Math.max(...row.widgets.map((w) => w.size_hint.min_height));
-			row_offset += 1 + content_height + 1; // border line + content + label
+			row_offset += 1 + content_height;
 		}
 	}
 
