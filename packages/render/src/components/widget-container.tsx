@@ -21,8 +21,11 @@ interface WidgetContainerProps {
 export function WidgetContainer(props: WidgetContainerProps) {
 	const [focused_idx, setFocusedIdx] = createSignal(0);
 
-	// scrollbox reserves 1 column for its scrollbar track
-	const contentWidth = () => Math.max(1, props.availableWidth - 1);
+	// Content width: use width="100%" on children and let opentui handle it.
+	// Only pass numeric width to widgets for their internal text truncation.
+	// Scrollbox reserves 1 col for scrollbar, border takes 2 — but we don't
+	// try to compute exact char widths for rendering; only for truncation hints.
+	const contentWidth = () => Math.max(1, props.availableWidth);
 
 	useKeyboard((key) => {
 		if (!props.focused) return;
@@ -101,16 +104,16 @@ export function WidgetContainer(props: WidgetContainerProps) {
 					when={props.status}
 					fallback={<text fg={theme.fg_dim} content="(select a repo)" />}
 				>
-					<scrollbox flexDirection="column" flexGrow={1}>
+					<scrollbox flexGrow={1}>
 					<For each={widgetEntries()}>
 						{(entry, index) => {
 							const is_focused = () => props.focused && index() === focused_idx();
 							const marker = () => is_focused() ? "▸ " : "  ";
 							return (
 								<>
-									<Show when={index() > 0}>
-										<text fg={theme.border} content={"─".repeat(contentWidth())} />
-									</Show>
+								<Show when={index() > 0}>
+									<text fg={theme.border} content="───" />
+								</Show>
 									<Show
 										when={!entry.config.collapsed}
 										fallback={
