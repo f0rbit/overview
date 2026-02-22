@@ -21,6 +21,9 @@ interface WidgetContainerProps {
 export function WidgetContainer(props: WidgetContainerProps) {
 	const [focused_idx, setFocusedIdx] = createSignal(0);
 
+	// scrollbox reserves 1 column for its scrollbar track
+	const contentWidth = () => Math.max(1, props.availableWidth - 1);
+
 	useKeyboard((key) => {
 		if (!props.focused) return;
 
@@ -106,7 +109,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 							return (
 								<>
 									<Show when={index() > 0}>
-										<text fg={theme.border} content={"─".repeat(props.availableWidth)} />
+										<text fg={theme.border} content={"─".repeat(contentWidth())} />
 									</Show>
 									<Show
 										when={!entry.config.collapsed}
@@ -125,7 +128,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 											</Show>
 											<entry.def.component
 												allocated_rows={entry.alloc.rows}
-												width={props.availableWidth}
+												width={contentWidth()}
 												focused={props.focused}
 												status={props.status}
 											/>
