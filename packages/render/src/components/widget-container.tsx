@@ -5,12 +5,12 @@ import type { RepoStatus, WidgetConfig, WidgetId } from "@overview/core";
 import { getWidget } from "./widgets/registry";
 import "./widgets/index";
 import { theme } from "../theme";
-import { BorderChars } from "@opentui/core";
 import {
 	computeGridLayout,
 	buildBorderLine,
 	buildBorderLineWithTitle,
 	contentWidth,
+	getWidgetBorderSides,
 	type GridWidget,
 	type GridRow,
 } from "../lib/widget-grid";
@@ -159,59 +159,55 @@ export function WidgetContainer(props: WidgetContainerProps) {
 											<text fg={theme.border} content={top_line()} />
 
 											<box flexDirection="row" alignItems="stretch" width={props.availableWidth}>
-												<text fg={theme.border} content={BorderChars.rounded.vertical} />
 												<For each={row.widgets}>
 													{(gw, widget_idx) => {
 														const def = getWidget(gw.id);
 														if (!def) return null;
 
 														const focused = () => isFocused(gw.id);
-														const junction_col = () => Math.floor(props.availableWidth / 2);
-														const content_box_width = () => {
-															if (row.columns === 1) return props.availableWidth - 2;
-															if (widget_idx() === 0) return junction_col() - 1;
-															return props.availableWidth - junction_col() - 2;
+														const box_width = () => {
+															if (row.columns === 1) return props.availableWidth;
+															const junction = Math.floor(props.availableWidth / 2);
+															if (widget_idx() === 0) return junction;
+															return props.availableWidth - junction;
 														};
 														const widget_content_width = () =>
 															contentWidth(gw.size_hint.span, props.availableWidth);
 
 														return (
-															<>
-																<Show when={widget_idx() > 0}>
-																	<text fg={theme.border} content={BorderChars.rounded.vertical} />
-																</Show>
-																<box
-																	width={content_box_width()}
-																	overflow="hidden"
-																	backgroundColor={focused() ? theme.bg_highlight : undefined}
-																	flexDirection="column"
-																	minHeight={gw.size_hint.min_height}
-																>
-																	<Show
-																		when={!gw.config.collapsed}
-																		fallback={
-																			<text
-																				fg={focused() ? theme.yellow : theme.fg_dim}
-																				content={focused() ? `▸ [>] ${def.label} (collapsed)` : `[>] ${def.label} (collapsed)`}
-																			/>
-																		}
-																	>
+															<box
+																width={box_width()}
+																border={getWidgetBorderSides(row, widget_idx())}
+																borderStyle="rounded"
+																borderColor={focused() ? theme.border_highlight : theme.border}
+																backgroundColor={focused() ? theme.bg_highlight : undefined}
+																flexDirection="column"
+																minHeight={gw.size_hint.min_height}
+																overflow="hidden"
+															>
+																<Show
+																	when={!gw.config.collapsed}
+																	fallback={
 																		<text
 																			fg={focused() ? theme.yellow : theme.fg_dim}
-																			content={focused() ? `▸ ${def.label}` : `  ${def.label}`}
+																			content={focused() ? `▸ [>] ${def.label} (collapsed)` : `[>] ${def.label} (collapsed)`}
 																		/>
-																		<def.component
-																			width={widget_content_width()}
-																			focused={focused()}
-																			status={props.status}
-																		/>
-																	</Show>
-																</box>
-															</>
+																	}
+																>
+																	<text
+																		fg={focused() ? theme.yellow : theme.fg_dim}
+																		content={focused() ? `▸ ${def.label}` : `  ${def.label}`}
+																	/>
+																	<def.component
+																		width={widget_content_width()}
+																		focused={focused()}
+																		status={props.status}
+																	/>
+																</Show>
+															</box>
 														);
 													}}
 												</For>
-												<text fg={theme.border} content={BorderChars.rounded.vertical} />
 											</box>
 
 											<Show when={is_last()}>

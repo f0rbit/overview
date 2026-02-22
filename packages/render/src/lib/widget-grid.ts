@@ -1,4 +1,4 @@
-import { BorderChars } from "@opentui/core";
+import { BorderChars, type BorderSides } from "@opentui/core";
 import type { WidgetId, WidgetSpan, WidgetSizeHint, WidgetConfig } from "@overview/core";
 
 const B = BorderChars.rounded;
@@ -146,16 +146,29 @@ export function buildBorderLineWithTitle(line: string, title: string): string {
 	return line.slice(0, 1) + title_str + line.slice(1 + title_str.length);
 }
 
+// ── Widget border sides ──
+
+export function getWidgetBorderSides(row: GridRow, widget_index: number): BorderSides[] {
+	if (row.columns === 1) {
+		return ["left", "right"];
+	}
+	// 2-column row
+	if (widget_index === 0) {
+		return ["left"]; // right border drawn by the right widget's left border
+	}
+	return ["left", "right"]; // left = shared divider, right = outer edge
+}
+
 // ── Content width calculation ──
 
 export function contentWidth(span: WidgetSpan, panel_width: number): number {
 	const resolved = resolveSpan(span, panel_width);
 	if (resolved === "full") {
-		return Math.max(1, panel_width - 3);
+		// border={["left", "right"]} takes 2 chars
+		return Math.max(1, panel_width - 2);
 	}
-	// For half-width, return the smaller (right) column width as conservative estimate
-	// Layout: │ left_content │ right_content │
-	// right_content_width = panel_width - junction - 3
+	// Half-width right column is the smaller one:
+	// outer width = panel_width - junction, borders take 2 chars
 	const junction = Math.floor(panel_width / 2);
-	return Math.max(1, panel_width - junction - 3);
+	return Math.max(1, panel_width - junction - 2);
 }

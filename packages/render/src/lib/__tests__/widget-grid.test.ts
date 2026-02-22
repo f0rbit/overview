@@ -6,6 +6,7 @@ import {
 	buildBorderLine,
 	buildBorderLineWithTitle,
 	contentWidth,
+	getWidgetBorderSides,
 	type GridWidget,
 	type GridRow,
 } from "../widget-grid";
@@ -383,19 +384,38 @@ describe("buildBorderLineWithTitle", () => {
 	});
 });
 
+// ── getWidgetBorderSides ───────────────────────────────────────────────────
+
+describe("getWidgetBorderSides", () => {
+	test("single-column row gets both sides", () => {
+		const r: GridRow = { widgets: [makeWidget("git-status", "full")], columns: 1 };
+		expect(getWidgetBorderSides(r, 0)).toEqual(["left", "right"]);
+	});
+
+	test("two-column row: left widget gets left only", () => {
+		const r: GridRow = { widgets: [makeWidget("git-status", "half"), makeWidget("repo-meta", "half")], columns: 2 };
+		expect(getWidgetBorderSides(r, 0)).toEqual(["left"]);
+	});
+
+	test("two-column row: right widget gets left and right", () => {
+		const r: GridRow = { widgets: [makeWidget("git-status", "half"), makeWidget("repo-meta", "half")], columns: 2 };
+		expect(getWidgetBorderSides(r, 1)).toEqual(["left", "right"]);
+	});
+});
+
 // ── contentWidth ───────────────────────────────────────────────────────────
 
 describe("contentWidth", () => {
-	test("full span at 60 → 57", () => {
-		expect(contentWidth("full", 60)).toBe(57);
+	test("full span at 60 → 58", () => {
+		expect(contentWidth("full", 60)).toBe(58);
 	});
 
-	test("half span at 60 → 27", () => {
-		expect(contentWidth("half", 60)).toBe(27);
+	test("half span at 60 → 28", () => {
+		expect(contentWidth("half", 60)).toBe(28);
 	});
 
-	test("half span at 39 → 36 (falls back to full)", () => {
-		expect(contentWidth("half", 39)).toBe(36);
+	test("half span at 39 → 37 (falls back to full)", () => {
+		expect(contentWidth("half", 39)).toBe(37);
 	});
 
 	test("returns at least 1 for very small widths", () => {

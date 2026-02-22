@@ -1,9 +1,6 @@
 import { describe, test, expect } from "bun:test";
-import { BorderChars } from "@opentui/core";
 import { testRender } from "@opentui/solid";
 import { buildBorderLine, resolveSpan, type GridRow } from "../../../lib/widget-grid";
-
-const V = BorderChars.rounded.vertical;
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -20,18 +17,15 @@ describe("grid layout rendering", () => {
 			() => (
 				<box flexDirection="column" width={width}>
 					<text content={buildBorderLine("top", width, null, twoColRow)} />
-					<box flexDirection="row" alignItems="stretch">
-						<text content={V} />
-						<box width={junction_col - 1} flexDirection="column">
+					<box flexDirection="row" alignItems="stretch" width={width}>
+						<box width={junction_col} border={["left"]} borderStyle="rounded" flexDirection="column">
 							<text content="Widget A" />
 							<text content="content a" />
 						</box>
-						<text content={V} />
-						<box width={width - junction_col - 2} flexDirection="column">
+						<box width={width - junction_col} border={["left", "right"]} borderStyle="rounded" flexDirection="column">
 							<text content="Widget B" />
 							<text content="content b" />
 						</box>
-						<text content={V} />
 					</box>
 					<text content={buildBorderLine("bottom", width, twoColRow, null)} />
 				</box>
@@ -63,13 +57,11 @@ describe("grid layout rendering", () => {
 			() => (
 				<box flexDirection="column" width={width}>
 					<text content={buildBorderLine("top", width, null, oneColRow)} />
-					<box flexDirection="row">
-						<text content={V} />
-						<box width={width - 2} flexDirection="column">
+					<box flexDirection="row" width={width}>
+						<box width={width} border={["left", "right"]} borderStyle="rounded" flexDirection="column">
 							<text content="Full Widget" />
 							<text content="full content" />
 						</box>
-						<text content={V} />
 					</box>
 					<text content={buildBorderLine("bottom", width, oneColRow, null)} />
 				</box>
@@ -108,24 +100,19 @@ describe("grid layout rendering", () => {
 			() => (
 				<box flexDirection="column" width={width}>
 					<text content={buildBorderLine("top", width, null, twoColRow)} />
-					<box flexDirection="row" alignItems="stretch">
-						<text content={V} />
-						<box width={junction_col - 1} flexDirection="column">
+					<box flexDirection="row" alignItems="stretch" width={width}>
+						<box width={junction_col} border={["left"]} borderStyle="rounded" flexDirection="column">
 							<text content="Half A" />
 						</box>
-						<text content={V} />
-						<box width={width - junction_col - 2} flexDirection="column">
+						<box width={width - junction_col} border={["left", "right"]} borderStyle="rounded" flexDirection="column">
 							<text content="Half B" />
 						</box>
-						<text content={V} />
 					</box>
 					<text content={buildBorderLine("mid", width, twoColRow, oneColRow)} />
-					<box flexDirection="row">
-						<text content={V} />
-						<box width={width - 2} flexDirection="column">
+					<box flexDirection="row" width={width}>
+						<box width={width} border={["left", "right"]} borderStyle="rounded" flexDirection="column">
 							<text content="Full C" />
 						</box>
-						<text content={V} />
 					</box>
 					<text content={buildBorderLine("bottom", width, oneColRow, null)} />
 				</box>
@@ -178,12 +165,10 @@ describe("grid layout rendering", () => {
 		const width = 40;
 		const { renderOnce, captureCharFrame } = await testRender(
 			() => (
-				<box width={width}>
-					<text content={V} />
-					<box width={width - 2} flexDirection="column" minHeight={1}>
+				<box flexDirection="row" width={width}>
+					<box width={width} border={["left", "right"]} borderStyle="rounded" flexDirection="column" minHeight={1}>
 						<text content="[>] Widget Name (collapsed)" />
 					</box>
-					<text content={V} />
 				</box>
 			),
 			{ width: 60, height: 20 },
