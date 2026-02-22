@@ -59,41 +59,50 @@ export function WidgetContainer(props: WidgetContainerProps) {
 		return ids;
 	});
 
+	function scrollChildIntoView(
+		scrollbox: ScrollBoxRenderable,
+		child: Renderable,
+		padding = 0,
+	) {
+		const child_top = child.y - padding;
+		const child_bottom = child.y + child.height + padding;
+
+		const viewport_top = scrollbox.scrollTop;
+		const viewport_height = scrollbox.viewport.height;
+		const viewport_bottom = viewport_top + viewport_height;
+
+		if (child_top < viewport_top) {
+			scrollbox.scrollTo({ x: scrollbox.scrollLeft, y: Math.max(0, child_top) });
+		} else if (child_bottom > viewport_bottom) {
+			scrollbox.scrollTo({ x: scrollbox.scrollLeft, y: child_bottom - viewport_height });
+		}
+	}
+
 	function scrollToFocused() {
 		if (!scrollbox_ref) return;
 		const focused_id = flat_widget_ids()[focused_idx()];
 		if (!focused_id) return;
 
-		const rows = grid_layout().rows;
-		let target_row_index = -1;
-		for (let i = 0; i < rows.length; i++) {
-			if (rows[i]!.widgets.some((w) => w.id === focused_id)) {
-				target_row_index = i;
-				break;
+		// Defer to next tick so yoga layout has been computed
+		setTimeout(() => {
+			if (!scrollbox_ref) return;
+
+			const rows = grid_layout().rows;
+			let target_row_index = -1;
+			for (let i = 0; i < rows.length; i++) {
+				if (rows[i]!.widgets.some((w) => w.id === focused_id)) {
+					target_row_index = i;
+					break;
+				}
 			}
-		}
-		if (target_row_index < 0) return;
+			if (target_row_index < 0) return;
 
-		const row_el = row_refs.get(target_row_index);
-		if (!row_el) return;
+			const row_el = row_refs.get(target_row_index);
+			if (!row_el) return;
 
-		// Include the border line above this row in the visible region
-		const row_top = row_el.y - 1;
-		let row_bottom = row_el.y + row_el.height;
-		// If this is the last row, include the bottom border line
-		if (target_row_index === rows.length - 1) {
-			row_bottom += 1;
-		}
-
-		const viewport_top = scrollbox_ref.scrollTop;
-		const viewport_height = scrollbox_ref.height;
-		const viewport_bottom = viewport_top + viewport_height;
-
-		if (row_top < viewport_top) {
-			scrollbox_ref.scrollTo({ x: 0, y: Math.max(0, row_top) });
-		} else if (row_bottom > viewport_bottom) {
-			scrollbox_ref.scrollTo({ x: 0, y: row_bottom - viewport_height });
-		}
+			// padding=1 accounts for the border <text> line above and below
+			scrollChildIntoView(scrollbox_ref, row_el, 1);
+		}, 0);
 	}
 
 	createEffect(on(focused_idx, () => scrollToFocused()));
