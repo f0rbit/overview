@@ -43,6 +43,10 @@ export function WidgetContainer(props: WidgetContainerProps) {
 			.filter((gw): gw is GridWidget => gw !== null);
 	});
 
+	const grid_layout = createMemo(() =>
+		computeGridLayout(enabled_widgets(), props.availableWidth),
+	);
+
 	const flat_widget_ids = createMemo(() => {
 		const rows = grid_layout().rows;
 		const ids: WidgetId[] = [];
@@ -53,10 +57,6 @@ export function WidgetContainer(props: WidgetContainerProps) {
 		}
 		return ids;
 	});
-
-	const grid_layout = createMemo(() =>
-		computeGridLayout(enabled_widgets(), props.availableWidth),
-	);
 
 	function scrollToFocused() {
 		if (!scrollbox_ref) return;
@@ -127,7 +127,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 	}
 
 	return (
-		<box flexDirection="column" flexGrow={1} height={props.height}>
+		<box flexDirection="column" width={props.availableWidth} height={props.height}>
 			<Show
 				when={!props.loading}
 				fallback={<text fg={theme.fg_dim} content="loading..." />}
@@ -137,7 +137,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 					fallback={<text fg={theme.fg_dim} content="(select a repo)" />}
 				>
 					<scrollbox ref={scrollbox_ref} flexGrow={1}>
-						<box flexDirection="column">
+						<box flexDirection="column" width={props.availableWidth}>
 							<For each={grid_layout().rows}>
 								{(row, row_index) => {
 									const rows = grid_layout().rows;
@@ -158,7 +158,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 										<>
 											<text fg={theme.border} content={top_line()} />
 
-											<box flexDirection="row" alignItems="stretch">
+											<box flexDirection="row" alignItems="stretch" width={props.availableWidth}>
 												<text fg={theme.border} content={BorderChars.rounded.vertical} />
 												<For each={row.widgets}>
 													{(gw, widget_idx) => {
