@@ -59,37 +59,14 @@ export function WidgetContainer(props: WidgetContainerProps) {
 		return ids;
 	});
 
-	function scrollChildIntoView(
-		scrollbox: ScrollBoxRenderable,
-		child: Renderable,
-		padding = 0,
-	) {
-		const child_top = child.y - padding;
-		const child_bottom = child.y + child.height + padding;
-
-		const viewport_top = scrollbox.scrollTop;
-		const viewport_height = scrollbox.viewport?.height ?? scrollbox.height;
-		const viewport_bottom = viewport_top + viewport_height;
-
-		if (viewport_height <= 0) return;
-
-		if (child_top < viewport_top) {
-			// Top is clipped — scroll up by exactly the deficit
-			const deficit = viewport_top - child_top;
-			scrollbox.scrollBy({ x: 0, y: -deficit });
-		} else if (child_bottom > viewport_bottom) {
-			// Bottom is clipped — scroll down by exactly the deficit
-			const deficit = child_bottom - viewport_bottom;
-			scrollbox.scrollBy({ x: 0, y: deficit });
-		}
-	}
-
 	function scrollToFocused() {
 		if (!scrollbox_ref) return;
 		const focused_id = flat_widget_ids()[focused_idx()];
 		if (!focused_id) return;
 
 		const rows = grid_layout().rows;
+
+		// Find which row contains the focused widget
 		let target_row_index = -1;
 		for (let i = 0; i < rows.length; i++) {
 			if (rows[i]!.widgets.some((w) => w.id === focused_id)) {
@@ -99,21 +76,54 @@ export function WidgetContainer(props: WidgetContainerProps) {
 		}
 		if (target_row_index < 0) return;
 
-		// First/last row: just scroll to absolute top/bottom
-		if (target_row_index === 0) {
-			scrollbox_ref.scrollTo({ x: 0, y: 0 });
-			return;
-		}
-		if (target_row_index === rows.length - 1) {
-			scrollbox_ref.scrollTo({ x: 0, y: scrollbox_ref.scrollHeight });
-			return;
-		}
-
-		// Middle rows: use layout-based scroll-into-view
+		// Get the rendered element for this row
 		const row_el = row_refs.get(target_row_index);
-		if (!row_el || row_el.height === 0) return;
+		if (!row_el) return;
 
-		scrollChildIntoView(scrollbox_ref, row_el, 1);
+		// el.y is SCREEN-relative (viewport-relative), not content-relative.
+		// Convert to content-space by adding scrollTop.
+		const scroll_top = scrollbox_ref.scrollTop;
+		const content_y = row_el.y + scroll_top;
+		const content_h = row_el.height;
+
+		// The region we want fully visible (in content-space):
+		// - 1 line above for the border/title text
+		// - the row box itself
+		// - 1 line below for the bottom border (only last row)
+		const region_top = content_y - 1;
+		const is_last = target_row_index === rows.length - 1;
+		const region_bottom = content_y + content_h + (is_last ? 1 : 0);
+
+		// Viewport bounds (in content-space)
+		const vp_top = scroll_top;
+		const vp_height = scrollbox_ref.viewport?.height ?? scrollbox_ref.height;
+		const vp_bottom = vp_top + vp_height;
+
+		const top_visible = region_top >= vp_top;
+		const bottom_visible = region_bottom <= vp_bottom;
+		const region_height = region_bottom - region_top;
+
+		// Already fully in view — do nothing
+		if (top_visible && bottom_visible) {
+			return;
+		}
+
+		// Region fits within viewport — scroll minimally
+		if (region_height <= vp_height) {
+			if (!top_visible) {
+				// Top is clipped — align top of region with top of viewport
+				const target = Math.max(0, region_top);
+				scrollbox_ref.scrollTo({ x: 0, y: target });
+			} else {
+				// Bottom is clipped — align bottom of region with bottom of viewport
+				const target = region_bottom - vp_height;
+				scrollbox_ref.scrollTo({ x: 0, y: target });
+			}
+		} else {
+			// Region taller than viewport — show the top
+			const target = Math.max(0, region_top);
+			scrollbox_ref.scrollTo({ x: 0, y: target });
+		}
 	}
 
 	createEffect(on(focused_idx, () => scrollToFocused()));
@@ -177,7 +187,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 					fallback={<text fg={theme.fg_dim} content="(select a repo)" />}
 				>
 					<scrollbox ref={scrollbox_ref} flexGrow={1}>
-						<box flexDirection="column" width={props.availableWidth}>
+						<box flexDirection="column" width={props.availableWidth} flexShrink={0}>
 							<For each={grid_layout().rows}>
 								{(row, row_index) => {
 									const rows = grid_layout().rows;
