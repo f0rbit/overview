@@ -74,9 +74,13 @@ export function WidgetContainer(props: WidgetContainerProps) {
 		if (viewport_height <= 0) return;
 
 		if (child_top < viewport_top) {
-			scrollbox.scrollTo({ x: scrollbox.scrollLeft, y: Math.max(0, child_top) });
+			// Top is clipped — scroll up by exactly the deficit
+			const deficit = viewport_top - child_top;
+			scrollbox.scrollBy({ x: 0, y: -deficit });
 		} else if (child_bottom > viewport_bottom) {
-			scrollbox.scrollTo({ x: scrollbox.scrollLeft, y: child_bottom - viewport_height });
+			// Bottom is clipped — scroll down by exactly the deficit
+			const deficit = child_bottom - viewport_bottom;
+			scrollbox.scrollBy({ x: 0, y: deficit });
 		}
 	}
 
