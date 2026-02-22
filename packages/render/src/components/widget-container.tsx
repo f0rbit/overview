@@ -1,10 +1,18 @@
 import { For, Show, createMemo, createSignal } from "solid-js";
 import { useKeyboard } from "@opentui/solid";
 import type { RepoStatus, WidgetConfig, WidgetId } from "@overview/core";
-// TODO: Phase 3 — replace with grid layout
-import { getWidget, getAllWidgets } from "./widgets/registry";
-import "./widgets/index"; // registers all widgets
+import { getWidget } from "./widgets/registry";
+import "./widgets/index";
 import { theme } from "../theme";
+import {
+	computeGridLayout,
+	buildBorderLine,
+	buildBorderLineWithTitle,
+	getWidgetBorderSides,
+	contentWidth,
+	type GridWidget,
+	type GridRow,
+} from "../lib/widget-grid";
 
 interface WidgetContainerProps {
 	status: RepoStatus | null;
@@ -12,7 +20,6 @@ interface WidgetContainerProps {
 	loading: boolean;
 	focused: boolean;
 	height: number | `${number}%` | "auto";
-	availableRows: number;
 	availableWidth: number;
 	widgetConfigs: WidgetConfig[];
 	onWidgetConfigChange?: (configs: WidgetConfig[]) => void;
@@ -21,21 +28,34 @@ interface WidgetContainerProps {
 export function WidgetContainer(props: WidgetContainerProps) {
 	const [focused_idx, setFocusedIdx] = createSignal(0);
 
-	// Content width: use width="100%" on children and let opentui handle it.
-	// Only pass numeric width to widgets for their internal text truncation.
-	// Scrollbox reserves 1 col for scrollbar, border takes 2 — but we don't
-	// try to compute exact char widths for rendering; only for truncation hints.
-	const contentWidth = () => Math.max(1, props.availableWidth);
+	const enabled_widgets = createMemo(() => {
+		const configs = props.widgetConfigs
+			.filter((c) => c.enabled)
+			.sort((a, b) => a.priority - b.priority);
+		return configs
+			.map((c): GridWidget | null => {
+				const def = getWidget(c.id);
+				if (!def) return null;
+				return { id: c.id, size_hint: def.size_hint, config: c };
+			})
+			.filter((gw): gw is GridWidget => gw !== null);
+	});
+
+	const flat_widget_ids = createMemo(() => enabled_widgets().map((gw) => gw.id));
+
+	const grid_layout = createMemo(() =>
+		computeGridLayout(enabled_widgets(), props.availableWidth),
+	);
 
 	useKeyboard((key) => {
 		if (!props.focused) return;
 
-		const entries = widgetEntries();
-		if (entries.length === 0) return;
+		const ids = flat_widget_ids();
+		if (ids.length === 0) return;
 
 		switch (key.name) {
 			case "j":
-				setFocusedIdx(Math.min(focused_idx() + 1, entries.length - 1));
+				setFocusedIdx(Math.min(focused_idx() + 1, ids.length - 1));
 				return;
 			case "k":
 				setFocusedIdx(Math.max(focused_idx() - 1, 0));
@@ -43,10 +63,10 @@ export function WidgetContainer(props: WidgetContainerProps) {
 		}
 
 		if (key.raw === "c") {
-			const entry = entries[focused_idx()];
-			if (entry) {
+			const widget_id = ids[focused_idx()];
+			if (widget_id) {
 				const updated = props.widgetConfigs.map((c) =>
-					c.id === entry.def.id ? { ...c, collapsed: !c.collapsed } : c,
+					c.id === widget_id ? { ...c, collapsed: !c.collapsed } : c,
 				);
 				props.onWidgetConfigChange?.(updated);
 			}
@@ -61,41 +81,20 @@ export function WidgetContainer(props: WidgetContainerProps) {
 		}
 	});
 
-	const allocations = createMemo(() => {
-		const size_requests = new Map<WidgetId, WidgetSizeRequest>();
-		for (const def of getAllWidgets()) {
-			const config = props.widgetConfigs.find((c) => c.id === def.id);
-			if (config) {
-				size_requests.set(def.id, getEffectiveSizeRequest(config, def.size_request));
-			} else {
-				size_requests.set(def.id, def.size_request);
-			}
-		}
+	function flatIndexOf(widget_id: WidgetId): number {
+		return flat_widget_ids().indexOf(widget_id);
+	}
 
-		return allocateWidgets(props.availableRows, props.widgetConfigs, size_requests);
-	});
+	function isFocused(widget_id: WidgetId): boolean {
+		return props.focused && flatIndexOf(widget_id) === focused_idx();
+	}
 
-	const widgetEntries = createMemo(() =>
-		allocations()
-			.map((alloc) => {
-				const def = getWidget(alloc.id);
-				const config = props.widgetConfigs.find((c) => c.id === alloc.id);
-				if (!def || !config) return null;
-				return { alloc, def, config };
-			})
-			.filter((e): e is NonNullable<typeof e> => e !== null),
-	);
+	function borderLine(type: "top" | "mid" | "bottom", prev: GridRow | null, next: GridRow | null): string {
+		return buildBorderLine(type, props.availableWidth, prev, next);
+	}
 
 	return (
-		<box
-			borderStyle="rounded"
-			borderColor={props.focused ? theme.border_highlight : theme.border}
-			title={`widgets: ${props.repoName}`}
-			titleAlignment="left"
-			flexDirection="column"
-			flexGrow={1}
-			height={props.height}
-		>
+		<box flexDirection="column" flexGrow={1} height={props.height}>
 			<Show
 				when={!props.loading}
 				fallback={<text fg={theme.fg_dim} content="loading..." />}
@@ -105,42 +104,80 @@ export function WidgetContainer(props: WidgetContainerProps) {
 					fallback={<text fg={theme.fg_dim} content="(select a repo)" />}
 				>
 					<scrollbox flexGrow={1}>
-					<For each={widgetEntries()}>
-						{(entry, index) => {
-							const is_focused = () => props.focused && index() === focused_idx();
-							const marker = () => is_focused() ? "▸ " : "  ";
-							return (
-								<>
-								<Show when={index() > 0}>
-									<text fg={theme.border} content="───" />
-								</Show>
-									<Show
-										when={!entry.config.collapsed}
-										fallback={
-											<box height={1}>
-												<text
-													fg={is_focused() ? theme.yellow : theme.fg_dim}
-													content={`${marker()}[>] ${entry.def.label} (collapsed)`}
-												/>
-											</box>
+						<box flexDirection="column">
+							<For each={grid_layout().rows}>
+								{(row, row_index) => {
+									const rows = grid_layout().rows;
+									const prev_row = () => row_index() > 0 ? rows[row_index() - 1]! : null;
+									const is_first = () => row_index() === 0;
+									const is_last = () => row_index() === rows.length - 1;
+
+									const top_line = () => {
+										const type = is_first() ? "top" : "mid";
+										const line = borderLine(type, prev_row(), row);
+										if (is_first()) {
+											return buildBorderLineWithTitle(line, `widgets: ${props.repoName}`);
 										}
-									>
-										<box height={entry.alloc.rows} flexDirection="column" overflow="hidden">
-											<Show when={is_focused()}>
-												<text fg={theme.yellow} content={`▸ ${entry.def.label}`} />
+										return line;
+									};
+
+									return (
+										<>
+											<text fg={theme.border} content={top_line()} />
+
+											<box flexDirection="row" alignItems="stretch">
+												<For each={row.widgets}>
+													{(gw, widget_idx) => {
+														const def = getWidget(gw.id);
+														if (!def) return null;
+
+														const focused = () => isFocused(gw.id);
+														const width_pct = row.columns === 2 ? "50%" : "100%";
+														const widget_content_width = () =>
+															contentWidth(gw.size_hint.span, props.availableWidth);
+
+														return (
+															<box
+																width={width_pct}
+																border={getWidgetBorderSides(row, widget_idx())}
+																borderStyle="rounded"
+																borderColor={focused() ? theme.border_highlight : theme.border}
+																flexDirection="column"
+																minHeight={gw.size_hint.min_height}
+															>
+																<Show
+																	when={!gw.config.collapsed}
+																	fallback={
+																		<text
+																			fg={focused() ? theme.yellow : theme.fg_dim}
+																			content={`[>] ${def.label} (collapsed)`}
+																		/>
+																	}
+																>
+																	<text
+																		fg={focused() ? theme.yellow : theme.fg_dim}
+																		content={focused() ? `▸ ${def.label}` : def.label}
+																	/>
+																	<def.component
+																		width={widget_content_width()}
+																		focused={focused()}
+																		status={props.status}
+																	/>
+																</Show>
+															</box>
+														);
+													}}
+												</For>
+											</box>
+
+											<Show when={is_last()}>
+												<text fg={theme.border} content={borderLine("bottom", row, null)} />
 											</Show>
-										<entry.def.component
-											allocated_rows={is_focused() ? entry.alloc.rows - 1 : entry.alloc.rows}
-											width={contentWidth()}
-											focused={props.focused}
-											status={props.status}
-										/>
-										</box>
-									</Show>
-								</>
-							);
-						}}
-					</For>
+										</>
+									);
+								}}
+							</For>
+						</box>
 					</scrollbox>
 				</Show>
 			</Show>

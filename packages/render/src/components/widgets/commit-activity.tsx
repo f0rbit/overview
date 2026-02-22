@@ -4,7 +4,7 @@ import { collectCommitActivity, type CommitActivity } from "@overview/core";
 import { registerWidget } from "./registry";
 import { theme } from "../../theme";
 
-const size_request = { min_rows: 2, preferred_rows: 3, max_rows: 4 };
+const size_hint = { span: "half" as const, min_height: 2 };
 
 const BLOCKS = " ▁▂▃▄▅▆▇█";
 
@@ -103,13 +103,11 @@ function CommitActivityWidget(props: WidgetRenderProps & { status: RepoStatus | 
 					</box>
 				</box>
 
-				{/* Row 3: Total (if space) */}
-				<Show when={props.allocated_rows >= 3}>
-					<box flexDirection="row" height={1} gap={1}>
-						<text fg={theme.yellow} content={`${total_14d()}`} />
-						<text fg={theme.fg_dim} content="commits in 14 days" />
-					</box>
-				</Show>
+				{/* Row 3: Total */}
+				<box flexDirection="row" height={1} gap={1}>
+					<text fg={theme.yellow} content={`${total_14d()}`} />
+					<text fg={theme.fg_dim} content="commits in 14 days" />
+				</box>
 			</Show>
 		</box>
 	);
@@ -118,7 +116,7 @@ function CommitActivityWidget(props: WidgetRenderProps & { status: RepoStatus | 
 registerWidget({
 	id: "commit-activity",
 	label: "Commit Activity",
-	size_request,
+	size_hint,
 	component: CommitActivityWidget,
 });
 

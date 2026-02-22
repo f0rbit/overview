@@ -5,7 +5,8 @@ import { theme } from "../../theme";
 import { truncate } from "../../lib/format";
 import { useDevpad } from "../../lib/use-devpad";
 
-const size_request = { min_rows: 3, preferred_rows: 6, max_rows: 10 };
+const size_hint = { span: "full" as const, min_height: 2 };
+const MAX_VISIBLE = 10;
 
 const priority_indicator: Record<DevpadTask["priority"], { char: string; color: string }> = {
 	HIGH: { char: "!", color: theme.red },
@@ -25,9 +26,8 @@ function DevpadTasksWidget(props: WidgetRenderProps & { status: RepoStatus | nul
 	const devpad = useDevpad(remote_url, repo_name);
 
 	const tasks = createMemo(() => devpad.data()?.tasks ?? []);
-	const visible_count = () => Math.max(0, props.allocated_rows - 1);
-	const visible = () => tasks().slice(0, visible_count());
-	const overflow = () => Math.max(0, tasks().length - visible_count());
+	const visible = () => tasks().slice(0, MAX_VISIBLE);
+	const overflow = () => Math.max(0, tasks().length - MAX_VISIBLE);
 
 	return (
 		<box flexDirection="column">
@@ -74,7 +74,7 @@ function DevpadTasksWidget(props: WidgetRenderProps & { status: RepoStatus | nul
 registerWidget({
 	id: "devpad-tasks",
 	label: "Devpad Tasks",
-	size_request,
+	size_hint,
 	component: DevpadTasksWidget,
 });
 

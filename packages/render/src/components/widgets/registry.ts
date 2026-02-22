@@ -1,10 +1,10 @@
 import type { Component } from "solid-js";
-import type { WidgetId, WidgetSizeRequest, WidgetRenderProps, RepoStatus } from "@overview/core";
+import type { WidgetId, WidgetSizeHint, WidgetRenderProps, RepoStatus } from "@overview/core";
 
 export interface WidgetDefinition {
 	id: WidgetId;
 	label: string;
-	size_request: WidgetSizeRequest;
+	size_hint: WidgetSizeHint;
 	component: Component<WidgetRenderProps & { status: RepoStatus | null }>;
 }
 

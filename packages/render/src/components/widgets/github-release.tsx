@@ -5,14 +5,12 @@ import { theme } from "../../theme";
 import { useGithub } from "../../lib/use-github";
 import { formatRelativeTime } from "../../lib/format";
 
-const size_request = { min_rows: 1, preferred_rows: 2, max_rows: 3 };
+const size_hint = { span: "half" as const, min_height: 1 };
 
 function GithubReleaseWidget(props: WidgetRenderProps & { status: RepoStatus | null }) {
 	const repo_path = createMemo(() => props.status?.path ?? null);
 	const remote_url = createMemo(() => props.status?.remote_url ?? null);
 	const github = useGithub(repo_path, remote_url);
-
-	const rows = () => props.allocated_rows;
 
 	const published_relative = () => {
 		const release = github.data()?.latest_release;
@@ -39,15 +37,13 @@ function GithubReleaseWidget(props: WidgetRenderProps & { status: RepoStatus | n
 							</box>
 
 							{/* Row 2: commits since release */}
-							<Show when={rows() >= 2}>
-								<box flexDirection="row" height={1} gap={1}>
-									<text
-										fg={release().commits_since > 0 ? theme.yellow : theme.green}
-										content={`${release().commits_since}`}
-									/>
-									<text fg={theme.fg_dim} content="commits since release" />
-								</box>
-							</Show>
+							<box flexDirection="row" height={1} gap={1}>
+								<text
+									fg={release().commits_since > 0 ? theme.yellow : theme.green}
+									content={`${release().commits_since}`}
+								/>
+								<text fg={theme.fg_dim} content="commits since release" />
+							</box>
 						</>
 					)}
 				</Show>
@@ -70,7 +66,7 @@ function GithubReleaseWidget(props: WidgetRenderProps & { status: RepoStatus | n
 registerWidget({
 	id: "github-release",
 	label: "Latest Release",
-	size_request,
+	size_hint,
 	component: GithubReleaseWidget,
 });
 

@@ -5,7 +5,7 @@ import { theme } from "../../theme";
 import { truncate } from "../../lib/format";
 import { useDevpad } from "../../lib/use-devpad";
 
-const size_request = { min_rows: 2, preferred_rows: 4, max_rows: 8 };
+const size_hint = { span: "half" as const, min_height: 2 };
 
 function progressBar(total: number, completed: number, width: number): string {
 	if (total === 0) return "░".repeat(width);
@@ -19,9 +19,9 @@ function DevpadMilestonesWidget(props: WidgetRenderProps & { status: RepoStatus 
 	const devpad = useDevpad(remote_url, repo_name);
 
 	const milestones = createMemo(() => devpad.data()?.milestones ?? []);
-	const visible_count = () => Math.max(0, Math.floor(props.allocated_rows / 2));
-	const visible = () => milestones().slice(0, visible_count());
-	const overflow = () => Math.max(0, milestones().length - visible_count());
+	const max_visible = 4;
+	const visible = () => milestones().slice(0, max_visible);
+	const overflow = () => Math.max(0, milestones().length - max_visible);
 
 	return (
 		<box flexDirection="column">
@@ -81,7 +81,7 @@ function DevpadMilestonesWidget(props: WidgetRenderProps & { status: RepoStatus 
 registerWidget({
 	id: "devpad-milestones",
 	label: "Devpad Milestones",
-	size_request,
+	size_hint,
 	component: DevpadMilestonesWidget,
 });
 

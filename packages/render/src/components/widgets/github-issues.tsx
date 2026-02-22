@@ -5,7 +5,8 @@ import { theme } from "../../theme";
 import { truncate } from "../../lib/format";
 import { useGithub } from "../../lib/use-github";
 
-const size_request = { min_rows: 3, preferred_rows: 5, max_rows: 8 };
+const size_hint = { span: "full" as const, min_height: 2 };
+const MAX_VISIBLE = 10;
 
 const label_colors = [
 	theme.cyan,
@@ -26,9 +27,8 @@ function GithubIssuesWidget(props: WidgetRenderProps & { status: RepoStatus | nu
 	const github = useGithub(repo_path, remote_url);
 
 	const issues = createMemo(() => github.data()?.issues ?? []);
-	const visible_count = () => Math.max(0, props.allocated_rows - 1);
-	const visible = () => issues().slice(0, visible_count());
-	const overflow = () => Math.max(0, issues().length - visible_count());
+	const visible = () => issues().slice(0, MAX_VISIBLE);
+	const overflow = () => Math.max(0, issues().length - MAX_VISIBLE);
 
 	const formatIssueLine = (issue: GithubIssue) => {
 		const number_str = `#${issue.number}`;
@@ -94,7 +94,7 @@ function GithubIssuesWidget(props: WidgetRenderProps & { status: RepoStatus | nu
 registerWidget({
 	id: "github-issues",
 	label: "GitHub Issues",
-	size_request,
+	size_hint,
 	component: GithubIssuesWidget,
 });
 

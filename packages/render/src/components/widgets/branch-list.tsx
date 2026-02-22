@@ -4,7 +4,8 @@ import { registerWidget } from "./registry";
 import { theme } from "../../theme";
 import { truncate } from "../../lib/format";
 
-const size_request = { min_rows: 3, preferred_rows: 6, max_rows: 10 };
+const size_hint = { span: "full" as const, min_height: 2 };
+const MAX_VISIBLE = 10;
 const STALE_THRESHOLD = 30 * 24 * 60 * 60; // 30 days in seconds
 
 function sortBranches(branches: BranchInfo[]): BranchInfo[] {
@@ -21,9 +22,8 @@ function isStale(branch: BranchInfo): boolean {
 
 function BranchListWidget(props: WidgetRenderProps & { status: RepoStatus | null }) {
 	const branches = () => props.status ? sortBranches(props.status.branches) : [];
-	const visible_count = () => props.allocated_rows - 1;
-	const visible = () => branches().slice(0, visible_count());
-	const overflow = () => Math.max(0, branches().length - visible_count());
+	const visible = () => branches().slice(0, MAX_VISIBLE);
+	const overflow = () => Math.max(0, branches().length - MAX_VISIBLE);
 	const has_sync = (b: BranchInfo) => b.ahead > 0 || b.behind > 0;
 
 	return (
@@ -84,7 +84,7 @@ function BranchListWidget(props: WidgetRenderProps & { status: RepoStatus | null
 registerWidget({
 	id: "branch-list",
 	label: "Branches",
-	size_request,
+	size_hint,
 	component: BranchListWidget,
 });
 

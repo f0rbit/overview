@@ -5,7 +5,7 @@ import { theme } from "../../theme";
 import { truncate } from "../../lib/format";
 import { useGithub } from "../../lib/use-github";
 
-const size_request = { min_rows: 2, preferred_rows: 4, max_rows: 6 };
+const size_hint = { span: "half" as const, min_height: 1 };
 
 function statusIcon(run: GithubWorkflowRun): { icon: string; color: string } {
 	if (run.conclusion === "success") return { icon: "✓", color: theme.green };
@@ -28,7 +28,7 @@ function GithubCIWidget(props: WidgetRenderProps & { status: RepoStatus | null }
 	});
 
 	const visible_runs = createMemo(() => {
-		return runs().slice(0, props.allocated_rows);
+		return runs().slice(0, 6);
 	});
 
 	return (
@@ -91,7 +91,7 @@ function GithubCIWidget(props: WidgetRenderProps & { status: RepoStatus | null }
 registerWidget({
 	id: "github-ci",
 	label: "GitHub CI",
-	size_request,
+	size_hint,
 	component: GithubCIWidget,
 });
 

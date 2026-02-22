@@ -4,12 +4,11 @@ import { registerWidget } from "./registry";
 import { theme } from "../../theme";
 import { formatBytes } from "../../lib/format";
 
-const size_request = { min_rows: 2, preferred_rows: 3, max_rows: 4 };
+const size_hint = { span: "half" as const, min_height: 2 };
 
 const SEMVER_RE = /^v?\d+\.\d+/;
 
 function RepoMetaWidget(props: WidgetRenderProps & { status: RepoStatus | null }) {
-	const rows = () => props.allocated_rows;
 	const s = () => props.status;
 
 	return (
@@ -54,7 +53,7 @@ function RepoMetaWidget(props: WidgetRenderProps & { status: RepoStatus | null }
 							</box>
 
 							{/* Row 3: latest tag */}
-							<Show when={rows() >= 3 && latest_tag()}>
+							<Show when={latest_tag()}>
 								<box flexDirection="row" height={1} gap={1}>
 									<text fg={theme.fg_dim} content="latest:" />
 									<text
@@ -74,7 +73,7 @@ function RepoMetaWidget(props: WidgetRenderProps & { status: RepoStatus | null }
 registerWidget({
 	id: "repo-meta",
 	label: "Repo Meta",
-	size_request,
+	size_hint,
 	component: RepoMetaWidget,
 });
 

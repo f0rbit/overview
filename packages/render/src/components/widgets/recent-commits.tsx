@@ -4,14 +4,13 @@ import { registerWidget } from "./registry";
 import { theme } from "../../theme";
 import { truncate, formatRelativeTime } from "../../lib/format";
 
-const size_request = { min_rows: 3, preferred_rows: 6, max_rows: 8 };
+const size_hint = { span: "full" as const, min_height: 2 };
+const MAX_VISIBLE = 8;
 
 function RecentCommitsWidget(props: WidgetRenderProps & { status: RepoStatus | null }) {
-	const visible_commits = () => {
-		const commits = props.status?.recent_commits ?? [];
-		const max_visible = Math.max(0, props.allocated_rows - 1);
-		return commits.slice(0, max_visible);
-	};
+	const all_commits = () => props.status?.recent_commits ?? [];
+	const visible_commits = () => all_commits().slice(0, MAX_VISIBLE);
+	const overflow = () => Math.max(0, all_commits().length - MAX_VISIBLE);
 
 	const format_line = (commit: { hash: string; message: string; time: number }) => {
 		const hash_short = commit.hash.slice(0, 7);
@@ -47,6 +46,9 @@ function RecentCommitsWidget(props: WidgetRenderProps & { status: RepoStatus | n
 						);
 					}}
 				</For>
+			<Show when={overflow() > 0}>
+				<text fg={theme.fg_dim} content={`+${overflow()} more`} />
+			</Show>
 			</Show>
 		</box>
 	);
@@ -55,7 +57,7 @@ function RecentCommitsWidget(props: WidgetRenderProps & { status: RepoStatus | n
 registerWidget({
 	id: "recent-commits",
 	label: "Recent Commits",
-	size_request,
+	size_hint,
 	component: RecentCommitsWidget,
 });
 

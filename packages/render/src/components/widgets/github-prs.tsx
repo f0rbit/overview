@@ -5,7 +5,8 @@ import { theme } from "../../theme";
 import { truncate } from "../../lib/format";
 import { useGithub } from "../../lib/use-github";
 
-const size_request = { min_rows: 3, preferred_rows: 6, max_rows: 10 };
+const size_hint = { span: "full" as const, min_height: 2 };
+const MAX_VISIBLE = 10;
 
 function statusIcon(pr: GithubPR): { char: string; color: string } {
 	if (pr.is_draft) return { char: "●", color: theme.orange };
@@ -34,9 +35,8 @@ function GithubPRsWidget(props: WidgetRenderProps & { status: RepoStatus | null 
 	const github = useGithub(repo_path, remote_url);
 
 	const prs = createMemo(() => github.data()?.prs ?? []);
-	const visible_count = () => Math.max(0, props.allocated_rows - 1);
-	const visible = () => prs().slice(0, visible_count());
-	const overflow = () => Math.max(0, prs().length - visible_count());
+	const visible = () => prs().slice(0, MAX_VISIBLE);
+	const overflow = () => Math.max(0, prs().length - MAX_VISIBLE);
 
 	const formatPrLine = (pr: GithubPR) => {
 		const si = statusIcon(pr);
@@ -112,7 +112,7 @@ function GithubPRsWidget(props: WidgetRenderProps & { status: RepoStatus | null 
 registerWidget({
 	id: "github-prs",
 	label: "GitHub PRs",
-	size_request,
+	size_hint,
 	component: GithubPRsWidget,
 });
 

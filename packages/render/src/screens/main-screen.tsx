@@ -67,13 +67,6 @@ export function MainScreen(props: MainScreenProps) {
 		return Math.max(10, w - 2); // subtract widget container border (left + right)
 	});
 
-	const widgetPanelHeight = createMemo(() => {
-		const total = dimensions().height - 2; // header + status bar
-		const graph_pct = props.config.layout.graph_height_pct;
-		const raw = Math.floor(total * (100 - graph_pct) / 100);
-		return Math.max(0, raw - 2); // subtract widget container border (top + bottom)
-	});
-
 	const processedRepos = createMemo(() => {
 		let result = repos();
 		result = filterTree(result, filterMode());
@@ -340,7 +333,6 @@ export function MainScreen(props: MainScreenProps) {
 						loading={statsLoading()}
 						focused={focusPanel() === "stats"}
 						height="50%"
-						availableRows={widgetPanelHeight()}
 						availableWidth={rightPanelWidth()}
 						widgetConfigs={widgetConfigs()}
 						onWidgetConfigChange={handleWidgetConfigChange}
