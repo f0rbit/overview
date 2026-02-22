@@ -1,6 +1,6 @@
 import { For, Show, createMemo, createSignal, createEffect, on } from "solid-js";
 import { useKeyboard } from "@opentui/solid";
-import type { ScrollBoxRenderable } from "@opentui/core";
+import type { ScrollBoxRenderable, Renderable } from "@opentui/core";
 import type { RepoStatus, WidgetConfig, WidgetId } from "@overview/core";
 import { getWidget } from "./widgets/registry";
 import "./widgets/index";
@@ -29,6 +29,7 @@ interface WidgetContainerProps {
 export function WidgetContainer(props: WidgetContainerProps) {
 	const [focused_idx, setFocusedIdx] = createSignal(0);
 	let scrollbox_ref: ScrollBoxRenderable | undefined;
+	const row_refs = new Map<number, Renderable>();
 
 	const enabled_widgets = createMemo(() => {
 		const configs = props.widgetConfigs
@@ -64,15 +65,28 @@ export function WidgetContainer(props: WidgetContainerProps) {
 		if (!focused_id) return;
 
 		const rows = grid_layout().rows;
-		let row_offset = 0;
-		for (const row of rows) {
-			const is_in_row = row.widgets.some((w) => w.id === focused_id);
-			if (is_in_row) {
-				scrollbox_ref.scrollTo({ x: 0, y: row_offset });
-				return;
+		let target_row_index = -1;
+		for (let i = 0; i < rows.length; i++) {
+			if (rows[i]!.widgets.some((w) => w.id === focused_id)) {
+				target_row_index = i;
+				break;
 			}
-			const content_height = Math.max(...row.widgets.map((w) => w.size_hint.min_height));
-			row_offset += 1 + content_height;
+		}
+		if (target_row_index < 0) return;
+
+		const row_el = row_refs.get(target_row_index);
+		if (!row_el) return;
+
+		const row_top = row_el.y;
+		const row_bottom = row_top + row_el.height;
+		const viewport_top = scrollbox_ref.scrollTop;
+		const viewport_height = scrollbox_ref.height;
+		const viewport_bottom = viewport_top + viewport_height;
+
+		if (row_top < viewport_top) {
+			scrollbox_ref.scrollTo({ x: 0, y: row_top });
+		} else if (row_bottom > viewport_bottom) {
+			scrollbox_ref.scrollTo({ x: 0, y: row_bottom - viewport_height });
 		}
 	}
 
@@ -158,7 +172,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 										<>
 											<text fg={theme.border} content={top_line()} />
 
-											<box flexDirection="row" alignItems="stretch" width={props.availableWidth}>
+											<box ref={(el: Renderable) => { row_refs.set(row_index(), el); }} flexDirection="row" alignItems="stretch" width={props.availableWidth}>
 												<For each={row.widgets}>
 													{(gw, widget_idx) => {
 														const def = getWidget(gw.id);
