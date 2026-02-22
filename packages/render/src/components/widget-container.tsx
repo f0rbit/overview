@@ -77,14 +77,20 @@ export function WidgetContainer(props: WidgetContainerProps) {
 		const row_el = row_refs.get(target_row_index);
 		if (!row_el) return;
 
-		const row_top = row_el.y;
-		const row_bottom = row_top + row_el.height;
+		// Include the border line above this row in the visible region
+		const row_top = row_el.y - 1;
+		let row_bottom = row_el.y + row_el.height;
+		// If this is the last row, include the bottom border line
+		if (target_row_index === rows.length - 1) {
+			row_bottom += 1;
+		}
+
 		const viewport_top = scrollbox_ref.scrollTop;
 		const viewport_height = scrollbox_ref.height;
 		const viewport_bottom = viewport_top + viewport_height;
 
 		if (row_top < viewport_top) {
-			scrollbox_ref.scrollTo({ x: 0, y: row_top });
+			scrollbox_ref.scrollTo({ x: 0, y: Math.max(0, row_top) });
 		} else if (row_bottom > viewport_bottom) {
 			scrollbox_ref.scrollTo({ x: 0, y: row_bottom - viewport_height });
 		}
