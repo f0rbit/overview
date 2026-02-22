@@ -1,5 +1,8 @@
 preload = ["@opentui/solid/preload"]
 
+[test]
+preload = ["@opentui/solid/preload"]
+
 [compilerOptions]
 jsxImportSource = "solid-js"
 jsx = "preserve"

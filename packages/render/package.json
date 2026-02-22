@@ -4,6 +4,7 @@
   "main": "src/overview.tsx",
   "scripts": {
     "dev": "bun run src/overview.tsx",
+    "test": "bun test",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -5,6 +5,7 @@
     "": {
       "name": "overview",
       "dependencies": {
+        "@devpad/api": "^2.0.4",
         "@f0rbit/corpus": "^0.3.5",
         "@opentui/core": "^0.1.80",
         "@opentui/solid": "^0.1.80",
@@ -114,7 +115,7 @@
 
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@1.9.4", "", { "os": "win32", "cpu": "x64" }, "sha512-8Y5wMhVIPaWe6jw2H+KlEm4wP/f7EW3810ZLmDlrEEy5KvBsb9ECEfu/kMWD484ijfQ8+nIi0giMgu9g1UAuuA=="],
 
-    "@devpad/api": ["@devpad/api@link:@devpad/api", {}],
+    "@devpad/api": ["@devpad/api@2.0.4", "", { "dependencies": { "@f0rbit/corpus": "^0.3.5", "zod": "^3.22.4" } }, "sha512-e+fr0P9VPbgnF8XnWZ1MsLcekroZNiRHwE2qG5r7WSBlw2t95lyJgAm1hgioMWi7sZBZ8SN9xN6ABI0hhqNW9Q=="],
 
     "@dimforge/rapier2d-simd-compat": ["@dimforge/rapier2d-simd-compat@0.17.3", "", {}, "sha512-bijvwWz6NHsNj5e5i1vtd3dU2pDhthSaTUZSh14DUGGKJfw8eMnlWZsxwHBxB/a3AXVNDjL9abuHw1k9FGR+jg=="],
 
@@ -426,7 +427,11 @@
 
     "zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
 
+    "@overview/core/@devpad/api": ["@devpad/api@link:@devpad/api", {}],
+
     "@overview/core/@f0rbit/corpus": ["@f0rbit/corpus@link:@f0rbit/corpus", {}],
+
+    "@overview/render/@devpad/api": ["@devpad/api@link:@devpad/api", {}],
 
     "@overview/render/@f0rbit/corpus": ["@f0rbit/corpus@link:@f0rbit/corpus", {}],
 
