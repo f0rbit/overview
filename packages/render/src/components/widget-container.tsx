@@ -1,7 +1,7 @@
 import { For, Show, createMemo, createSignal } from "solid-js";
 import { useKeyboard } from "@opentui/solid";
-import type { RepoStatus, WidgetConfig, WidgetSizeRequest, WidgetId } from "@overview/core";
-import { allocateWidgets, getEffectiveSizeRequest } from "../lib/widget-layout";
+import type { RepoStatus, WidgetConfig, WidgetId } from "@overview/core";
+// TODO: Phase 3 — replace with grid layout
 import { getWidget, getAllWidgets } from "./widgets/registry";
 import "./widgets/index"; // registers all widgets
 import { theme } from "../theme";

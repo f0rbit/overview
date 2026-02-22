@@ -131,14 +131,14 @@ export interface WidgetConfig {
 	collapsed: boolean;
 }
 
-export interface WidgetSizeRequest {
-	min_rows: number;
-	preferred_rows: number;
-	max_rows: number;
+export type WidgetSpan = "full" | "half" | "auto";
+
+export interface WidgetSizeHint {
+	span: WidgetSpan;
+	min_height: number;
 }
 
 export interface WidgetRenderProps {
-	allocated_rows: number;
 	width: number;
 	focused: boolean;
 }
