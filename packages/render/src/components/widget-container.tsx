@@ -80,10 +80,11 @@ export function WidgetContainer(props: WidgetContainerProps) {
 		const row_el = row_refs.get(target_row_index);
 		if (!row_el) return;
 
-		// el.y is SCREEN-relative (viewport-relative), not content-relative.
-		// Convert to content-space by adding scrollTop.
+		// el.y is screen-absolute, not relative to scrollbox content.
+		// Use content.y as origin — both are screen-absolute and shift together,
+		// so their difference gives stable content-relative position.
 		const scroll_top = scrollbox_ref.scrollTop;
-		const content_y = row_el.y + scroll_top;
+		const content_y = row_el.y - scrollbox_ref.content.y;
 		const content_h = row_el.height;
 
 		// The region we want fully visible (in content-space):
