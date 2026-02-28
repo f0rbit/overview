@@ -3,7 +3,7 @@ import { testRender } from "@opentui/solid";
 import { createSignal, Show } from "solid-js";
 import type { ScrollBoxRenderable, Renderable } from "@opentui/core";
 
-describe("scrollbox content height", () => {
+describe("scrollbox behavior", () => {
 	// Test 1: Simple case — many text lines in a scrollbox
 	// Render a scrollbox with height=20 containing 50 lines of text
 	// Verify scrollHeight >= 50

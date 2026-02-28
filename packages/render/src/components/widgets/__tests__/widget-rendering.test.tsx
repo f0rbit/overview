@@ -9,7 +9,7 @@ const oneColRow: GridRow = { widgets: [{} as any], columns: 1 };
 
 // ── grid layout rendering ──────────────────────────────────────────────────
 
-describe("grid layout rendering", () => {
+describe("widget grid rendering (integration)", () => {
 	test("two half-width widgets render side-by-side with shared border", async () => {
 		const width = 60;
 		const junction_col = Math.floor(width / 2);
