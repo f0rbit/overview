@@ -4,7 +4,7 @@ import { registerWidget } from "./registry";
 import { theme } from "../../theme";
 import { truncate, formatRelativeTime } from "../../lib/format";
 
-const size_hint = { span: "full" as const, min_height: 2 };
+const size_hint = { span: "half" as const, min_height: 2 };
 const MAX_VISIBLE = 8;
 
 function RecentCommitsWidget(props: WidgetRenderProps & { status: RepoStatus | null }) {

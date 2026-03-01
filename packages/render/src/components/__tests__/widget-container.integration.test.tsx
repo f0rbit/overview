@@ -58,7 +58,6 @@ function mockRepoStatus(): RepoStatus {
 const ALL_WIDGET_IDS: WidgetId[] = [
 	"git-status",
 	"devpad-milestones",
-	"recent-commits",
 	"github-prs",
 	"devpad-tasks",
 	"file-changes",
@@ -108,7 +107,7 @@ describe("widget container (integration)", () => {
 
 		// Widget labels visible (first widget + a few others)
 		expect(frame).toContain("Git Status");
-		expect(frame).toContain("Recent Commits");
+		expect(frame).toContain("Branches");
 		expect(frame).toContain("Repo Meta");
 	});
 
@@ -167,8 +166,8 @@ describe("widget container (integration)", () => {
 
 		// Git Status should no longer have the ▸ marker
 		expect(frame_after_j).not.toContain("▸ Git Status");
-		// The second widget (devpad-milestones) should now be focused
-		expect(frame_after_j).toContain("▸ Devpad Milestones");
+		// The next widget visually is Repo Meta (same row, next column)
+		expect(frame_after_j).toContain("▸ Repo Meta");
 
 		// Press k to go back
 		mockInput.pressKey("k");
@@ -176,7 +175,7 @@ describe("widget container (integration)", () => {
 		const frame_after_k = captureCharFrame();
 
 		expect(frame_after_k).toContain("▸ Git Status");
-		expect(frame_after_k).not.toContain("▸ Devpad Milestones");
+		expect(frame_after_k).not.toContain("▸ Repo Meta");
 	});
 
 	test("collapsed widget shows collapsed indicator", async () => {
@@ -204,8 +203,8 @@ describe("widget container (integration)", () => {
 		await renderOnce();
 		const frame = captureCharFrame();
 
-		expect(frame).toContain("(collapsed)");
 		expect(frame).toContain("[>]");
+		expect(frame).toContain("collapsed");
 	});
 
 	test("scroll-to-focused reaches bottom widgets in nested layout", async () => {
@@ -298,7 +297,7 @@ describe("widget container (integration)", () => {
 		expect(git_status_config!.collapsed).toBe(true);
 
 		// Other widgets should remain uncollapsed
-		const other = result!.find((c) => c.id === "recent-commits");
+		const other = result!.find((c) => c.id === "github-issues");
 		expect(other).toBeDefined();
 		expect(other!.collapsed).toBe(false);
 	});

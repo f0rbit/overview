@@ -5,7 +5,7 @@ import { theme } from "../../theme";
 import { truncate } from "../../lib/format";
 import { useGithub } from "../../lib/use-github";
 
-const size_hint = { span: "full" as const, min_height: 2 };
+const size_hint = { span: "half" as const, min_height: 2 };
 const MAX_VISIBLE = 10;
 
 function statusIcon(pr: GithubPR): { char: string; color: string } {

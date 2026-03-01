@@ -4,7 +4,7 @@ import { registerWidget } from "./registry";
 import { theme } from "../../theme";
 import { formatBytes } from "../../lib/format";
 
-const size_hint = { span: "half" as const, min_height: 2 };
+const size_hint = { span: "third" as const, min_height: 2 };
 
 const SEMVER_RE = /^v?\d+\.\d+/;
 

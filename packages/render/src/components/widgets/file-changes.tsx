@@ -4,7 +4,7 @@ import { registerWidget } from "./registry";
 import { theme } from "../../theme";
 import { truncate } from "../../lib/format";
 
-const size_hint = { span: "full" as const, min_height: 2 };
+const size_hint = { span: "half" as const, min_height: 2 };
 
 function statusIcon(change: GitFileChange): { icon: string; color: string } {
 	const icons: Record<string, { icon: string; color: string }> = {

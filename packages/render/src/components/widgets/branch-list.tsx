@@ -4,7 +4,7 @@ import { registerWidget } from "./registry";
 import { theme } from "../../theme";
 import { truncate } from "../../lib/format";
 
-const size_hint = { span: "full" as const, min_height: 2 };
+const size_hint = { span: "half" as const, min_height: 2 };
 const MAX_VISIBLE = 10;
 const STALE_THRESHOLD = 30 * 24 * 60 * 60; // 30 days in seconds
 
