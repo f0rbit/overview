@@ -57,6 +57,7 @@ export function MainScreen(props: MainScreenProps) {
 	const [filterMode, setFilterMode] = createSignal<FilterMode>(props.config.filter);
 	const [showHelp, setShowHelp] = createSignal(false);
 	const [widgetConfigs, setWidgetConfigs] = createSignal<WidgetConfig[]>(defaultWidgetConfig());
+	const [repoVersion, setRepoVersion] = createSignal(0);
 
 	const renderer = useRenderer();
 
@@ -69,6 +70,7 @@ export function MainScreen(props: MainScreenProps) {
 	});
 
 	const processedRepos = createMemo(() => {
+		repoVersion(); // track version for reactivity
 		let result = repos();
 		result = filterTree(result, filterMode());
 		result = sortTree(result, sortMode());
@@ -168,8 +170,8 @@ export function MainScreen(props: MainScreenProps) {
 		on_change: (repoPath) => {
 			collectStatus(repoPath, props.config.scan_dirs[0]!).then((result) => {
 				if (result.ok) {
-					updateRepoStatus(repos(), repoPath, result.value);
-					setRepos([...repos()]);
+				updateRepoStatus(repos(), repoPath, result.value);
+				setRepoVersion(v => v + 1);
 				}
 			});
 		},

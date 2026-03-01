@@ -1,4 +1,4 @@
-import { For, Show } from "solid-js";
+import { For, Show, createMemo } from "solid-js";
 import type { WidgetRenderProps, RepoStatus, BranchInfo } from "@overview/core";
 import { registerWidget } from "./registry";
 import { theme } from "../../theme";
@@ -21,7 +21,9 @@ function isStale(branch: BranchInfo): boolean {
 }
 
 function BranchListWidget(props: WidgetRenderProps & { status: RepoStatus | null }) {
-	const branches = () => props.status ? sortBranches(props.status.branches) : [];
+	const branches = createMemo(() =>
+		props.status ? sortBranches(props.status.branches) : []
+	);
 	const visible = () => branches().slice(0, MAX_VISIBLE);
 	const overflow = () => Math.max(0, branches().length - MAX_VISIBLE);
 	const has_sync = (b: BranchInfo) => b.ahead > 0 || b.behind > 0;
