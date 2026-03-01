@@ -1,9 +1,10 @@
 import { createSignal, createEffect, createMemo, onMount, onCleanup, Show } from "solid-js";
 import { useKeyboard, useTerminalDimensions, useRenderer } from "@opentui/solid";
 import type { RepoNode, GitGraphOutput, OverviewConfig, HealthStatus, WidgetConfig } from "@overview/core";
-import { scanAndCollect, captureGraph, collectStats, collectStatus, createRepoWatcher } from "@overview/core";
+import { scanAndCollect, captureGraph, collectStats, collectStatus, createRepoWatcher, collectCommitActivity } from "@overview/core";
 import { RepoList, GitGraph, WidgetContainer, StatusBar, HelpOverlay, type AppMode } from "../components";
 import { filterTree, sortTree, nextFilter, nextSort, type SortMode, type FilterMode } from "../lib/filter";
+import { createFetchContext } from "../lib/fetch-context";
 import { launchGgi, launchEditor, launchSessionizer } from "../lib/actions";
 import { loadWidgetState, saveWidgetState, defaultWidgetConfig, getWidgetState, updateWidgetState } from "../lib/widget-state";
 import { theme } from "../theme";
@@ -98,19 +99,30 @@ export function MainScreen(props: MainScreenProps) {
 		await saveWidgetState(state);
 	}
 
+	let _details_request_id = 0;
+	let _details_timer: ReturnType<typeof setTimeout> | undefined;
+
 	async function fetchDetails(node: RepoNode | null) {
 		if (!node || node.type === "directory") {
 			setGraph(null);
+			setGraphLoading(false);
+			setStatsLoading(false);
 			return;
 		}
+
+		const my_request_id = _details_request_id;
 
 		setGraphLoading(true);
 		setStatsLoading(true);
 
-		const [graphResult, statsResult] = await Promise.all([
+		const [graphResult, statsResult, activityResult] = await Promise.all([
 			captureGraph(node.path),
 			collectStats(node.path),
+			collectCommitActivity(node.path),
 		]);
+
+		// Stale check — a newer request was issued while we were awaiting
+		if (my_request_id !== _details_request_id) return;
 
 		if (graphResult.ok) setGraph(graphResult.value);
 		else setGraph(null);
@@ -123,13 +135,32 @@ export function MainScreen(props: MainScreenProps) {
 			node.status.recent_commits = statsResult.value.recent_commits;
 		}
 
+		if (activityResult.ok && node.status) {
+			node.status.commit_activity = activityResult.value;
+		}
+
 		setGraphLoading(false);
 		setStatsLoading(false);
 	}
 
 	createEffect(() => {
 		const node = selectedNode();
-		fetchDetails(node);
+		clearTimeout(_details_timer);
+		if (!node || node.type === "directory") {
+			_details_request_id++;
+			setGraph(null);
+			setGraphLoading(false);
+			setStatsLoading(false);
+			return;
+		}
+		// Show loading state immediately
+		setGraphLoading(true);
+		setStatsLoading(true);
+		// Debounce the actual fetch
+		_details_request_id++;
+		_details_timer = setTimeout(() => {
+			fetchDetails(node);
+		}, 250);
 	});
 
 	const watcher = createRepoWatcher({
@@ -169,7 +200,10 @@ export function MainScreen(props: MainScreenProps) {
 		});
 	});
 
-	onCleanup(() => watcher.close());
+	onCleanup(() => {
+		clearTimeout(_details_timer);
+		watcher.close();
+	});
 
 	const FOCUS_ORDER = ["list", "graph", "stats"] as const;
 
@@ -206,6 +240,8 @@ export function MainScreen(props: MainScreenProps) {
 					break;
 				}
 				case "r":
+					_details_request_id++;
+					clearTimeout(_details_timer);
 					fetchDetails(selectedNode());
 					break;
 				case "R":
@@ -289,6 +325,8 @@ export function MainScreen(props: MainScreenProps) {
 					break;
 				}
 				case "r":
+					_details_request_id++;
+					clearTimeout(_details_timer);
 					fetchDetails(selectedNode());
 					break;
 			}

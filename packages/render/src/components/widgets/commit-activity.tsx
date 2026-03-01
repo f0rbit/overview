@@ -1,6 +1,5 @@
-import { Show, createSignal, createEffect, createMemo } from "solid-js";
+import { Show, createMemo } from "solid-js";
 import type { WidgetRenderProps, RepoStatus } from "@overview/core";
-import { collectCommitActivity, type CommitActivity } from "@overview/core";
 import { registerWidget } from "./registry";
 import { theme } from "../../theme";
 
@@ -19,17 +18,7 @@ function renderSparkline(counts: number[]): string {
 }
 
 function CommitActivityWidget(props: WidgetRenderProps & { status: RepoStatus | null }) {
-	const [activity, setActivity] = createSignal<CommitActivity | null>(null);
-
-	createEffect(async () => {
-		const path = props.status?.path;
-		if (!path) {
-			setActivity(null);
-			return;
-		}
-		const result = await collectCommitActivity(path);
-		if (result.ok) setActivity(result.value);
-	});
+	const activity = () => props.status?.commit_activity ?? null;
 
 	const sparkline = createMemo(() => {
 		const a = activity();

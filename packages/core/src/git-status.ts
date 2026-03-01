@@ -306,6 +306,8 @@ export async function collectStatus(
 
 		recent_commits: [],
 
+		commit_activity: null,
+
 		is_clean,
 		health,
 	});

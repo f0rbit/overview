@@ -1,8 +1,10 @@
 import { createSignal, createEffect, type Accessor } from "solid-js";
 import { DataCache } from "@overview/core/cache";
 import { collectGithubData, type GithubRepoData, type GithubError } from "@overview/core/github";
+import { InFlightDedup } from "./fetch-context";
 
 const cache = new DataCache<GithubRepoData>();
+const dedup = new InFlightDedup<void>();
 
 const GITHUB_CACHE_TTL = 120_000;
 
@@ -36,17 +38,26 @@ export function useGithub(
 		}
 
 		setLoading(true);
-		const result = await collectGithubData(path, url);
-		setLoading(false);
 
-		if (result.ok) {
-			cache.set(path, result.value, GITHUB_CACHE_TTL);
-			setData(result.value);
+		// Deduplicate: if another widget instance is already fetching this path,
+		// wait for it instead of starting a redundant fetch
+		await dedup.run(path, async () => {
+			const result = await collectGithubData(path, url);
+			if (result.ok) {
+				cache.set(path, result.value, GITHUB_CACHE_TTL);
+			}
+		});
+
+		// Read result from cache (populated by whichever instance ran first)
+		const fresh = cache.get(path);
+		if (fresh) {
+			setData(fresh);
 			setError(null);
 		} else {
 			setData(null);
-			setError(result.error);
+			setError(null);
 		}
+		setLoading(false);
 	}
 
 	createEffect(() => {

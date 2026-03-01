@@ -1,9 +1,7 @@
 import { ok, err, type Result } from "@f0rbit/corpus";
 import type { GitGraphOutput } from "./types";
 
-export type GitGraphError =
-	| { kind: "not_a_repo"; path: string }
-	| { kind: "graph_failed"; path: string; cause: string };
+export type GitGraphError = { kind: "graph_failed"; path: string; cause: string };
 
 const DEFAULT_LIMIT = 40;
 
@@ -17,24 +15,10 @@ const stripTrailingEmpty = (lines: string[]): string[] => {
 	return lines.slice(0, end);
 };
 
-const isGitRepo = async (path: string): Promise<boolean> => {
-	const proc = Bun.spawn(["git", "rev-parse", "--git-dir"], {
-		cwd: path,
-		stdout: "pipe",
-		stderr: "pipe",
-	});
-	const code = await proc.exited;
-	return code === 0;
-};
-
 export async function captureGraph(
 	repoPath: string,
 	options?: { limit?: number },
 ): Promise<Result<GitGraphOutput, GitGraphError>> {
-	if (!(await isGitRepo(repoPath))) {
-		return err({ kind: "not_a_repo", path: repoPath });
-	}
-
 	const limit = options?.limit ?? DEFAULT_LIMIT;
 
 	const proc = Bun.spawn(

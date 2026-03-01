@@ -76,6 +76,9 @@ export interface RepoStatus {
 	// Recent activity
 	recent_commits: RecentCommit[];
 
+	// Commit activity (populated by fetchDetails, not initial scan)
+	commit_activity: { daily_counts: number[]; total_this_week: number; total_last_week: number } | null;
+
 	// Derived
 	is_clean: boolean;
 	health: HealthStatus;
