@@ -5,7 +5,7 @@ import { theme } from "../../theme";
 import { truncate } from "../../lib/format";
 import { useGithub } from "../../lib/use-github";
 
-const size_hint = { span: "half" as const, min_height: 1 };
+const size_hint = { span: "third" as const, min_height: 1 };
 
 function statusIcon(run: GithubWorkflowRun): { icon: string; color: string } {
 	if (run.conclusion === "success") return { icon: "✓", color: theme.green };

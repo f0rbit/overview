@@ -4,7 +4,7 @@ import { collectCommitActivity, type CommitActivity } from "@overview/core";
 import { registerWidget } from "./registry";
 import { theme } from "../../theme";
 
-const size_hint = { span: "half" as const, min_height: 2 };
+const size_hint = { span: "third" as const, min_height: 2 };
 
 const BLOCKS = " ▁▂▃▄▅▆▇█";
 

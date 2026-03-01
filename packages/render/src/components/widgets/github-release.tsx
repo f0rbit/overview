@@ -5,7 +5,7 @@ import { theme } from "../../theme";
 import { useGithub } from "../../lib/use-github";
 import { formatRelativeTime } from "../../lib/format";
 
-const size_hint = { span: "half" as const, min_height: 1 };
+const size_hint = { span: "third" as const, min_height: 1 };
 
 function GithubReleaseWidget(props: WidgetRenderProps & { status: RepoStatus | null }) {
 	const repo_path = createMemo(() => props.status?.path ?? null);
