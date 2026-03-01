@@ -20,7 +20,7 @@ function RepoMetaWidget(props: WidgetRenderProps & { status: RepoStatus | null }
 				}
 			>
 				{(status) => {
-					const latest_tag = () => status().tags[status().tags.length - 1] ?? null;
+					const latest_tag = () => status().tags[0] ?? null;
 					const tag_is_semver = () => {
 						const tag = latest_tag();
 						return tag !== null && SEMVER_RE.test(tag);

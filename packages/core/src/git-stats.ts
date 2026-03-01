@@ -77,14 +77,17 @@ function parseContributors(output: string): { contributors: string[]; contributo
 }
 
 function parseRepoSize(output: string): number {
-	const line = output
-		.split("\n")
-		.find((l) => l.startsWith("size-pack:"));
+	const lines = output.split("\n");
+	let total = 0;
 
-	if (!line) return 0;
+	for (const line of lines) {
+		if (line.startsWith("size:") || line.startsWith("size-pack:")) {
+			const size_str = line.replace(/^size(?:-pack)?:/, "").trim();
+			total += parseSize(size_str);
+		}
+	}
 
-	const size_str = line.replace("size-pack:", "").trim();
-	return parseSize(size_str);
+	return total;
 }
 
 function parseTags(output: string): string[] {

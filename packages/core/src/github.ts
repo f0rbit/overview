@@ -206,6 +206,14 @@ interface RawRelease {
 }
 
 async function countCommitsSince(tag: string, cwd: string): Promise<number> {
+	// Ensure tags are fetched — the release tag may not exist locally
+	const fetch_proc = Bun.spawn(["git", "fetch", "--tags", "--quiet"], {
+		cwd,
+		stdout: "pipe",
+		stderr: "pipe",
+	});
+	await fetch_proc.exited;
+
 	const proc = Bun.spawn(["git", "rev-list", `${tag}..HEAD`, "--count"], {
 		cwd,
 		stdout: "pipe",
@@ -213,7 +221,9 @@ async function countCommitsSince(tag: string, cwd: string): Promise<number> {
 	});
 
 	const stdout = await new Response(proc.stdout).text();
-	await proc.exited;
+	const exit_code = await proc.exited;
+
+	if (exit_code !== 0) return 0;
 
 	const count = parseInt(stdout.trim(), 10);
 	return Number.isNaN(count) ? 0 : count;
