@@ -17,6 +17,7 @@ packages/
 │       ├── git-status.ts     # per-repo status collection (Bun.spawn)
 │       ├── git-graph.ts      # git log --graph capture
 │       ├── git-stats.ts      # heavyweight stats (contributors, size, tags)
+│       ├── concurrency.ts    # createPool(n) semaphore for subprocess limiting
 │       └── watcher.ts        # fs.watch on .git dirs for live updates
 └── render/         # @overview/render — TUI components, screens, theming
     └── src/
@@ -33,6 +34,7 @@ packages/
         │   ├── widget-grid.ts         # pure grid layout + border computation
         │   ├── widget-state.ts        # widget config persistence (~/.config/overview/widgets.json)
         │   ├── filter.ts              # repo filtering/sorting
+        │   ├── fetch-context.ts    # createFetchContext + InFlightDedup for request dedup
         │   ├── format.ts              # text formatting utilities
         │   └── actions.ts             # subprocess launchers (ggi, editor, sessionizer)
         ├── theme/index.ts             # Tokyo Night color palette
@@ -84,6 +86,14 @@ packages/
 - **`Bun.spawn`** for all git operations — NOT `child_process`
 - Subprocess actions (ggi, editor, sessionizer) use `renderer.suspend()` / `renderer.resume()` pattern
 
+### Performance Patterns
+
+- **Debounce + cancellation:** Repo selection in `main-screen.tsx` uses 250ms debounce with request ID cancellation. Never fire async work directly from `createEffect` without cancellation — stale results will overwrite fresh ones.
+- **Request ID pattern:** Since `Bun.spawn` doesn't support `AbortSignal`, use an incrementing request ID counter. After `await`, check if the ID still matches before applying results. Manual refresh (`r` key) bypasses debounce by calling `fetchDetails` directly.
+- **Fetch deduplication:** Hooks instantiated by multiple widgets (`useGithub`, `useDevpad`) use `InFlightDedup` from `fetch-context.ts` to prevent duplicate concurrent fetches for the same key.
+- **Concurrency limiting:** Use `createPool(n)` from `@overview/core/concurrency` when spawning subprocesses in bulk. Default: `pool(8)` for `populateNode` during scan.
+- **Version counter for mutations:** When mutating objects in-place (e.g., `updateRepoStatus`), bump a version signal instead of cloning arrays. This triggers `createMemo` recomputation without creating new references.
+
 ### Testing
 
 - **Test runner:** `bun test` from `packages/render/`
@@ -104,3 +114,5 @@ packages/
 4. **GitHub widgets:** Show placeholder text when `gh` CLI is unavailable — NOT silently disabled.
 
 5. **Devpad integration:** Uses `@devpad/api` TypeScript client as a link dependency. The `useDevpad` hook fetches data via `createEffect` + async — data arrives after initial render, causing widget height changes.
+
+6. **Widget data consolidation:** `commit-activity` data is fetched centrally in `fetchDetails` (main-screen.tsx) and stored on `RepoStatus.commit_activity`, NOT fetched independently by the widget. All heavyweight per-repo fetches should go through `fetchDetails` to benefit from debounce + cancellation.
