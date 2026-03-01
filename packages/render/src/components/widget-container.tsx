@@ -9,7 +9,6 @@ import {
 	computeGridLayout,
 	buildBorderLine,
 	buildBorderLineWithTitle,
-	contentWidth,
 	getWidgetBorderSides,
 	type GridWidget,
 	type GridRow,
@@ -218,12 +217,22 @@ export function WidgetContainer(props: WidgetContainerProps) {
 														const focused = () => isFocused(gw.id);
 														const box_width = () => {
 															if (row.columns === 1) return props.availableWidth;
-															const junction = Math.floor(props.availableWidth / 2);
-															if (widget_idx() === 0) return junction;
-															return props.availableWidth - junction;
+															if (row.columns === 2) {
+																const junction = Math.floor(props.availableWidth / 2);
+																if (widget_idx() === 0) return junction;
+																return props.availableWidth - junction;
+															}
+															// 3-column
+															const j1 = Math.floor(props.availableWidth / 3);
+															const j2 = Math.floor(2 * props.availableWidth / 3);
+															if (widget_idx() === 0) return j1;
+															if (widget_idx() === 1) return j2 - j1;
+															return props.availableWidth - j2;
 														};
-														const widget_content_width = () =>
-															contentWidth(gw.size_hint.span, props.availableWidth);
+														const widget_content_width = () => {
+															const sides = getWidgetBorderSides(row, widget_idx());
+															return Math.max(1, box_width() - sides.length);
+														};
 
 														return (
 															<box

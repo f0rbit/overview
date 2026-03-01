@@ -13,7 +13,7 @@ export interface GridWidget {
 
 export interface GridRow {
 	widgets: GridWidget[];
-	columns: 1 | 2;
+	columns: 1 | 2 | 3;
 }
 
 export interface GridLayout {
@@ -23,7 +23,12 @@ export interface GridLayout {
 
 // ── Span resolution ──
 
-export function resolveSpan(span: WidgetSpan, panel_width: number): "full" | "half" {
+export function resolveSpan(span: WidgetSpan, panel_width: number): "full" | "half" | "third" {
+	if (span === "third") {
+		if (panel_width >= 60) return "third";
+		if (panel_width >= 40) return "half";
+		return "full";
+	}
 	if (span === "half" && panel_width >= 40) return "half";
 	return "full";
 }
@@ -35,13 +40,16 @@ export function computeRows(widgets: GridWidget[], panel_width: number): GridRow
 
 	const fulls: GridWidget[] = [];
 	const halfs: GridWidget[] = [];
+	const thirds: GridWidget[] = [];
 
 	for (const widget of enabled) {
 		const effective = resolveSpan(widget.size_hint.span, panel_width);
 		if (effective === "full") {
 			fulls.push(widget);
-		} else {
+		} else if (effective === "half") {
 			halfs.push(widget);
+		} else {
+			thirds.push(widget);
 		}
 	}
 
@@ -51,6 +59,20 @@ export function computeRows(widgets: GridWidget[], panel_width: number): GridRow
 		rows.push({ widgets: [widget], columns: 1 });
 	}
 
+	// Group thirds into rows of 3; leftovers auto-expand
+	for (let i = 0; i < thirds.length; i += 3) {
+		if (i + 2 < thirds.length) {
+			rows.push({ widgets: [thirds[i]!, thirds[i + 1]!, thirds[i + 2]!], columns: 3 });
+		} else if (i + 1 < thirds.length) {
+			// 2 leftover thirds → auto-expand to 2-column row
+			rows.push({ widgets: [thirds[i]!, thirds[i + 1]!], columns: 2 });
+		} else {
+			// 1 leftover third → auto-expand to 1-column row
+			rows.push({ widgets: [thirds[i]!], columns: 1 });
+		}
+	}
+
+	// Group halfs into rows of 2; leftover auto-expands
 	for (let i = 0; i < halfs.length; i += 2) {
 		if (i + 1 < halfs.length) {
 			rows.push({ widgets: [halfs[i]!, halfs[i + 1]!], columns: 2 });
@@ -85,17 +107,26 @@ function cornerChar(type: "top" | "mid" | "bottom", side: "left" | "right"): str
 	return side === "left" ? B.leftT : B.rightT;
 }
 
-function junctionChar(
-	prev_row: GridRow | null,
-	next_row: GridRow | null,
-): string {
-	const from_above = prev_row !== null && prev_row.columns === 2;
-	const from_below = next_row !== null && next_row.columns === 2;
+function junctionColumns(row: GridRow | null, total_width: number): Set<number> {
+	if (!row) return new Set();
+	if (row.columns === 2) return new Set([Math.floor(total_width / 2)]);
+	if (row.columns === 3) return new Set([Math.floor(total_width / 3), Math.floor(2 * total_width / 3)]);
+	return new Set();
+}
 
-	if (from_above && from_below) return B.cross;
-	if (from_above) return B.bottomT;
-	if (from_below) return B.topT;
-	return B.horizontal; // no junction needed
+function junctionChar(
+	type: "top" | "mid" | "bottom",
+	in_prev: boolean,
+	in_next: boolean,
+): string {
+	if (type === "top") return B.topT;      // junction only from below
+	if (type === "bottom") return B.bottomT; // junction only from above
+
+	// mid: check both directions
+	if (in_prev && in_next) return B.cross;
+	if (in_prev) return B.bottomT;
+	if (in_next) return B.topT;
+	return B.horizontal;
 }
 
 export function buildBorderLine(
@@ -106,11 +137,9 @@ export function buildBorderLine(
 ): string {
 	if (total_width <= 0) return "";
 
-	// Junction column is at the midpoint for 2-column rows
-	const has_junction = (type === "top" && next_row?.columns === 2) ||
-		(type === "bottom" && prev_row?.columns === 2) ||
-		(type === "mid" && (prev_row?.columns === 2 || next_row?.columns === 2));
-	const junction_col = has_junction ? Math.floor(total_width / 2) : -1;
+	const prev_junctions = junctionColumns(type === "top" ? null : prev_row, total_width);
+	const next_junctions = junctionColumns(type === "bottom" ? null : next_row, total_width);
+	const all_junctions = new Set([...prev_junctions, ...next_junctions]);
 
 	const chars: string[] = [];
 	for (let col = 0; col < total_width; col++) {
@@ -118,11 +147,8 @@ export function buildBorderLine(
 			chars.push(cornerChar(type, "left"));
 		} else if (col === total_width - 1) {
 			chars.push(cornerChar(type, "right"));
-		} else if (col === junction_col) {
-			chars.push(junctionChar(
-				type === "top" ? null : prev_row,
-				type === "bottom" ? null : next_row,
-			));
+		} else if (all_junctions.has(col)) {
+			chars.push(junctionChar(type, prev_junctions.has(col), next_junctions.has(col)));
 		} else {
 			chars.push(B.horizontal);
 		}
@@ -152,11 +178,11 @@ export function getWidgetBorderSides(row: GridRow, widget_index: number): Border
 	if (row.columns === 1) {
 		return ["left", "right"];
 	}
-	// 2-column row
-	if (widget_index === 0) {
-		return ["left"]; // right border drawn by the right widget's left border
+	// Multi-column row: last widget gets both sides, others get left only
+	if (widget_index === row.columns - 1) {
+		return ["left", "right"];
 	}
-	return ["left", "right"]; // left = shared divider, right = outer edge
+	return ["left"];
 }
 
 // ── Content width calculation ──
@@ -167,8 +193,12 @@ export function contentWidth(span: WidgetSpan, panel_width: number): number {
 		// border={["left", "right"]} takes 2 chars
 		return Math.max(1, panel_width - 2);
 	}
-	// Half-width right column is the smaller one:
-	// outer width = panel_width - junction, borders take 2 chars
+	if (resolved === "third") {
+		// First column width minus left border (1 char)
+		const first_junction = Math.floor(panel_width / 3);
+		return Math.max(1, first_junction - 1);
+	}
+	// Half: right column width minus 2 border chars
 	const junction = Math.floor(panel_width / 2);
 	return Math.max(1, panel_width - junction - 2);
 }

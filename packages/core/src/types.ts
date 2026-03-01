@@ -131,7 +131,7 @@ export interface WidgetConfig {
 	collapsed: boolean;
 }
 
-export type WidgetSpan = "full" | "half" | "auto";
+export type WidgetSpan = "full" | "half" | "third" | "auto";
 
 export interface WidgetSizeHint {
 	span: WidgetSpan;

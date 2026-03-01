@@ -13,7 +13,7 @@ import {
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
-function makeWidget(id: WidgetId, span: "full" | "half" | "auto", enabled = true, collapsed = false, priority = 0): GridWidget {
+function makeWidget(id: WidgetId, span: "full" | "half" | "third" | "auto", enabled = true, collapsed = false, priority = 0): GridWidget {
 	return {
 		id,
 		size_hint: { span, min_height: 2 },
@@ -21,7 +21,7 @@ function makeWidget(id: WidgetId, span: "full" | "half" | "auto", enabled = true
 	};
 }
 
-function row(columns: 1 | 2, ...widgets: GridWidget[]): GridRow {
+function row(columns: 1 | 2 | 3, ...widgets: GridWidget[]): GridRow {
 	return { widgets, columns };
 }
 
@@ -54,6 +54,26 @@ describe("resolveSpan", () => {
 		expect(resolveSpan("auto", 120)).toBe("full");
 		expect(resolveSpan("auto", 30)).toBe("full");
 		expect(resolveSpan("auto", 1)).toBe("full");
+	});
+
+	test("third at 60 cols → third", () => {
+		expect(resolveSpan("third", 60)).toBe("third");
+	});
+
+	test("third at 59 cols → half (cascading fallback)", () => {
+		expect(resolveSpan("third", 59)).toBe("half");
+	});
+
+	test("third at 40 cols → half", () => {
+		expect(resolveSpan("third", 40)).toBe("half");
+	});
+
+	test("third at 39 cols → full (double fallback)", () => {
+		expect(resolveSpan("third", 39)).toBe("full");
+	});
+
+	test("third at 100 cols → third", () => {
+		expect(resolveSpan("third", 100)).toBe("third");
 	});
 });
 
@@ -231,6 +251,111 @@ describe("computeRows", () => {
 		expect(rows[2].columns).toBe(1);
 		expect(rows[2].widgets[0].id).toBe("github-prs");
 	});
+
+	test("three third-width widgets → 1 three-column row", () => {
+		const widgets = [
+			makeWidget("git-status", "third", true, false, 0),
+			makeWidget("repo-meta", "third", true, false, 1),
+			makeWidget("github-ci", "third", true, false, 2),
+		];
+		const rows = computeRows(widgets, 80);
+
+		expect(rows).toHaveLength(1);
+		expect(rows[0].columns).toBe(3);
+		expect(rows[0].widgets).toHaveLength(3);
+		expect(rows[0].widgets[0].id).toBe("git-status");
+		expect(rows[0].widgets[1].id).toBe("repo-meta");
+		expect(rows[0].widgets[2].id).toBe("github-ci");
+	});
+
+	test("four thirds → 3-col row + 1-col row (auto-expand)", () => {
+		const widgets = [
+			makeWidget("git-status", "third", true, false, 0),
+			makeWidget("repo-meta", "third", true, false, 1),
+			makeWidget("github-ci", "third", true, false, 2),
+			makeWidget("commit-activity", "third", true, false, 3),
+		];
+		const rows = computeRows(widgets, 80);
+
+		expect(rows).toHaveLength(2);
+		expect(rows[0].columns).toBe(3);
+		expect(rows[0].widgets).toHaveLength(3);
+		expect(rows[1].columns).toBe(1);
+		expect(rows[1].widgets).toHaveLength(1);
+		expect(rows[1].widgets[0].id).toBe("commit-activity");
+	});
+
+	test("five thirds → 3-col row + 2-col row (auto-expand)", () => {
+		const widgets = [
+			makeWidget("git-status", "third", true, false, 0),
+			makeWidget("repo-meta", "third", true, false, 1),
+			makeWidget("github-ci", "third", true, false, 2),
+			makeWidget("commit-activity", "third", true, false, 3),
+			makeWidget("github-release", "third", true, false, 4),
+		];
+		const rows = computeRows(widgets, 80);
+
+		expect(rows).toHaveLength(2);
+		expect(rows[0].columns).toBe(3);
+		expect(rows[0].widgets).toHaveLength(3);
+		expect(rows[1].columns).toBe(2);
+		expect(rows[1].widgets).toHaveLength(2);
+		expect(rows[1].widgets[0].id).toBe("commit-activity");
+		expect(rows[1].widgets[1].id).toBe("github-release");
+	});
+
+	test("mixed thirds + halfs + fulls", () => {
+		const widgets = [
+			makeWidget("recent-commits", "full", true, false, 0),
+			makeWidget("git-status", "third", true, false, 1),
+			makeWidget("repo-meta", "third", true, false, 2),
+			makeWidget("github-ci", "third", true, false, 3),
+			makeWidget("branch-list", "half", true, false, 4),
+			makeWidget("github-prs", "half", true, false, 5),
+		];
+		const rows = computeRows(widgets, 80);
+
+		expect(rows).toHaveLength(3);
+		// Sort by min priority: full(0), thirds(1), halfs(4)
+		expect(rows[0].columns).toBe(1);
+		expect(rows[0].widgets[0].id).toBe("recent-commits");
+		expect(rows[1].columns).toBe(3);
+		expect(rows[1].widgets[0].id).toBe("git-status");
+		expect(rows[2].columns).toBe(2);
+		expect(rows[2].widgets[0].id).toBe("branch-list");
+	});
+
+	test("thirds at narrow panel (<60) fall back to half pairing", () => {
+		const widgets = [
+			makeWidget("git-status", "third", true, false, 0),
+			makeWidget("repo-meta", "third", true, false, 1),
+			makeWidget("github-ci", "third", true, false, 2),
+		];
+		const rows = computeRows(widgets, 50);
+
+		// thirds resolve to half at 50 cols → paired as halfs
+		expect(rows).toHaveLength(2);
+		expect(rows[0].columns).toBe(2);
+		expect(rows[0].widgets).toHaveLength(2);
+		expect(rows[1].columns).toBe(1);
+		expect(rows[1].widgets).toHaveLength(1);
+	});
+
+	test("thirds at very narrow panel (<40) fall back to full", () => {
+		const widgets = [
+			makeWidget("git-status", "third", true, false, 0),
+			makeWidget("repo-meta", "third", true, false, 1),
+			makeWidget("github-ci", "third", true, false, 2),
+		];
+		const rows = computeRows(widgets, 35);
+
+		// thirds resolve to full at <40 cols → each gets own row
+		expect(rows).toHaveLength(3);
+		rows.forEach((r) => {
+			expect(r.columns).toBe(1);
+			expect(r.widgets).toHaveLength(1);
+		});
+	});
 });
 
 // ── buildBorderLine ────────────────────────────────────────────────────────
@@ -240,6 +365,7 @@ describe("buildBorderLine", () => {
 
 	const oneCol = row(1, makeWidget("git-status", "full"));
 	const twoCol = row(2, makeWidget("git-status", "half"), makeWidget("repo-meta", "half"));
+	const threeCol = row(3, makeWidget("git-status", "third"), makeWidget("repo-meta", "third"), makeWidget("github-ci", "third"));
 
 	test("top border, 1-col next row → corners + horizontal fill", () => {
 		const line = buildBorderLine("top", W, null, oneCol);
@@ -342,6 +468,83 @@ describe("buildBorderLine", () => {
 		expect(line[0]).toBe("╭");
 		expect(line[odd_w - 1]).toBe("╮");
 	});
+
+	test("top border, 3-col next row → has two junctions", () => {
+		const W = 30;
+		const line = buildBorderLine("top", W, null, threeCol);
+		expect(line.length).toBe(W);
+		expect(line[0]).toBe("╭");
+		expect(line[W - 1]).toBe("╮");
+		expect(line[10]).toBe("┬"); // Math.floor(30/3) = 10
+		expect(line[20]).toBe("┬"); // Math.floor(60/3) = 20
+	});
+
+	test("bottom border, 3-col prev row → has two ┴ junctions", () => {
+		const W = 30;
+		const line = buildBorderLine("bottom", W, threeCol, null);
+		expect(line.length).toBe(W);
+		expect(line[0]).toBe("╰");
+		expect(line[W - 1]).toBe("╯");
+		expect(line[10]).toBe("┴");
+		expect(line[20]).toBe("┴");
+	});
+
+	test("mid border, 3-col → 3-col → has two ┼ junctions", () => {
+		const W = 30;
+		const line = buildBorderLine("mid", W, threeCol, threeCol);
+		expect(line.length).toBe(W);
+		expect(line[0]).toBe("├");
+		expect(line[W - 1]).toBe("┤");
+		expect(line[10]).toBe("┼");
+		expect(line[20]).toBe("┼");
+	});
+
+	test("mid border, 3-col → 1-col → two ┴ junctions", () => {
+		const W = 30;
+		const line = buildBorderLine("mid", W, threeCol, oneCol);
+		expect(line.length).toBe(W);
+		expect(line[0]).toBe("├");
+		expect(line[W - 1]).toBe("┤");
+		expect(line[10]).toBe("┴");
+		expect(line[20]).toBe("┴");
+	});
+
+	test("mid border, 1-col → 3-col → two ┬ junctions", () => {
+		const W = 30;
+		const line = buildBorderLine("mid", W, oneCol, threeCol);
+		expect(line.length).toBe(W);
+		expect(line[0]).toBe("├");
+		expect(line[W - 1]).toBe("┤");
+		expect(line[10]).toBe("┬");
+		expect(line[20]).toBe("┬");
+	});
+
+	test("mid border, 3-col → 2-col → mixed junctions", () => {
+		// 3-col junctions at 10, 20 (for W=30)
+		// 2-col junction at 15 (for W=30)
+		// At 10: in prev only → ┴
+		// At 15: in next only → ┬
+		// At 20: in prev only → ┴
+		const W = 30;
+		const line = buildBorderLine("mid", W, threeCol, twoCol);
+		expect(line.length).toBe(W);
+		expect(line[0]).toBe("├");
+		expect(line[W - 1]).toBe("┤");
+		expect(line[10]).toBe("┴");  // from 3-col above only
+		expect(line[15]).toBe("┬");  // from 2-col below only
+		expect(line[20]).toBe("┴");  // from 3-col above only
+	});
+
+	test("mid border, 2-col → 3-col → mixed junctions", () => {
+		const W = 30;
+		const line = buildBorderLine("mid", W, twoCol, threeCol);
+		expect(line.length).toBe(W);
+		expect(line[0]).toBe("├");
+		expect(line[W - 1]).toBe("┤");
+		expect(line[10]).toBe("┬");  // from 3-col below only
+		expect(line[15]).toBe("┴");  // from 2-col above only
+		expect(line[20]).toBe("┬");  // from 3-col below only
+	});
 });
 
 // ── buildBorderLineWithTitle ───────────────────────────────────────────────
@@ -401,6 +604,21 @@ describe("getWidgetBorderSides", () => {
 		const r: GridRow = { widgets: [makeWidget("git-status", "half"), makeWidget("repo-meta", "half")], columns: 2 };
 		expect(getWidgetBorderSides(r, 1)).toEqual(["left", "right"]);
 	});
+
+	test("three-column row: left widget gets left only", () => {
+		const r: GridRow = { widgets: [makeWidget("git-status", "third"), makeWidget("repo-meta", "third"), makeWidget("github-ci", "third")], columns: 3 };
+		expect(getWidgetBorderSides(r, 0)).toEqual(["left"]);
+	});
+
+	test("three-column row: middle widget gets left only", () => {
+		const r: GridRow = { widgets: [makeWidget("git-status", "third"), makeWidget("repo-meta", "third"), makeWidget("github-ci", "third")], columns: 3 };
+		expect(getWidgetBorderSides(r, 1)).toEqual(["left"]);
+	});
+
+	test("three-column row: right widget gets left and right", () => {
+		const r: GridRow = { widgets: [makeWidget("git-status", "third"), makeWidget("repo-meta", "third"), makeWidget("github-ci", "third")], columns: 3 };
+		expect(getWidgetBorderSides(r, 2)).toEqual(["left", "right"]);
+	});
 });
 
 // ── contentWidth ───────────────────────────────────────────────────────────
@@ -422,5 +640,26 @@ describe("contentWidth", () => {
 		expect(contentWidth("full", 1)).toBe(1);
 		expect(contentWidth("full", 2)).toBe(1);
 		expect(contentWidth("half", 2)).toBe(1);
+	});
+
+	test("third span at 90 → 29", () => {
+		// Math.floor(90/3) = 30, minus 1 border = 29
+		expect(contentWidth("third", 90)).toBe(29);
+	});
+
+	test("third span at 60 → 19", () => {
+		// Math.floor(60/3) = 20, minus 1 border = 19
+		expect(contentWidth("third", 60)).toBe(19);
+	});
+
+	test("third span at 50 → falls back to half → 23", () => {
+		// At 50 cols, third resolves to half
+		// junction = Math.floor(50/2) = 25, content = 50 - 25 - 2 = 23
+		expect(contentWidth("third", 50)).toBe(23);
+	});
+
+	test("third span at 39 → falls back to full → 37", () => {
+		// At 39 cols, third resolves to full
+		expect(contentWidth("third", 39)).toBe(37);
 	});
 });
