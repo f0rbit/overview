@@ -3,6 +3,7 @@ import type { RepoNode } from "./types";
 import { scanDirectory, type ScanError } from "./scanner";
 import { collectStatus } from "./git-status";
 import { detectWorktrees } from "./worktree";
+import { createPool } from "./concurrency";
 
 export * from "./types";
 export * from "./scanner";
@@ -14,17 +15,22 @@ export * from "./watcher";
 export * from "./cache";
 export * from "./github";
 export * from "./devpad";
+export * from "./concurrency";
 
 export type ScanAndCollectError = ScanError;
 
+const pool = createPool(8);
+
 async function populateNode(node: RepoNode, scanRoot: string): Promise<void> {
 	if (node.type === "repo" || node.type === "worktree") {
-		const [status_result, worktree_result] = await Promise.all([
-			collectStatus(node.path, scanRoot),
-			detectWorktrees(node.path),
-		]);
-		node.status = status_result.ok ? status_result.value : null;
-		node.worktrees = worktree_result.ok ? worktree_result.value : [];
+		await pool.run(async () => {
+			const [status_result, worktree_result] = await Promise.all([
+				collectStatus(node.path, scanRoot),
+				detectWorktrees(node.path),
+			]);
+			node.status = status_result.ok ? status_result.value : null;
+			node.worktrees = worktree_result.ok ? worktree_result.value : [];
+		});
 	}
 
 	await Promise.all(node.children.map((child) => populateNode(child, scanRoot)));

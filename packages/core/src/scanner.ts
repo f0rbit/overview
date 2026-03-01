@@ -56,44 +56,45 @@ async function walkDirectory(
 		.filter((e) => e.isDirectory() && !ignore.some((pattern) => e.name.includes(pattern)))
 		.sort((a, b) => a.name.localeCompare(b.name));
 
-	const nodes: RepoNode[] = [];
+	const results = await Promise.all(
+		dirs.map(async (entry) => {
+			const full_path = join(dirPath, entry.name);
+			const repo_type = await detectType(full_path);
+			const is_repo = repo_type !== null && (await isGitRepo(full_path));
 
-	for (const entry of dirs) {
-		const full_path = join(dirPath, entry.name);
-		const repo_type = await detectType(full_path);
-		const is_repo = repo_type !== null && (await isGitRepo(full_path));
+			const children_result = await walkDirectory(full_path, current_depth + 1, max_depth, ignore);
+			if (!children_result.ok) return null;
 
-		const children_result = await walkDirectory(full_path, current_depth + 1, max_depth, ignore);
-		if (!children_result.ok) continue;
+			const children = children_result.value;
 
-		const children = children_result.value;
+			if (is_repo) {
+				return {
+					name: entry.name,
+					path: full_path,
+					type: repo_type,
+					status: null,
+					worktrees: [],
+					children,
+					depth: current_depth,
+					expanded: current_depth <= 1,
+				} as RepoNode;
+			} else if (children.length > 0) {
+				return {
+					name: entry.name,
+					path: full_path,
+					type: "directory" as const,
+					status: null,
+					worktrees: [],
+					children,
+					depth: current_depth,
+					expanded: current_depth <= 1,
+				} as RepoNode;
+			}
+			return null;
+		}),
+	);
 
-		if (is_repo) {
-			nodes.push({
-				name: entry.name,
-				path: full_path,
-				type: repo_type,
-				status: null,
-				worktrees: [],
-				children,
-				depth: current_depth,
-				expanded: current_depth <= 1,
-			});
-		} else if (children.length > 0) {
-			nodes.push({
-				name: entry.name,
-				path: full_path,
-				type: "directory",
-				status: null,
-				worktrees: [],
-				children,
-				depth: current_depth,
-				expanded: current_depth <= 1,
-			});
-		}
-	}
-
-	return ok(nodes);
+	return ok(results.filter((n): n is RepoNode => n !== null));
 }
 
 export async function scanDirectory(
