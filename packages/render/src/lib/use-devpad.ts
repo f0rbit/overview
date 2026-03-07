@@ -18,7 +18,7 @@ type ApiGoal = ExtractOkArray<Awaited<ReturnType<InstanceType<typeof ApiClient>[
 
 const project_cache = new DataCache<DevpadProject[]>();
 const data_cache = new DataCache<DevpadRepoData>();
-const dedup = new InFlightDedup<void>();
+const dedup = new InFlightDedup<string | null>();
 
 const PROJECT_CACHE_TTL = 600_000;
 const DATA_CACHE_TTL = 300_000;
@@ -84,65 +84,66 @@ export function useDevpad(
 
 		setLoading(true);
 
-		try {
-			await dedup.run(cache_key, async () => {
-				let projects = project_cache.get("all");
-				if (!projects) {
-					const projects_result = await client.projects.list();
-					if (!projects_result.ok) {
-						throw new Error(projects_result.error.message);
-					}
-					projects = projects_result.value.map(toDevpadProject);
-					project_cache.set("all", projects, PROJECT_CACHE_TTL);
+		const fetch_error = await dedup.run(cache_key, async () => {
+			let projects = project_cache.get("all");
+			if (!projects) {
+				const projects_result = await client.projects.list();
+				if (!projects_result.ok) {
+					return projects_result.error.message;
 				}
+				projects = projects_result.value.map(toDevpadProject);
+				project_cache.set("all", projects, PROJECT_CACHE_TTL);
+			}
 
-				const matched = matchRepoToProject(url, name, projects);
-				if (!matched) {
-					data_cache.set(cache_key, { project: null, tasks: [], milestones: [] }, DATA_CACHE_TTL);
-					return;
-				}
+			const matched = matchRepoToProject(url, name, projects);
+			if (!matched) {
+				data_cache.set(cache_key, { project: null, tasks: [], milestones: [] }, DATA_CACHE_TTL);
+				return null;
+			}
 
-				const [tasks_result, milestones_result] = await Promise.all([
-					client.tasks.getByProject(matched.id),
-					client.milestones.getByProject(matched.id),
-				]);
+			const [tasks_result, milestones_result] = await Promise.all([
+				client.tasks.getByProject(matched.id),
+				client.milestones.getByProject(matched.id),
+			]);
 
-				const tasks: DevpadTask[] = tasks_result.ok
-					? tasks_result.value
-							.map(toDevpadTask)
-							.filter((t) => t.progress !== "COMPLETED")
-					: [];
+			const tasks: DevpadTask[] = tasks_result.ok
+				? tasks_result.value
+						.map(toDevpadTask)
+						.filter((t) => t.progress !== "COMPLETED")
+				: [];
 
-				const raw_milestones: ApiMilestone[] = milestones_result.ok
-					? milestones_result.value.filter((m) => !m.finished_at)
-					: [];
+			const raw_milestones: ApiMilestone[] = milestones_result.ok
+				? milestones_result.value.filter((m) => !m.finished_at)
+				: [];
 
-				const milestones: DevpadMilestone[] = await Promise.all(
-					raw_milestones.map(async (m) => {
-						const goals_result = await client.milestones.goals(m.id);
-						const goals: ApiGoal[] = goals_result.ok ? goals_result.value : [];
-						return {
-							id: m.id,
-							name: m.name,
-							target_version: m.target_version ?? null,
-							target_time: m.target_time ?? null,
-							finished_at: m.finished_at ?? null,
-							goals_total: goals.length,
-							goals_completed: goals.filter((g) => g.finished_at !== null).length,
-						};
-					}),
-				);
+			const milestones: DevpadMilestone[] = await Promise.all(
+				raw_milestones.map(async (m) => {
+					const goals_result = await client.milestones.goals(m.id);
+					const goals: ApiGoal[] = goals_result.ok ? goals_result.value : [];
+					return {
+						id: m.id,
+						name: m.name,
+						target_version: m.target_version ?? null,
+						target_time: m.target_time ?? null,
+						finished_at: m.finished_at ?? null,
+						goals_total: goals.length,
+						goals_completed: goals.filter((g) => g.finished_at !== null).length,
+					};
+				}),
+			);
 
-				const repo_data: DevpadRepoData = {
-					project: matched,
-					tasks,
-					milestones,
-				};
+			const repo_data: DevpadRepoData = {
+				project: matched,
+				tasks,
+				milestones,
+			};
 
-				data_cache.set(cache_key, repo_data, DATA_CACHE_TTL);
-			});
-		} catch (e) {
-			setError(e instanceof Error ? e.message : String(e));
+			data_cache.set(cache_key, repo_data, DATA_CACHE_TTL);
+			return null;
+		});
+
+		if (fetch_error) {
+			setError(fetch_error);
 			setLoading(false);
 			return;
 		}
