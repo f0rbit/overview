@@ -66,7 +66,7 @@ export function parseSize(size_str: string): number {
 	return Math.round(value * (multipliers[unit] ?? 1));
 }
 
-function parseContributors(output: string): { contributors: string[]; contributor_count: number } {
+export function parseContributors(output: string): { contributors: string[]; contributor_count: number } {
 	const contributors = output
 		.split("\n")
 		.map((line) => line.trim())
@@ -76,7 +76,7 @@ function parseContributors(output: string): { contributors: string[]; contributo
 	return { contributors, contributor_count: contributors.length };
 }
 
-function parseRepoSize(output: string): number {
+export function parseRepoSize(output: string): number {
 	const lines = output.split("\n");
 	let total = 0;
 
@@ -90,14 +90,14 @@ function parseRepoSize(output: string): number {
 	return total;
 }
 
-function parseTags(output: string): string[] {
+export function parseTags(output: string): string[] {
 	return output
 		.split("\n")
 		.map((t) => t.trim())
 		.filter((t) => t.length > 0);
 }
 
-function parseRecentCommits(output: string): RecentCommit[] {
+export function parseRecentCommits(output: string): RecentCommit[] {
 	return output
 		.split("\n")
 		.map((line) => line.trim())
@@ -124,7 +124,7 @@ export interface CommitActivity {
 	total_last_week: number;
 }
 
-function bucketIntoDays(timestamps: number[]): number[] {
+export function bucketIntoDays(timestamps: number[]): number[] {
 	const now = new Date();
 	const today_start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
 	const counts = new Array<number>(14).fill(0);

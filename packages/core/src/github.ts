@@ -66,7 +66,7 @@ export function parseGhOwnerRepo(remote_url: string): { owner: string; repo: str
 	return null;
 }
 
-function safeJsonParse<T>(text: string): Result<T, GithubError> {
+export function safeJsonParse<T>(text: string): Result<T, GithubError> {
 	try {
 		return ok(JSON.parse(text) as T);
 	} catch {
@@ -96,7 +96,7 @@ async function gh(args: string[], cwd: string): Promise<Result<string, GithubErr
 	return ok(stdout);
 }
 
-interface RawPR {
+export interface RawPR {
 	number: number;
 	title: string;
 	state: string;
@@ -106,7 +106,7 @@ interface RawPR {
 	author: { login: string };
 }
 
-function deriveCiStatus(checks: RawPR["statusCheckRollup"]): GithubPR["ci_status"] {
+export function deriveCiStatus(checks: RawPR["statusCheckRollup"]): GithubPR["ci_status"] {
 	if (!checks || checks.length === 0) return "none";
 	const has_failure = checks.some(
 		(c) => c.conclusion === "FAILURE" || c.conclusion === "failure",
@@ -119,7 +119,7 @@ function deriveCiStatus(checks: RawPR["statusCheckRollup"]): GithubPR["ci_status
 	return "pending";
 }
 
-function mapPR(raw: RawPR): GithubPR {
+export function mapPR(raw: RawPR): GithubPR {
 	return {
 		number: raw.number,
 		title: raw.title,
@@ -206,14 +206,6 @@ interface RawRelease {
 }
 
 async function countCommitsSince(tag: string, cwd: string): Promise<number> {
-	// Ensure tags are fetched — the release tag may not exist locally
-	const fetch_proc = Bun.spawn(["git", "fetch", "--tags", "--quiet"], {
-		cwd,
-		stdout: "pipe",
-		stderr: "pipe",
-	});
-	await fetch_proc.exited;
-
 	const proc = Bun.spawn(["git", "rev-list", `${tag}..HEAD`, "--count"], {
 		cwd,
 		stdout: "pipe",
