@@ -204,7 +204,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 
 									return (
 										<>
-											<text fg={props.focused ? theme.border_highlight : theme.border} content={top_line()} />
+											<text fg={props.focused && is_first() ? theme.border_highlight : theme.border} content={top_line()} />
 
 											<box ref={(el: Renderable) => { row_refs.set(row_index(), el); }} flexDirection="row" alignItems="stretch" width={props.availableWidth}>
 												<For each={row.widgets}>
