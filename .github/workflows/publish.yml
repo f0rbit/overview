@@ -1,0 +1,42 @@
+name: Publish
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install
+
+      - name: Test (core)
+        run: bun test
+        working-directory: packages/core
+
+      - name: Test (render)
+        run: bun test
+        working-directory: packages/render
+
+      - name: Build (verify)
+        run: bun run build
+
+      - name: Set version from release tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          bun run --filter '*' exec -- sh -c 'tmp=$(mktemp) && jq --arg v "'"$VERSION"'" ".version = \$v" package.json > "$tmp" && mv "$tmp" package.json' || true
+          tmp=$(mktemp) && jq --arg v "$VERSION" '.version = $v' package.json > "$tmp" && mv "$tmp" package.json
+
+      - name: Publish to npm
+        run: bunx npm publish --access public --provenance
+        env:
+          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,13 +1,31 @@
 {
-  "name": "overview",
-  "private": true,
+  "name": "@f0rbit/overview",
+  "version": "0.1.0",
+  "description": "Terminal UI dashboard for multi-repo git health",
   "workspaces": ["packages/*"],
+  "bin": {
+    "overview": "packages/render/src/overview.tsx"
+  },
+  "files": [
+    "packages/",
+    "bunfig.toml",
+    "tsconfig.json"
+  ],
   "scripts": {
     "dev": "bun run --filter @overview/render dev",
     "typecheck": "bun run --filter '*' typecheck",
     "lint": "biome check .",
     "test": "bun test",
     "build": "bun build packages/render/src/overview.tsx --compile --outfile overview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/f0rbit/overview.git"
+  },
+  "license": "MIT",
+  "keywords": ["git", "tui", "terminal", "dashboard", "bun", "solidjs"],
+  "engines": {
+    "bun": ">=1.0.0"
   },
   "devDependencies": {
     "typescript": "^5.7.0",
