@@ -7,4 +7,4 @@ while [ -L "$SOURCE" ]; do
   [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
 done
 DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
-exec bun "$DIR/../packages/render/src/overview.tsx" "$@"
+exec bun "$DIR/../dist/overview.js" "$@"

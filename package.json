@@ -7,17 +7,16 @@
     "overview": "bin/overview"
   },
   "files": [
-    "packages/",
-    "bin/",
-    "bunfig.toml",
-    "tsconfig.json"
+    "dist/",
+    "bin/"
   ],
   "scripts": {
     "dev": "bun run --filter @overview/render dev",
     "typecheck": "bun run --filter '*' typecheck",
     "lint": "biome check .",
     "test": "bun test",
-    "build": "bun build packages/render/src/overview.tsx --compile --outfile overview"
+    "build": "bun build packages/render/src/overview.tsx --compile --outfile overview",
+    "build:bundle": "rm -rf dist && bun build packages/render/src/overview.tsx --outdir dist --target=bun --format=esm --external '@opentui/*' --external 'solid-js' --external 'solid-js/*'"
   },
   "repository": {
     "type": "git",
@@ -28,16 +27,14 @@
   "engines": {
     "bun": ">=1.0.0"
   },
+  "dependencies": {
+    "@opentui/core": "^0.1.80",
+    "@opentui/solid": "^0.1.80",
+    "solid-js": "^1.9.11"
+  },
   "devDependencies": {
     "typescript": "^5.7.0",
     "@types/bun": "latest",
     "@biomejs/biome": "^1.9.0"
-  },
-  "dependencies": {
-    "@devpad/api": "^2.0.4",
-    "@f0rbit/corpus": "^0.3.5",
-    "@opentui/core": "^0.1.80",
-    "@opentui/solid": "^0.1.80",
-    "solid-js": "^1.9.11"
   }
 }

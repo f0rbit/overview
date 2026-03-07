@@ -32,8 +32,11 @@ jobs:
         run: bun test
         working-directory: packages/render
 
-      - name: Build (verify)
+      - name: Build (verify compile)
         run: bun run build
+
+      - name: Bundle for npm
+        run: bun run build:bundle
 
       - name: Set version from release tag
         run: |
