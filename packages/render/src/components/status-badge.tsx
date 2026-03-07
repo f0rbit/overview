@@ -14,6 +14,20 @@ interface BadgePart {
 function buildBadgeParts(status: RepoStatus): BadgePart[] {
 	const parts: BadgePart[] = [];
 
+	if (status.ocn_status) {
+		switch (status.ocn_status.status) {
+			case "busy":
+				parts.push({ text: "*", color: theme.yellow });
+				break;
+			case "prompting":
+				parts.push({ text: ">", color: theme.magenta });
+				break;
+			case "error":
+				parts.push({ text: "!", color: theme.red });
+				break;
+		}
+	}
+
 	if (status.health === "conflict") {
 		parts.push({ text: "!", color: theme.status.conflict });
 	} else if (status.health === "clean" && status.modified_count === 0 && status.untracked_count === 0) {

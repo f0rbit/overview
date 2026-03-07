@@ -30,6 +30,15 @@ export interface RecentCommit {
 	time: number; // unix timestamp
 }
 
+// OpenCode session status (from ocn)
+export type OcnSessionStatus = "idle" | "busy" | "prompting" | "error";
+
+export interface OcnStatus {
+	pid: number;
+	status: OcnSessionStatus;
+	session_id: string;
+}
+
 // Health status
 export type HealthStatus = "clean" | "dirty" | "ahead" | "behind" | "diverged" | "conflict";
 
@@ -78,6 +87,9 @@ export interface RepoStatus {
 
 	// Commit activity (populated by fetchDetails, not initial scan)
 	commit_activity: { daily_counts: number[]; total_this_week: number; total_last_week: number } | null;
+
+	// OpenCode session status (from ocn)
+	ocn_status: OcnStatus | null;
 
 	// Derived
 	is_clean: boolean;

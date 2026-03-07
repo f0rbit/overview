@@ -308,6 +308,8 @@ export async function collectStatus(
 
 		commit_activity: null,
 
+		ocn_status: null,
+
 		is_clean,
 		health,
 	});
