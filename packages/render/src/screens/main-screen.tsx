@@ -363,7 +363,7 @@ export function MainScreen(props: MainScreenProps) {
 			{/* Main content */}
 			<box flexDirection="row" flexGrow={1}>
 				{/* Left panel */}
-				<box width={leftWidth()} flexDirection="column" borderStyle="rounded" borderColor={theme.border}>
+				<box width={leftWidth()} flexDirection="column" borderStyle="rounded" borderColor={focusPanel() === "list" ? theme.border_highlight : theme.border}>
 					<RepoList
 						repos={processedRepos()}
 						focused={focusPanel() === "list"}

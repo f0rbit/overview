@@ -204,7 +204,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 
 									return (
 										<>
-											<text fg={theme.border} content={top_line()} />
+											<text fg={props.focused ? theme.border_highlight : theme.border} content={top_line()} />
 
 											<box ref={(el: Renderable) => { row_refs.set(row_index(), el); }} flexDirection="row" alignItems="stretch" width={props.availableWidth}>
 												<For each={row.widgets}>
@@ -269,7 +269,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 											</box>
 
 											<Show when={is_last()}>
-												<text fg={theme.border} content={borderLine("bottom", row, null)} />
+												<text fg={props.focused ? theme.border_highlight : theme.border} content={borderLine("bottom", row, null)} />
 											</Show>
 										</>
 									);
