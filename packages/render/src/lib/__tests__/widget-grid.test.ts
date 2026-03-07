@@ -88,10 +88,10 @@ describe("computeRows", () => {
 		const rows = computeRows(widgets, 80);
 
 		expect(rows).toHaveLength(1);
-		expect(rows[0].columns).toBe(2);
-		expect(rows[0].widgets).toHaveLength(2);
-		expect(rows[0].widgets[0].id).toBe("git-status");
-		expect(rows[0].widgets[1].id).toBe("repo-meta");
+		expect(rows[0]!.columns).toBe(2);
+		expect(rows[0]!.widgets).toHaveLength(2);
+		expect(rows[0]!.widgets[0]!.id).toBe("git-status");
+		expect(rows[0]!.widgets[1]!.id).toBe("repo-meta");
 	});
 
 	test("half + full → sorted by priority: half(p0) before full(p1)", () => {
@@ -102,10 +102,10 @@ describe("computeRows", () => {
 		const rows = computeRows(widgets, 80);
 
 		expect(rows).toHaveLength(2);
-		expect(rows[0].columns).toBe(1);
-		expect(rows[0].widgets[0].id).toBe("git-status");
-		expect(rows[1].columns).toBe(1);
-		expect(rows[1].widgets[0].id).toBe("recent-commits");
+		expect(rows[0]!.columns).toBe(1);
+		expect(rows[0]!.widgets[0]!.id).toBe("git-status");
+		expect(rows[1]!.columns).toBe(1);
+		expect(rows[1]!.widgets[0]!.id).toBe("recent-commits");
 	});
 
 	test("full + half + half → full(p0) first, half pair(p1) second", () => {
@@ -117,11 +117,11 @@ describe("computeRows", () => {
 		const rows = computeRows(widgets, 80);
 
 		expect(rows).toHaveLength(2);
-		expect(rows[0].columns).toBe(1);
-		expect(rows[0].widgets[0].id).toBe("recent-commits");
-		expect(rows[1].columns).toBe(2);
-		expect(rows[1].widgets[0].id).toBe("git-status");
-		expect(rows[1].widgets[1].id).toBe("repo-meta");
+		expect(rows[0]!.columns).toBe(1);
+		expect(rows[0]!.widgets[0]!.id).toBe("recent-commits");
+		expect(rows[1]!.columns).toBe(2);
+		expect(rows[1]!.widgets[0]!.id).toBe("git-status");
+		expect(rows[1]!.widgets[1]!.id).toBe("repo-meta");
 	});
 
 	test("three half-width → 2-column row + 1-column row", () => {
@@ -133,11 +133,11 @@ describe("computeRows", () => {
 		const rows = computeRows(widgets, 80);
 
 		expect(rows).toHaveLength(2);
-		expect(rows[0].columns).toBe(2);
-		expect(rows[0].widgets).toHaveLength(2);
-		expect(rows[1].columns).toBe(1);
-		expect(rows[1].widgets).toHaveLength(1);
-		expect(rows[1].widgets[0].id).toBe("branch-list");
+		expect(rows[0]!.columns).toBe(2);
+		expect(rows[0]!.widgets).toHaveLength(2);
+		expect(rows[1]!.columns).toBe(1);
+		expect(rows[1]!.widgets).toHaveLength(1);
+		expect(rows[1]!.widgets[0]!.id).toBe("branch-list");
 	});
 
 	test("single full-width → 1 one-column row", () => {
@@ -145,8 +145,8 @@ describe("computeRows", () => {
 		const rows = computeRows(widgets, 80);
 
 		expect(rows).toHaveLength(1);
-		expect(rows[0].columns).toBe(1);
-		expect(rows[0].widgets[0].id).toBe("recent-commits");
+		expect(rows[0]!.columns).toBe(1);
+		expect(rows[0]!.widgets[0]!.id).toBe("recent-commits");
 	});
 
 	test("narrow panel (< 40) → all half become full, each own row", () => {
@@ -177,9 +177,9 @@ describe("computeRows", () => {
 		const rows = computeRows(widgets, 80);
 
 		expect(rows).toHaveLength(1);
-		expect(rows[0].columns).toBe(2);
-		expect(rows[0].widgets[0].id).toBe("git-status");
-		expect(rows[0].widgets[1].id).toBe("branch-list");
+		expect(rows[0]!.columns).toBe(2);
+		expect(rows[0]!.widgets[0]!.id).toBe("git-status");
+		expect(rows[0]!.widgets[1]!.id).toBe("branch-list");
 	});
 
 	test("order is preserved for same-type widgets", () => {
@@ -192,10 +192,10 @@ describe("computeRows", () => {
 		const rows = computeRows(widgets, 80);
 
 		expect(rows).toHaveLength(2);
-		expect(rows[0].widgets[0].id).toBe("github-prs");
-		expect(rows[0].widgets[1].id).toBe("github-issues");
-		expect(rows[1].widgets[0].id).toBe("github-ci");
-		expect(rows[1].widgets[1].id).toBe("devpad-tasks");
+		expect(rows[0]!.widgets[0]!.id).toBe("github-prs");
+		expect(rows[0]!.widgets[1]!.id).toBe("github-issues");
+		expect(rows[1]!.widgets[0]!.id).toBe("github-ci");
+		expect(rows[1]!.widgets[1]!.id).toBe("devpad-tasks");
 	});
 
 	test("non-contiguous halfs pair together", () => {
@@ -208,11 +208,11 @@ describe("computeRows", () => {
 
 		expect(rows).toHaveLength(2);
 		// half pair has min priority 0, full has priority 1 → pair first
-		expect(rows[0].columns).toBe(2);
-		expect(rows[0].widgets[0].id).toBe("git-status");
-		expect(rows[0].widgets[1].id).toBe("repo-meta");
-		expect(rows[1].columns).toBe(1);
-		expect(rows[1].widgets[0].id).toBe("recent-commits");
+		expect(rows[0]!.columns).toBe(2);
+		expect(rows[0]!.widgets[0]!.id).toBe("git-status");
+		expect(rows[0]!.widgets[1]!.id).toBe("repo-meta");
+		expect(rows[1]!.columns).toBe(1);
+		expect(rows[1]!.widgets[0]!.id).toBe("recent-commits");
 	});
 
 	test("full-width at priority 0 comes before halfs at priority 3+4", () => {
@@ -224,11 +224,11 @@ describe("computeRows", () => {
 		const rows = computeRows(widgets, 80);
 
 		expect(rows).toHaveLength(2);
-		expect(rows[0].columns).toBe(1);
-		expect(rows[0].widgets[0].id).toBe("recent-commits");
-		expect(rows[1].columns).toBe(2);
-		expect(rows[1].widgets[0].id).toBe("git-status");
-		expect(rows[1].widgets[1].id).toBe("repo-meta");
+		expect(rows[0]!.columns).toBe(1);
+		expect(rows[0]!.widgets[0]!.id).toBe("recent-commits");
+		expect(rows[1]!.columns).toBe(2);
+		expect(rows[1]!.widgets[0]!.id).toBe("git-status");
+		expect(rows[1]!.widgets[1]!.id).toBe("repo-meta");
 	});
 
 	test("odd number of halfs → trailing half gets 1-column row", () => {
@@ -242,14 +242,14 @@ describe("computeRows", () => {
 		const rows = computeRows(widgets, 80);
 
 		expect(rows).toHaveLength(3);
-		expect(rows[0].columns).toBe(2);
-		expect(rows[0].widgets[0].id).toBe("git-status");
-		expect(rows[0].widgets[1].id).toBe("repo-meta");
-		expect(rows[1].columns).toBe(2);
-		expect(rows[1].widgets[0].id).toBe("branch-list");
-		expect(rows[1].widgets[1].id).toBe("recent-commits");
-		expect(rows[2].columns).toBe(1);
-		expect(rows[2].widgets[0].id).toBe("github-prs");
+		expect(rows[0]!.columns).toBe(2);
+		expect(rows[0]!.widgets[0]!.id).toBe("git-status");
+		expect(rows[0]!.widgets[1]!.id).toBe("repo-meta");
+		expect(rows[1]!.columns).toBe(2);
+		expect(rows[1]!.widgets[0]!.id).toBe("branch-list");
+		expect(rows[1]!.widgets[1]!.id).toBe("recent-commits");
+		expect(rows[2]!.columns).toBe(1);
+		expect(rows[2]!.widgets[0]!.id).toBe("github-prs");
 	});
 
 	test("three third-width widgets → 1 three-column row", () => {
@@ -261,11 +261,11 @@ describe("computeRows", () => {
 		const rows = computeRows(widgets, 80);
 
 		expect(rows).toHaveLength(1);
-		expect(rows[0].columns).toBe(3);
-		expect(rows[0].widgets).toHaveLength(3);
-		expect(rows[0].widgets[0].id).toBe("git-status");
-		expect(rows[0].widgets[1].id).toBe("repo-meta");
-		expect(rows[0].widgets[2].id).toBe("github-ci");
+		expect(rows[0]!.columns).toBe(3);
+		expect(rows[0]!.widgets).toHaveLength(3);
+		expect(rows[0]!.widgets[0]!.id).toBe("git-status");
+		expect(rows[0]!.widgets[1]!.id).toBe("repo-meta");
+		expect(rows[0]!.widgets[2]!.id).toBe("github-ci");
 	});
 
 	test("four thirds → 3-col row + 1-col row (auto-expand)", () => {
@@ -278,11 +278,11 @@ describe("computeRows", () => {
 		const rows = computeRows(widgets, 80);
 
 		expect(rows).toHaveLength(2);
-		expect(rows[0].columns).toBe(3);
-		expect(rows[0].widgets).toHaveLength(3);
-		expect(rows[1].columns).toBe(1);
-		expect(rows[1].widgets).toHaveLength(1);
-		expect(rows[1].widgets[0].id).toBe("commit-activity");
+		expect(rows[0]!.columns).toBe(3);
+		expect(rows[0]!.widgets).toHaveLength(3);
+		expect(rows[1]!.columns).toBe(1);
+		expect(rows[1]!.widgets).toHaveLength(1);
+		expect(rows[1]!.widgets[0]!.id).toBe("commit-activity");
 	});
 
 	test("five thirds → 3-col row + 2-col row (auto-expand)", () => {
@@ -296,12 +296,12 @@ describe("computeRows", () => {
 		const rows = computeRows(widgets, 80);
 
 		expect(rows).toHaveLength(2);
-		expect(rows[0].columns).toBe(3);
-		expect(rows[0].widgets).toHaveLength(3);
-		expect(rows[1].columns).toBe(2);
-		expect(rows[1].widgets).toHaveLength(2);
-		expect(rows[1].widgets[0].id).toBe("commit-activity");
-		expect(rows[1].widgets[1].id).toBe("github-release");
+		expect(rows[0]!.columns).toBe(3);
+		expect(rows[0]!.widgets).toHaveLength(3);
+		expect(rows[1]!.columns).toBe(2);
+		expect(rows[1]!.widgets).toHaveLength(2);
+		expect(rows[1]!.widgets[0]!.id).toBe("commit-activity");
+		expect(rows[1]!.widgets[1]!.id).toBe("github-release");
 	});
 
 	test("mixed thirds + halfs + fulls", () => {
@@ -317,12 +317,12 @@ describe("computeRows", () => {
 
 		expect(rows).toHaveLength(3);
 		// Sort by min priority: full(0), thirds(1), halfs(4)
-		expect(rows[0].columns).toBe(1);
-		expect(rows[0].widgets[0].id).toBe("recent-commits");
-		expect(rows[1].columns).toBe(3);
-		expect(rows[1].widgets[0].id).toBe("git-status");
-		expect(rows[2].columns).toBe(2);
-		expect(rows[2].widgets[0].id).toBe("branch-list");
+		expect(rows[0]!.columns).toBe(1);
+		expect(rows[0]!.widgets[0]!.id).toBe("recent-commits");
+		expect(rows[1]!.columns).toBe(3);
+		expect(rows[1]!.widgets[0]!.id).toBe("git-status");
+		expect(rows[2]!.columns).toBe(2);
+		expect(rows[2]!.widgets[0]!.id).toBe("branch-list");
 	});
 
 	test("thirds at narrow panel (<60) fall back to half pairing", () => {
@@ -335,10 +335,10 @@ describe("computeRows", () => {
 
 		// thirds resolve to half at 50 cols → paired as halfs
 		expect(rows).toHaveLength(2);
-		expect(rows[0].columns).toBe(2);
-		expect(rows[0].widgets).toHaveLength(2);
-		expect(rows[1].columns).toBe(1);
-		expect(rows[1].widgets).toHaveLength(1);
+		expect(rows[0]!.columns).toBe(2);
+		expect(rows[0]!.widgets).toHaveLength(2);
+		expect(rows[1]!.columns).toBe(1);
+		expect(rows[1]!.widgets).toHaveLength(1);
 	});
 
 	test("thirds at very narrow panel (<40) fall back to full", () => {
@@ -370,71 +370,71 @@ describe("buildBorderLine", () => {
 	test("top border, 1-col next row → corners + horizontal fill", () => {
 		const line = buildBorderLine("top", W, null, oneCol);
 		expect(line.length).toBe(W);
-		expect(line[0]).toBe("╭");
-		expect(line[W - 1]).toBe("╮");
+		expect(line[0]!).toBe("╭");
+		expect(line[W - 1]!).toBe("╮");
 		// No junction — all interior chars are horizontal
 		for (let i = 1; i < W - 1; i++) {
-			expect(line[i]).toBe("─");
+			expect(line[i]!).toBe("─");
 		}
 	});
 
 	test("top border, 2-col next row → has ┬ at midpoint", () => {
 		const line = buildBorderLine("top", W, null, twoCol);
 		expect(line.length).toBe(W);
-		expect(line[0]).toBe("╭");
-		expect(line[W - 1]).toBe("╮");
-		expect(line[10]).toBe("┬");
+		expect(line[0]!).toBe("╭");
+		expect(line[W - 1]!).toBe("╮");
+		expect(line[10]!).toBe("┬");
 	});
 
 	test("bottom border, 1-col prev row → corners only", () => {
 		const line = buildBorderLine("bottom", W, oneCol, null);
 		expect(line.length).toBe(W);
-		expect(line[0]).toBe("╰");
-		expect(line[W - 1]).toBe("╯");
+		expect(line[0]!).toBe("╰");
+		expect(line[W - 1]!).toBe("╯");
 		for (let i = 1; i < W - 1; i++) {
-			expect(line[i]).toBe("─");
+			expect(line[i]!).toBe("─");
 		}
 	});
 
 	test("bottom border, 2-col prev row → has ┴ at midpoint", () => {
 		const line = buildBorderLine("bottom", W, twoCol, null);
 		expect(line.length).toBe(W);
-		expect(line[0]).toBe("╰");
-		expect(line[W - 1]).toBe("╯");
-		expect(line[10]).toBe("┴");
+		expect(line[0]!).toBe("╰");
+		expect(line[W - 1]!).toBe("╯");
+		expect(line[10]!).toBe("┴");
 	});
 
 	test("mid border, 2-col prev → 1-col next → ┴ at midpoint", () => {
 		const line = buildBorderLine("mid", W, twoCol, oneCol);
 		expect(line.length).toBe(W);
-		expect(line[0]).toBe("├");
-		expect(line[W - 1]).toBe("┤");
-		expect(line[10]).toBe("┴");
+		expect(line[0]!).toBe("├");
+		expect(line[W - 1]!).toBe("┤");
+		expect(line[10]!).toBe("┴");
 	});
 
 	test("mid border, 1-col prev → 2-col next → ┬ at midpoint", () => {
 		const line = buildBorderLine("mid", W, oneCol, twoCol);
 		expect(line.length).toBe(W);
-		expect(line[0]).toBe("├");
-		expect(line[W - 1]).toBe("┤");
-		expect(line[10]).toBe("┬");
+		expect(line[0]!).toBe("├");
+		expect(line[W - 1]!).toBe("┤");
+		expect(line[10]!).toBe("┬");
 	});
 
 	test("mid border, 2-col prev → 2-col next → ┼ at midpoint", () => {
 		const line = buildBorderLine("mid", W, twoCol, twoCol);
 		expect(line.length).toBe(W);
-		expect(line[0]).toBe("├");
-		expect(line[W - 1]).toBe("┤");
-		expect(line[10]).toBe("┼");
+		expect(line[0]!).toBe("├");
+		expect(line[W - 1]!).toBe("┤");
+		expect(line[10]!).toBe("┼");
 	});
 
 	test("mid border, 1-col prev → 1-col next → no junction", () => {
 		const line = buildBorderLine("mid", W, oneCol, oneCol);
 		expect(line.length).toBe(W);
-		expect(line[0]).toBe("├");
-		expect(line[W - 1]).toBe("┤");
+		expect(line[0]!).toBe("├");
+		expect(line[W - 1]!).toBe("┤");
 		for (let i = 1; i < W - 1; i++) {
-			expect(line[i]).toBe("─");
+			expect(line[i]!).toBe("─");
 		}
 	});
 
@@ -455,8 +455,8 @@ describe("buildBorderLine", () => {
 		];
 		for (const [type, left, right] of cases) {
 			const line = buildBorderLine(type, W, oneCol, oneCol);
-			expect(line[0]).toBe(left);
-			expect(line[W - 1]).toBe(right);
+			expect(line[0]!).toBe(left);
+			expect(line[W - 1]!).toBe(right);
 		}
 	});
 
@@ -464,59 +464,59 @@ describe("buildBorderLine", () => {
 		const odd_w = 21;
 		const line = buildBorderLine("top", odd_w, null, twoCol);
 		expect(line.length).toBe(odd_w);
-		expect(line[Math.floor(odd_w / 2)]).toBe("┬");
-		expect(line[0]).toBe("╭");
-		expect(line[odd_w - 1]).toBe("╮");
+		expect(line[Math.floor(odd_w / 2)]!).toBe("┬");
+		expect(line[0]!).toBe("╭");
+		expect(line[odd_w - 1]!).toBe("╮");
 	});
 
 	test("top border, 3-col next row → has two junctions", () => {
 		const W = 30;
 		const line = buildBorderLine("top", W, null, threeCol);
 		expect(line.length).toBe(W);
-		expect(line[0]).toBe("╭");
-		expect(line[W - 1]).toBe("╮");
-		expect(line[10]).toBe("┬"); // Math.floor(30/3) = 10
-		expect(line[20]).toBe("┬"); // Math.floor(60/3) = 20
+		expect(line[0]!).toBe("╭");
+		expect(line[W - 1]!).toBe("╮");
+		expect(line[10]!).toBe("┬"); // Math.floor(30/3) = 10
+		expect(line[20]!).toBe("┬"); // Math.floor(60/3) = 20
 	});
 
 	test("bottom border, 3-col prev row → has two ┴ junctions", () => {
 		const W = 30;
 		const line = buildBorderLine("bottom", W, threeCol, null);
 		expect(line.length).toBe(W);
-		expect(line[0]).toBe("╰");
-		expect(line[W - 1]).toBe("╯");
-		expect(line[10]).toBe("┴");
-		expect(line[20]).toBe("┴");
+		expect(line[0]!).toBe("╰");
+		expect(line[W - 1]!).toBe("╯");
+		expect(line[10]!).toBe("┴");
+		expect(line[20]!).toBe("┴");
 	});
 
 	test("mid border, 3-col → 3-col → has two ┼ junctions", () => {
 		const W = 30;
 		const line = buildBorderLine("mid", W, threeCol, threeCol);
 		expect(line.length).toBe(W);
-		expect(line[0]).toBe("├");
-		expect(line[W - 1]).toBe("┤");
-		expect(line[10]).toBe("┼");
-		expect(line[20]).toBe("┼");
+		expect(line[0]!).toBe("├");
+		expect(line[W - 1]!).toBe("┤");
+		expect(line[10]!).toBe("┼");
+		expect(line[20]!).toBe("┼");
 	});
 
 	test("mid border, 3-col → 1-col → two ┴ junctions", () => {
 		const W = 30;
 		const line = buildBorderLine("mid", W, threeCol, oneCol);
 		expect(line.length).toBe(W);
-		expect(line[0]).toBe("├");
-		expect(line[W - 1]).toBe("┤");
-		expect(line[10]).toBe("┴");
-		expect(line[20]).toBe("┴");
+		expect(line[0]!).toBe("├");
+		expect(line[W - 1]!).toBe("┤");
+		expect(line[10]!).toBe("┴");
+		expect(line[20]!).toBe("┴");
 	});
 
 	test("mid border, 1-col → 3-col → two ┬ junctions", () => {
 		const W = 30;
 		const line = buildBorderLine("mid", W, oneCol, threeCol);
 		expect(line.length).toBe(W);
-		expect(line[0]).toBe("├");
-		expect(line[W - 1]).toBe("┤");
-		expect(line[10]).toBe("┬");
-		expect(line[20]).toBe("┬");
+		expect(line[0]!).toBe("├");
+		expect(line[W - 1]!).toBe("┤");
+		expect(line[10]!).toBe("┬");
+		expect(line[20]!).toBe("┬");
 	});
 
 	test("mid border, 3-col → 2-col → mixed junctions", () => {
@@ -528,22 +528,22 @@ describe("buildBorderLine", () => {
 		const W = 30;
 		const line = buildBorderLine("mid", W, threeCol, twoCol);
 		expect(line.length).toBe(W);
-		expect(line[0]).toBe("├");
-		expect(line[W - 1]).toBe("┤");
-		expect(line[10]).toBe("┴");  // from 3-col above only
-		expect(line[15]).toBe("┬");  // from 2-col below only
-		expect(line[20]).toBe("┴");  // from 3-col above only
+		expect(line[0]!).toBe("├");
+		expect(line[W - 1]!).toBe("┤");
+		expect(line[10]!).toBe("┴");  // from 3-col above only
+		expect(line[15]!).toBe("┬");  // from 2-col below only
+		expect(line[20]!).toBe("┴");  // from 3-col above only
 	});
 
 	test("mid border, 2-col → 3-col → mixed junctions", () => {
 		const W = 30;
 		const line = buildBorderLine("mid", W, twoCol, threeCol);
 		expect(line.length).toBe(W);
-		expect(line[0]).toBe("├");
-		expect(line[W - 1]).toBe("┤");
-		expect(line[10]).toBe("┬");  // from 3-col below only
-		expect(line[15]).toBe("┴");  // from 2-col above only
-		expect(line[20]).toBe("┬");  // from 3-col below only
+		expect(line[0]!).toBe("├");
+		expect(line[W - 1]!).toBe("┤");
+		expect(line[10]!).toBe("┬");  // from 3-col below only
+		expect(line[15]!).toBe("┴");  // from 2-col above only
+		expect(line[20]!).toBe("┬");  // from 3-col below only
 	});
 });
 
@@ -555,9 +555,9 @@ describe("buildBorderLineWithTitle", () => {
 	test("inserts title into border line after first char", () => {
 		const result = buildBorderLineWithTitle(base, "Hello");
 		expect(result.length).toBe(20);
-		expect(result[0]).toBe("╭");
+		expect(result[0]!).toBe("╭");
 		expect(result.slice(1, 8)).toBe(" Hello ");
-		expect(result[19]).toBe("╮");
+		expect(result[19]!).toBe("╮");
 	});
 
 	test("empty title returns unchanged line", () => {
@@ -569,8 +569,8 @@ describe("buildBorderLineWithTitle", () => {
 		const result = buildBorderLineWithTitle(base, long_title);
 		expect(result.length).toBe(20);
 		expect(result).toContain("…");
-		expect(result[0]).toBe("╭");
-		expect(result[19]).toBe("╮");
+		expect(result[0]!).toBe("╭");
+		expect(result[19]!).toBe("╮");
 	});
 
 	test("title fits exactly (boundary)", () => {
@@ -580,8 +580,8 @@ describe("buildBorderLineWithTitle", () => {
 		const exact_title = "A".repeat(15);
 		const result = buildBorderLineWithTitle(base, exact_title);
 		expect(result.length).toBe(20);
-		expect(result[0]).toBe("╭");
-		expect(result[19]).toBe("╮");
+		expect(result[0]!).toBe("╭");
+		expect(result[19]!).toBe("╮");
 		expect(result).toContain(exact_title);
 		expect(result).not.toContain("…");
 	});

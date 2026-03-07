@@ -16,7 +16,7 @@ describe("createFetchContext", () => {
 		// Wait for debounce
 		await Bun.sleep(80);
 
-		expect(result).toBe("hello");
+		expect(result!).toBe("hello");
 		ctx.dispose();
 	});
 
@@ -46,7 +46,7 @@ describe("createFetchContext", () => {
 
 		await Bun.sleep(10);
 
-		expect(result).toBe("now");
+		expect(result!).toBe("now");
 		ctx.dispose();
 	});
 

@@ -50,6 +50,8 @@ function mockRepoStatus(): RepoStatus {
 				time: Date.now() / 1000,
 			},
 		],
+		commit_activity: null,
+		ocn_status: null,
 		is_clean: false,
 		health: "ahead" as const,
 	};
