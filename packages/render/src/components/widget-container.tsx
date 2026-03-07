@@ -43,8 +43,10 @@ export function WidgetContainer(props: WidgetContainerProps) {
 			.filter((gw): gw is GridWidget => gw !== null);
 	});
 
+	const content_width = createMemo(() => props.availableWidth - 1);
+
 	const grid_layout = createMemo(() =>
-		computeGridLayout(enabled_widgets(), props.availableWidth),
+		computeGridLayout(enabled_widgets(), content_width()),
 	);
 
 	const flat_widget_ids = createMemo(() => {
@@ -171,7 +173,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 	}
 
 	function borderLine(type: "top" | "mid" | "bottom", prev: GridRow | null, next: GridRow | null): string {
-		return buildBorderLine(type, props.availableWidth, prev, next);
+		return buildBorderLine(type, content_width(), prev, next);
 	}
 
 	return (
@@ -185,7 +187,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 					fallback={<text fg={theme.fg_dim} content="(select a repo)" />}
 				>
 					<scrollbox ref={scrollbox_ref} flexGrow={1}>
-						<box flexDirection="column" width={props.availableWidth} flexShrink={0}>
+						<box flexDirection="column" width={content_width()} flexShrink={0}>
 							<For each={grid_layout().rows}>
 								{(row, row_index) => {
 									const rows = grid_layout().rows;
@@ -206,7 +208,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 										<>
 											<text fg={props.focused && is_first() ? theme.border_highlight : theme.border} content={top_line()} />
 
-											<box ref={(el: Renderable) => { row_refs.set(row_index(), el); }} flexDirection="row" alignItems="stretch" width={props.availableWidth}>
+											<box ref={(el: Renderable) => { row_refs.set(row_index(), el); }} flexDirection="row" alignItems="stretch" width={content_width()}>
 												<For each={row.widgets}>
 													{(gw, widget_idx) => {
 														const def = getWidget(gw.id);
@@ -214,18 +216,18 @@ export function WidgetContainer(props: WidgetContainerProps) {
 
 														const focused = () => isFocused(gw.id);
 														const box_width = () => {
-															if (row.columns === 1) return props.availableWidth;
+															if (row.columns === 1) return content_width();
 															if (row.columns === 2) {
-																const junction = Math.floor(props.availableWidth / 2);
+																const junction = Math.floor(content_width() / 2);
 																if (widget_idx() === 0) return junction;
-																return props.availableWidth - junction;
+																return content_width() - junction;
 															}
 															// 3-column
-															const j1 = Math.floor(props.availableWidth / 3);
-															const j2 = Math.floor(2 * props.availableWidth / 3);
+															const j1 = Math.floor(content_width() / 3);
+															const j2 = Math.floor(2 * content_width() / 3);
 															if (widget_idx() === 0) return j1;
 															if (widget_idx() === 1) return j2 - j1;
-															return props.availableWidth - j2;
+															return content_width() - j2;
 														};
 														const widget_content_width = () => {
 															const sides = getWidgetBorderSides(row, widget_idx());
@@ -237,7 +239,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 																width={box_width()}
 																border={getWidgetBorderSides(row, widget_idx())}
 																borderStyle="rounded"
-																borderColor={focused() ? theme.border_highlight : theme.border}
+																borderColor={(focused() || (props.focused && (widget_idx() === 0 || widget_idx() === row.columns - 1))) ? theme.border_highlight : theme.border}
 																backgroundColor={focused() ? theme.bg_highlight : undefined}
 																flexDirection="column"
 																minHeight={gw.size_hint.min_height}
