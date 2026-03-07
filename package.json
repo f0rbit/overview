@@ -4,10 +4,11 @@
   "description": "Terminal UI dashboard for multi-repo git health",
   "workspaces": ["packages/*"],
   "bin": {
-    "overview": "packages/render/src/overview.tsx"
+    "overview": "bin/overview"
   },
   "files": [
     "packages/",
+    "bin/",
     "bunfig.toml",
     "tsconfig.json"
   ],
