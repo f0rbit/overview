@@ -17,6 +17,11 @@ jobs:
         with:
           bun-version: latest
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+
       - run: bun install
 
       - name: Test (core)
@@ -37,6 +42,4 @@ jobs:
           tmp=$(mktemp) && jq --arg v "$VERSION" '.version = $v' package.json > "$tmp" && mv "$tmp" package.json
 
       - name: Publish to npm
-        run: bunx npm publish --access public --provenance
-        env:
-          NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
