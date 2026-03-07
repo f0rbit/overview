@@ -36,10 +36,6 @@ function buildBadgeParts(status: RepoStatus): BadgePart[] {
 		}
 	}
 
-	if (status.stash_count > 0) {
-		parts.push({ text: "✂", color: theme.status.stash });
-	}
-
 	return parts;
 }
 

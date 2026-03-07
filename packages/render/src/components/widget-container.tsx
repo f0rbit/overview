@@ -136,11 +136,9 @@ export function WidgetContainer(props: WidgetContainerProps) {
 
 		switch (key.name) {
 			case "j":
-			case "l":
 				setFocusedIdx(Math.min(focused_idx() + 1, ids.length - 1));
 				return;
 			case "k":
-			case "h":
 				setFocusedIdx(Math.max(focused_idx() - 1, 0));
 				return;
 		}

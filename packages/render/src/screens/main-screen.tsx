@@ -233,15 +233,23 @@ export function MainScreen(props: MainScreenProps) {
 				case "escape":
 					process.exit(0);
 					break;
-				case "return": {
-					const node = selectedNode();
-					if (node && node.type !== "directory") {
-						setMode("DETAIL");
-						setFocusPanel("graph");
-					}
-					break;
+			case "return": {
+				const node = selectedNode();
+				if (node && node.type !== "directory") {
+					setMode("DETAIL");
+					setFocusPanel("graph");
 				}
-				case "r":
+				break;
+			}
+			case "l": {
+				const node = selectedNode();
+				if (node && node.type !== "directory") {
+					setMode("DETAIL");
+					setFocusPanel("graph");
+				}
+				break;
+			}
+			case "r":
 					_details_request_id++;
 					clearTimeout(_details_timer);
 					fetchDetails(selectedNode());
@@ -290,9 +298,14 @@ export function MainScreen(props: MainScreenProps) {
 					setMode("NORMAL");
 					setFocusPanel("list");
 					break;
-				case "h":
+			case "h":
+				if (focusPanel() === "graph") {
+					setMode("NORMAL");
+					setFocusPanel("list");
+				} else {
 					setFocusPanel("graph");
-					break;
+				}
+				break;
 				case "l":
 					setFocusPanel("stats");
 					break;
