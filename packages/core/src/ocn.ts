@@ -1,11 +1,7 @@
-import { ok, err, type Result } from "@f0rbit/corpus";
+import { ok, type Result } from "@f0rbit/corpus";
 import { join } from "node:path";
 import { readdir } from "node:fs/promises";
 import type { OcnStatus, OcnSessionStatus } from "./types";
-
-export type OcnError =
-	| { kind: "state_dir_not_found" }
-	| { kind: "read_failed"; path: string; cause: string };
 
 interface OcnStateFile {
 	pid: number;
@@ -39,7 +35,7 @@ function isValidState(data: unknown): data is OcnStateFile {
 	);
 }
 
-export async function readOcnStates(): Promise<Result<Map<string, OcnStatus>, OcnError>> {
+export async function readOcnStates(): Promise<Result<Map<string, OcnStatus>, never>> {
 	const state_dir = process.env.OCN_STATE_DIR ?? join(process.env.HOME ?? "~", ".local", "state", "ocn");
 	const map = new Map<string, OcnStatus>();
 

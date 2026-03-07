@@ -116,3 +116,7 @@ packages/
 5. **Devpad integration:** Uses `@devpad/api` TypeScript client as a link dependency. The `useDevpad` hook fetches data via `createEffect` + async — data arrives after initial render, causing widget height changes.
 
 6. **Widget data consolidation:** `commit-activity` data is fetched centrally in `fetchDetails` (main-screen.tsx) and stored on `RepoStatus.commit_activity`, NOT fetched independently by the widget. All heavyweight per-repo fetches should go through `fetchDetails` to benefit from debounce + cancellation.
+
+7. **OCN (OpenCode) integration:** Reads `~/.local/state/ocn/*.json` state files during scan. PID liveness check via `process.kill(pid, 0)`. Gracefully returns empty map if state dir doesn't exist — the function signature uses `Result<..., never>` since all error paths degrade gracefully. `OCN_STATE_DIR` env var override supported for testing.
+
+8. **npm bundle build:** `bun build` CLI ignores tsconfig `jsx` settings. The `scripts/build-bundle.ts` script uses `Bun.build()` with `@opentui/solid/bun-plugin` (Babel + `babel-preset-solid`) to produce correct SolidJS output. `@opentui/*` and `solid-js` are external (native modules); everything else is bundled.

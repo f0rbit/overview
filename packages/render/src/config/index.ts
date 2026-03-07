@@ -31,15 +31,16 @@ export async function loadConfig(): Promise<Result<OverviewConfig, ConfigError>>
 		return err({ kind: "parse_error", path: CONFIG_PATH, cause: String(e) });
 	}
 
-	let parsed: DeepPartial<OverviewConfig>;
 	try {
-		parsed = JSON.parse(raw);
+		const parsed = JSON.parse(raw) as DeepPartial<OverviewConfig>;
+		const merged = merge_deep(
+			defaultConfig() as unknown as Record<string, unknown>,
+			parsed as unknown as Record<string, unknown>,
+		) as unknown as OverviewConfig;
+		return ok(expandPaths(merged));
 	} catch (e) {
 		return err({ kind: "parse_error", path: CONFIG_PATH, cause: `Invalid JSON: ${e}` });
 	}
-
-	const merged = merge_deep(defaultConfig() as unknown as Record<string, unknown>, parsed as unknown as Record<string, unknown>) as unknown as OverviewConfig;
-	return ok(expandPaths(merged));
 }
 
 export async function writeDefaultConfig(): Promise<Result<void, ConfigError>> {
@@ -48,14 +49,9 @@ export async function writeDefaultConfig(): Promise<Result<void, ConfigError>> {
 		return ok(undefined);
 	} catch (e) {
 		if (!isEnoent(e)) return err({ kind: "write_error", path: CONFIG_PATH, cause: String(e) });
-	}
-
-	try {
 		await mkdir(CONFIG_DIR, { recursive: true });
 		await writeFile(CONFIG_PATH, JSON.stringify(defaultConfig(), null, 2) + "\n", "utf-8");
 		return ok(undefined);
-	} catch (e) {
-		return err({ kind: "write_error", path: CONFIG_PATH, cause: String(e) });
 	}
 }
 
