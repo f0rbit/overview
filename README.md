@@ -93,23 +93,25 @@ bun run build     # compile standalone binary
 
 ### Configuration
 
-Config lives at `~/.config/overview/config.toml`. A default is created on first run. Key options:
+Config lives at `~/.config/overview/config.json`. A default is created on first run. Key options:
 
-```toml
-scan_dirs = ["~/dev"]
-depth = 3
-refresh_interval = 30
-sort = "name"           # name | status | last-commit
-filter = "all"          # all | dirty | clean | ahead | behind
-
-[layout]
-left_width_pct = 35
-graph_height_pct = 45
-
-[actions]
-ggi = "ggi"
-editor = "$EDITOR"
-sessionizer = ""        # path to tmux-sessionizer script
+```json
+{
+  "scan_dirs": ["~/dev"],
+  "depth": 3,
+  "refresh_interval": 30,
+  "sort": "name",
+  "filter": "all",
+  "layout": {
+    "left_width_pct": 35,
+    "graph_height_pct": 45
+  },
+  "actions": {
+    "ggi": "ggi",
+    "editor": "$EDITOR",
+    "sessionizer": null
+  }
+}
 ```
 
 ## Keybindings

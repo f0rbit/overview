@@ -11,6 +11,7 @@ import { launchGgi, launchEditor, launchSessionizer } from "../lib/actions";
 import { loadWidgetState, saveWidgetState, defaultWidgetConfig, getWidgetState, updateWidgetState } from "../lib/widget-state";
 import { createCommandContext, type CommandContext, type CommandError } from "../lib/palette";
 import "../lib/palette"; // side-effect import registers built-in commands
+import { createProvider, type AIProvider } from "../lib/ai";
 import { theme } from "../theme";
 
 interface MainScreenProps {
@@ -73,6 +74,7 @@ export function MainScreen(props: MainScreenProps) {
 	const [standupPayload, setStandupPayload] = createSignal<StandupOverlayPayload | null>(null);
 	const [widgetConfigs, setWidgetConfigs] = createSignal<WidgetConfig[]>(defaultWidgetConfig());
 	const [repoVersion, setRepoVersion] = createSignal(0);
+	const [aiProvider, setAiProvider] = createSignal<AIProvider | null>(null);
 
 	const renderer = useRenderer();
 
@@ -113,7 +115,7 @@ export function MainScreen(props: MainScreenProps) {
 		config: props.config,
 		get_repos: () => repos(),
 		get_selected_repo: () => selectedNode(),
-		get_ai_provider: () => null, // Phase C will replace
+		get_ai_provider: () => aiProvider(),
 		emit: (event) => {
 			if (event.kind === "status") setMessage(event.text);
 			if (event.kind === "command_failed") setMessage(`✗ ${event.command_id}: ${describe_command_error(event.error)}`);
@@ -237,6 +239,13 @@ export function MainScreen(props: MainScreenProps) {
 			if (result.ok) {
 				setWidgetConfigs(result.value.widgets);
 				updateWidgetState(result.value);
+			}
+		});
+		createProvider(props.config.ai_provider).then((result) => {
+			if (result.ok) {
+				setAiProvider(result.value);
+			} else {
+				setMessage(`AI provider init failed: ${result.error.kind}`);
 			}
 		});
 	});
@@ -472,6 +481,7 @@ export function MainScreen(props: MainScreenProps) {
 			<StandupOverlay
 				visible={standupOpen()}
 				payload={standupPayload()}
+				ai_provider={aiProvider()}
 				onClose={() => setStandupOpen(false)}
 			/>
 		</box>

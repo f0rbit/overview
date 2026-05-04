@@ -5,6 +5,7 @@ const result = await Bun.build({
 	outdir: "dist",
 	target: "bun",
 	format: "esm",
+	splitting: true,
 	external: ["@opentui/core", "@opentui/core/*"],
 	plugins: [solidPlugin],
 });

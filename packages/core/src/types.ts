@@ -158,6 +158,16 @@ export interface WidgetRenderProps {
 	focused: boolean;
 }
 
+// AI provider config
+export interface AIProviderConfig {
+	provider: "anthropic" | "bedrock" | null;
+	model: string;
+	api_key_env?: string;
+	aws_region?: string;
+	aws_profile?: string;
+	max_tokens?: number;
+}
+
 // Config
 export interface OverviewConfig {
 	scan_dirs: string[];
@@ -175,6 +185,7 @@ export interface OverviewConfig {
 		editor: string;
 		sessionizer: string | null;
 	};
+	ai_provider: AIProviderConfig;
 	plugins?: readonly string[];
 }
 
@@ -196,6 +207,7 @@ export function defaultConfig(): OverviewConfig {
 			editor: "$EDITOR",
 			sessionizer: null,
 		},
+		ai_provider: { provider: null, model: "claude-opus-4-7" },
 		plugins: [],
 	};
 }

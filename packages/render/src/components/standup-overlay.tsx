@@ -1,6 +1,7 @@
-import { Show, For, createSignal } from "solid-js";
+import { Show, For, createSignal, createEffect, onCleanup } from "solid-js";
 import { useKeyboard } from "@opentui/solid";
 import type { ActivityItem, RepoActivity, StandupRange } from "@overview/core";
+import type { AIProvider, SummaryStream } from "../lib/ai";
 import { theme } from "../theme";
 
 export interface StandupOverlayPayload {
@@ -11,8 +12,11 @@ export interface StandupOverlayPayload {
 interface StandupOverlayProps {
 	visible: boolean;
 	payload: StandupOverlayPayload | null;
+	ai_provider: AIProvider | null;
 	onClose: () => void;
 }
+
+type AIState = "idle" | "streaming" | "done" | "error";
 
 type FocusSection = "summary" | "ai" | "raw";
 
@@ -51,6 +55,58 @@ export function StandupOverlay(props: StandupOverlayProps) {
 	const [ai_open, setAiOpen] = createSignal(false);
 	const [raw_open, setRawOpen] = createSignal(false);
 	const [focus_section, setFocusSection] = createSignal<FocusSection>("summary");
+	const [ai_text, setAiText] = createSignal<string>("");
+	const [ai_state, setAiState] = createSignal<AIState>("idle");
+	const [ai_error, setAiError] = createSignal<string | null>(null);
+
+	let current_stream: SummaryStream | null = null;
+
+	createEffect(() => {
+		if (!props.visible || !props.payload || !props.ai_provider) {
+			if (current_stream) {
+				current_stream.abort();
+				current_stream = null;
+			}
+			return;
+		}
+
+		const provider = props.ai_provider;
+		const payload = props.payload;
+
+		setAiText("");
+		setAiError(null);
+		setAiState("streaming");
+
+		void (async () => {
+			const result = await provider.summarize({
+				range_label: payload.window.label,
+				activities: payload.activities,
+				style: "narrative",
+			});
+			if (!result.ok) {
+				setAiState("error");
+				const cause = "cause" in result.error ? result.error.cause : "";
+				setAiError(`${result.error.kind}${cause ? `: ${cause}` : ""}`);
+				return;
+			}
+			current_stream = result.value;
+			try {
+				for await (const chunk of result.value.chunks()) {
+					setAiText((prev) => prev + chunk);
+				}
+				setAiState("done");
+			} catch (e) {
+				setAiState("error");
+				setAiError(`stream_failed: ${String(e)}`);
+			} finally {
+				current_stream = null;
+			}
+		})();
+	});
+
+	onCleanup(() => {
+		if (current_stream) current_stream.abort();
+	});
 
 	function toggle_focused() {
 		const f = focus_section();
@@ -152,10 +208,23 @@ export function StandupOverlay(props: StandupOverlayProps) {
 					/>
 					<Show when={ai_open()}>
 						<box flexDirection="column">
-							<text
-								content="(AI provider not configured — set ai_provider in ~/.config/overview/config.json)"
-								fg={theme.fg_dim}
-							/>
+							<Show when={props.ai_provider === null}>
+								<text
+									content="(AI provider not configured — set ai_provider in ~/.config/overview/config.json)"
+									fg={theme.fg_dim}
+								/>
+							</Show>
+							<Show when={props.ai_provider !== null && ai_state() === "streaming" && ai_text() === ""}>
+								<text content="thinking..." fg={theme.fg_dim} />
+							</Show>
+							<Show when={props.ai_provider !== null && (ai_state() === "streaming" || ai_state() === "done") && ai_text() !== ""}>
+								<For each={ai_text().split("\n")}>
+									{(line) => <text content={line} fg={theme.fg} />}
+								</For>
+							</Show>
+							<Show when={props.ai_provider !== null && ai_state() === "error"}>
+								<text content={`AI summary failed: ${ai_error()}`} fg={theme.red} />
+							</Show>
 						</box>
 					</Show>
 				</box>
