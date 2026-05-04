@@ -206,7 +206,24 @@ export function WidgetContainer(props: WidgetContainerProps) {
 
 									return (
 										<>
-											<text fg={(props.focused && is_first()) ? theme.border_highlight : theme.border} content={top_line()} />
+											<Show
+												when={is_first()}
+												fallback={(() => {
+													const line = top_line();
+													const left_char = line.slice(0, 1);
+													const right_char = line.slice(-1);
+													const middle = line.slice(1, -1);
+													return (
+														<box flexDirection="row" height={1}>
+															<text content={left_char} fg={props.focused ? theme.border_highlight : theme.border} />
+															<text content={middle} fg={theme.border} />
+															<text content={right_char} fg={props.focused ? theme.border_highlight : theme.border} />
+														</box>
+													);
+												})()}
+											>
+												<text fg={props.focused ? theme.border_highlight : theme.border} content={top_line()} />
+											</Show>
 
 											<box ref={(el: Renderable) => { row_refs.set(row_index(), el); }} flexDirection="row" alignItems="stretch" width={content_width()}>
 												<For each={row.widgets}>
