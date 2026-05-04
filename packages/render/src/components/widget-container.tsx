@@ -206,7 +206,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 
 									return (
 										<>
-											<text fg={props.focused && is_first() ? theme.border_highlight : theme.border} content={top_line()} />
+											<text fg={props.focused ? theme.border_highlight : theme.border} content={top_line()} />
 
 											<box ref={(el: Renderable) => { row_refs.set(row_index(), el); }} flexDirection="row" alignItems="stretch" width={content_width()}>
 												<For each={row.widgets}>
@@ -239,7 +239,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 																width={box_width()}
 																border={getWidgetBorderSides(row, widget_idx())}
 																borderStyle="rounded"
-																borderColor={(focused() || (props.focused && (widget_idx() === 0 || widget_idx() === row.columns - 1))) ? theme.border_highlight : theme.border}
+																borderColor={(focused() || props.focused) ? theme.border_highlight : theme.border}
 																backgroundColor={focused() ? theme.bg_highlight : undefined}
 																flexDirection="column"
 																minHeight={gw.size_hint.min_height}
