@@ -1,4 +1,5 @@
 import { watch, type FSWatcher } from "node:fs";
+import type { EventEmitter } from "node:events";
 import { join } from "node:path";
 import { readFile, lstat } from "node:fs/promises";
 
@@ -45,7 +46,7 @@ function tryWatch(
 ): FSWatcher | null {
 	try {
 		const watcher = watch(target, options, callback);
-		watcher.on("error", () => {});
+		(watcher as unknown as EventEmitter).on("error", () => {});
 		return watcher;
 	} catch {
 		return null;

@@ -76,6 +76,23 @@ packages/
 - **Grid layout** computed by pure functions in `widget-grid.ts` (`computeRows`, `buildBorderLine`, etc.)
 - **Shared borders** — widgets only draw left/right borders; horizontal borders are `<text>` elements with junction characters
 
+### Command Palette
+
+- **`:`-triggered overlay** in `components/palette-overlay.tsx`. Fuzzy-matched via `fzf-for-js` (npm `fzf`).
+- Commands registered via `register_command(cmd)` from `lib/palette/registry.ts`. Side-effect imports in `lib/palette/index.ts` wire built-ins, standup, and batch commands at module load.
+- A `Command<Args>` has `id`, `label`, `description`, optional `keywords` and `args_schema` (Zod), and `execute: (args, ctx) => Promise<Result<void, CommandError>>`. Never throws.
+- Commands receive a `CommandContext` with config, repo accessors, AI provider accessor, `emit`, `open_overlay`, `trigger_rescan`, and renderer suspend/resume hooks. The context is the only seam — commands never reach for globals, making them trivially fakeable in tests.
+- Args are pre-normalised by `parse_input` into `{ _: positional[], ...flags }` before zod validates. When a `.transform()` schema renames input fields (e.g. `"dry-run"` → `dry_run`), the resulting `ZodEffects<...>` cannot cast directly to `ZodSchema<Output>` — use `as unknown as ZodSchema<Output>`. When field names match, a direct cast works (see `standup.ts` vs `batch.ts`).
+- Overlays opened via `ctx.open_overlay(id, payload)` are routed in `main-screen.tsx`'s dispatcher. Long-running commands (batch) use a subscription pattern in the payload because commands run outside Solid reactive scope — main-screen pumps `subscribe`/`subscribe_done` callbacks into Solid signals the overlay reads.
+
+### Activity Sources
+
+- **Plugin pattern** for the standup pipeline. `ActivitySource` lives in `packages/core/src/activity/`. Each source has `id`, `label`, and `collect(repo, range) => Promise<Result<ActivitySection | null, ActivityError>>`.
+- Built-in `git` source self-registers on import via `register_activity_source(...)` in `activity/sources/git.ts`. Registry barrel in `activity/index.ts` does the side-effect import.
+- Standup command iterates `list_activity_sources()` generically — never references specific source ids. Add a new source by creating a file under `activity/sources/` and registering; nothing else changes.
+- Out-of-tree plugins (e.g. devpad, Amazon SIM) ship as npm packages with a default export `(deps: PluginInit) => void`. User adds the package name to `~/.config/overview/config.json` `plugins: string[]`; `load_plugins()` dynamically imports each at startup. Failures log to stderr but don't crash.
+- AI prompt builder iterates `RepoActivity.sections[].items[]` generically — gains support for new sources for free.
+
 ### Error Handling
 
 - **@f0rbit/corpus** Result types: `ok()`, `err()`, `Result<T,E>`, `pipe()`, `try_catch_async()`
@@ -119,4 +136,6 @@ packages/
 
 7. **OCN (OpenCode) integration:** Reads `~/.local/state/ocn/*.json` state files during scan. PID liveness check via `process.kill(pid, 0)`. Gracefully returns empty map if state dir doesn't exist — the function signature uses `Result<..., never>` since all error paths degrade gracefully. `OCN_STATE_DIR` env var override supported for testing.
 
-8. **npm bundle build:** `bun build` CLI ignores tsconfig `jsx` settings. The `scripts/build-bundle.ts` script uses `Bun.build()` with `@opentui/solid/bun-plugin` (Babel + `babel-preset-solid`) to produce correct SolidJS output. `@opentui/*` and `solid-js` are external (native modules); everything else is bundled.
+8. **npm bundle build:** `bun build` CLI ignores tsconfig `jsx` settings. The `scripts/build-bundle.ts` script uses `Bun.build()` with `@opentui/solid/bun-plugin` (Babel + `babel-preset-solid`) to produce correct SolidJS output. **Only `@opentui/core` is external** (it has a native binary `@opentui/core-darwin-arm64`). `@opentui/solid`, `solid-js`, and everything else are bundled — required so the bundled `solid-js` and `@opentui/solid` share the same module instance (otherwise `RendererContext` lives in a different solid-js than the user code, throwing "No renderer found"). The plugin's `onLoad` interceptor rewrites `solid-js/dist/server.js` → `solid.js` at build time, baking the universal/browser-friendly reactivity build into the dist.
+
+9. **Bundle splitting for lazy SDK loading:** `scripts/build-bundle.ts` sets `splitting: true` so `await import("./anthropic")` and `await import("./bedrock")` produce separate chunks. Without `splitting: true` Bun inlines the dynamic imports into the main bundle (verified: 1659 KB monolithic vs 459 KB main + chunks). After dep changes that affect lazy-loaded modules, verify by inspecting `dist/` for chunk count and main bundle size — main should stay under 500 KB; AI SDKs land in ~360 KB and ~145 KB chunks loaded only when `ai_provider !== null`.
