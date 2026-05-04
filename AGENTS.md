@@ -120,6 +120,146 @@ packages/
 - **Mock keyboard:** `mockInput.pressKey("j")` — must call `renderOnce()` after for state updates
 - Devpad widgets will show error/loading in tests (no API available) — expected behavior
 
+## Plugin Development
+
+Out-of-tree plugins extend the standup pipeline with new activity types (devpad tasks, Amazon SIM tickets, Linear issues, etc.). They ship as standalone npm packages and register themselves at app startup.
+
+### Plugin contract
+
+A plugin is a package whose default export is a function that receives a `PluginInit` and registers one or more `ActivitySource`s:
+
+```ts
+import type { PluginInit, ActivitySource, ActivitySection } from "@overview/core";
+import { ok, err, type Result } from "@f0rbit/corpus";
+
+const my_source: ActivitySource = {
+  id: "my-source",                          // unique across all plugins
+  label: "My Source",                       // shown in standup overlay headers
+  async collect(repo, range) {
+    // repo: RepoNode { type: "repo" | "worktree" | "directory", path, name, status, children }
+    // range: StandupRange { kind, since, until, label }
+    // skip non-leaf nodes — directory aggregates have no source-specific data
+    if (repo.type === "directory") return ok(null);
+
+    const items = await fetch_my_items(repo.path, range.since, range.until);
+    if (items.length === 0) return ok(null);  // null = no section rendered
+
+    const section: ActivitySection = {
+      source_id: "my-source",
+      source_label: "My Source",
+      summary_line: `${items.length} items`,
+      items: items.map(i => ({
+        id: i.id,
+        title: i.title,
+        timestamp: i.unix_seconds,
+        author: i.assignee,
+        url: i.permalink,
+        meta: { status: i.state, priority: i.priority },
+      })),
+      metrics: { total: items.length },
+    };
+    return ok(section);
+  },
+};
+
+export default async (deps: PluginInit) => {
+  deps.register_activity_source(my_source);
+};
+```
+
+### Required types (all from `@overview/core`)
+
+- `ActivitySource` — `{ id, label, collect(repo, range) }`. `collect` returns `Promise<Result<ActivitySection | null, ActivityError>>`. Returning `ok(null)` skips this source for this repo (no section rendered).
+- `ActivitySection` — `{ source_id, source_label, summary_line, items, metrics? }`. The standup overlay renders sections generically; the AI prompt iterates `items` source-agnostically.
+- `ActivityItem` — `{ id, title, timestamp, author?, url?, meta? }`. `meta` renders inline as `[k=v]` tags in the raw view.
+- `StandupRange` — `{ kind, since: Date, until: Date, label }`. Filter your data to this window.
+- `PluginInit` — `{ register_activity_source }`. The only injected dep today; more may be added.
+
+### Package shape
+
+Minimal `package.json`:
+
+```jsonc
+{
+  "name": "@you/overview-my-source",
+  "type": "module",
+  "main": "dist/index.js",
+  "exports": { ".": "./dist/index.js" },
+  "peerDependencies": {
+    "@overview/core": "*",
+    "@f0rbit/corpus": "*"
+  }
+}
+```
+
+Build to ESM with TypeScript or Bun. Make `@overview/core` a peer dependency — overview will provide it from its own `node_modules` at load time.
+
+### User-side install
+
+```sh
+bun add -g @you/overview-my-source
+```
+
+Then in `~/.config/overview/config.json`:
+
+```jsonc
+{
+  "plugins": ["@you/overview-my-source"]
+}
+```
+
+`load_plugins()` runs at startup, dynamically `import()`-s each name, calls the default export with `{ register_activity_source }`. Failures log to stderr (`[plugin <name>] <kind>: <cause>`) but never crash the app — the user can fix or remove the plugin entry.
+
+### Error handling rules
+
+- **Never throw** from `collect()`. Always return `Result`. Catch network/API errors yourself and map them to `ActivityError` (use `kind: "source_failed"` with your `source_id` and a concise cause).
+- **Wrap external SDK calls with `try_catch_async`** from `@f0rbit/corpus`. Don't let third-party throws escape into the loader.
+- **Degrade gracefully**: if your auth is missing or the API is unreachable, return `ok(null)` rather than `err(...)`. The user shouldn't see error noise during a normal standup unless something genuinely broken needs their attention.
+- **Respect the range**: only return items whose `timestamp` falls within `[range.since, range.until)`. The standup view trusts your filter.
+
+### Performance expectations
+
+- `collect()` runs once per (repo × source) on every `:standup` invocation. The standup command parallelises across repos (pool of 8) but each source within a repo runs sequentially.
+- Aim for sub-second per-repo per-source. Cache aggressively in module scope if your API has request limits.
+- Don't spawn subprocesses unless you have to — keep network/SDK calls preferred. If you must spawn, use `Bun.spawn`, never `child_process`.
+
+### Testing your plugin
+
+The same in-memory-fake pattern overview uses internally works for plugin tests:
+
+```ts
+import { test, expect } from "bun:test";
+import my_plugin from "../src/index";
+
+test("plugin registers a source", async () => {
+  const sources = [];
+  await my_plugin({ register_activity_source: (s) => sources.push(s) });
+  expect(sources).toHaveLength(1);
+  expect(sources[0].id).toBe("my-source");
+});
+
+test("source returns ok(null) for empty range", async () => {
+  // ... build a fake RepoNode + StandupRange, call source.collect(...)
+});
+```
+
+For real-API integration tests, gate with an env var so CI doesn't hit external services.
+
+### Naming conventions
+
+- Plugin package names: `@scope/overview-<source>` (e.g. `@you/overview-linear`, `@yourcompany/overview-amazon-sim`).
+- `source_id` should be kebab-case and stable forever — it shows up in user config (future: enable/disable specific sources) and in AI prompts. Don't rename it once shipped.
+- `source_label` is human-readable; can change without breaking anything.
+
+### Future hooks (not yet exposed)
+
+`PluginInit` will likely grow to include hooks for:
+- Custom palette commands (`register_command`)
+- Custom widgets (`registerWidget`)
+- Cleanup/shutdown lifecycle
+
+For now, plugins can only register activity sources. Don't reach into other modules through `import "@overview/core/..."` paths — those are private and may break across versions.
+
 ## Gotchas
 
 1. **Scrollbox content height with nested layouts:** The scrollbox's `content.y` includes ancestor offsets. Always use `el.y - scrollbox_ref.content.y` for content-relative coordinates, never `el.y + scrollTop`.
