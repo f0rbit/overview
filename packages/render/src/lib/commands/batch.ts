@@ -1,7 +1,8 @@
 import { z } from "zod";
-import { ok } from "@f0rbit/corpus";
+import { ok, err, type Result } from "@f0rbit/corpus";
 import { createPool } from "@overview/core";
 import { register_command } from "../palette/registry";
+import type { CommandError } from "../palette/types";
 import { execute, plan, type BatchAction, type BatchFilter } from "../batch";
 
 const batch_args_schema = z.object({
@@ -9,25 +10,32 @@ const batch_args_schema = z.object({
 	filter: z.enum(["all", "dirty", "clean", "ahead", "behind"]).optional(),
 	"dry-run": z.boolean().optional(),
 	force: z.boolean().optional(),
-}).transform((raw: {
-	_?: string[];
-	filter?: "all" | "dirty" | "clean" | "ahead" | "behind";
-	"dry-run"?: boolean;
-	force?: boolean;
-}) => {
-	// Positional: must be "all" (sanity check — matches `:fetch all` syntax)
+});
+
+export type BatchRawArgs = z.infer<typeof batch_args_schema>;
+
+interface BatchArgs {
+	filter: BatchFilter;
+	dry_run: boolean;
+	force: boolean;
+}
+
+export function resolve_batch_args(
+	raw: BatchRawArgs,
+): Result<BatchArgs, CommandError> {
 	const positional = raw._?.[0];
 	if (positional !== undefined && positional !== "all") {
-		throw new Error(`unknown positional: ${positional}. Try '... all'.`);
+		return err({
+			kind: "invalid_args",
+			details: `unknown positional: ${positional}. Try '... all'.`,
+		});
 	}
-	return {
-		filter: (raw.filter ?? "all") as BatchFilter,
+	return ok({
+		filter: raw.filter ?? "all",
 		dry_run: raw["dry-run"] ?? false,
 		force: raw.force ?? false,
-	};
-}) as unknown as z.ZodSchema<{ filter: BatchFilter; dry_run: boolean; force: boolean }>;
-
-type BatchArgs = { filter: BatchFilter; dry_run: boolean; force: boolean };
+	});
+}
 
 async function run_batch(
 	action: BatchAction,
@@ -112,29 +120,41 @@ async function run_batch(
 	return ok(undefined);
 }
 
-register_command<BatchArgs>({
+register_command<BatchRawArgs>({
 	id: ":fetch all",
 	label: "Fetch all repos",
 	description: "Run git fetch across all repos",
 	keywords: ["fetch", "all"],
 	args_schema: batch_args_schema,
-	execute: async (args, ctx) => run_batch("fetch", args, ctx),
+	execute: async (raw_args, ctx) => {
+		const args_result = resolve_batch_args(raw_args);
+		if (!args_result.ok) return args_result;
+		return run_batch("fetch", args_result.value, ctx);
+	},
 });
 
-register_command<BatchArgs>({
+register_command<BatchRawArgs>({
 	id: ":pull all",
 	label: "Pull clean repos",
 	description: "Run git pull across all repos (skips dirty unless --force)",
 	keywords: ["pull", "all"],
 	args_schema: batch_args_schema,
-	execute: async (args, ctx) => run_batch("pull", args, ctx),
+	execute: async (raw_args, ctx) => {
+		const args_result = resolve_batch_args(raw_args);
+		if (!args_result.ok) return args_result;
+		return run_batch("pull", args_result.value, ctx);
+	},
 });
 
-register_command<BatchArgs>({
+register_command<BatchRawArgs>({
 	id: ":push all",
 	label: "Push repos with commits ahead",
 	description: "Run git push across all repos with commits to push",
 	keywords: ["push", "all"],
 	args_schema: batch_args_schema,
-	execute: async (args, ctx) => run_batch("push", args, ctx),
+	execute: async (raw_args, ctx) => {
+		const args_result = resolve_batch_args(raw_args);
+		if (!args_result.ok) return args_result;
+		return run_batch("push", args_result.value, ctx);
+	},
 });

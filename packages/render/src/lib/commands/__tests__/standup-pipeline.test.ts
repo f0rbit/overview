@@ -16,6 +16,7 @@ import {
 import { register_command, get_command, _clear_registry_for_tests } from "../../palette/registry";
 import type { CommandContext } from "../../palette/context";
 import type { PaletteEvent } from "../../palette/types";
+import { resolve_standup_range } from "../standup";
 
 // Helper to create a fake CommandContext with in-memory event log
 interface FakeContext extends CommandContext {
@@ -211,6 +212,18 @@ describe("standup pipeline integration", () => {
 
 		expect(activity.repo_name).toBe("test-repo");
 		expect(activity.sections).toHaveLength(0);
+	});
+
+	test("resolve_standup_range: positional 'daily' returns ok", () => {
+		const r = resolve_standup_range({ _: ["daily"] });
+		expect(r.ok).toBe(true);
+		if (r.ok) expect(r.value.range).toBe("daily");
+	});
+
+	test("resolve_standup_range: missing range returns invalid_args", () => {
+		const r = resolve_standup_range({});
+		expect(r.ok).toBe(false);
+		if (!r.ok) expect(r.error.kind).toBe("invalid_args");
 	});
 
 	test("collects repos recursively from directories", async () => {

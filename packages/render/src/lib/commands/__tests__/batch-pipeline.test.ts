@@ -5,6 +5,7 @@ import { register_command, get_command, _clear_registry_for_tests } from "../../
 import type { CommandContext } from "../../palette/context";
 import type { PaletteEvent } from "../../palette/types";
 import type { BatchTask } from "../../batch/planner";
+import { resolve_batch_args } from "../batch";
 
 // Register batch commands (these would normally be imported from batch.ts)
 // For now, we'll register them inline for testing purposes
@@ -294,6 +295,20 @@ describe("batch commands integration", () => {
 		const payload = fake_ctx.last_overlay?.payload as any;
 		expect(payload.initial_tasks).toHaveLength(2);
 		expect(payload.initial_tasks.map((t: BatchTask) => t.repo_name)).toEqual(["repo1", "repo2"]);
+	});
+
+	test("resolve_batch_args: empty input returns ok with defaults", () => {
+		const r = resolve_batch_args({});
+		expect(r.ok).toBe(true);
+		if (r.ok) {
+			expect(r.value).toEqual({ filter: "all", dry_run: false, force: false });
+		}
+	});
+
+	test("resolve_batch_args: bogus positional returns invalid_args", () => {
+		const r = resolve_batch_args({ _: ["bogus"] });
+		expect(r.ok).toBe(false);
+		if (!r.ok) expect(r.error.kind).toBe("invalid_args");
 	});
 
 	test("batch commands pass correct payload structure to overlay", async () => {
