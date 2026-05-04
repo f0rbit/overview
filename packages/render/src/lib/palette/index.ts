@@ -9,3 +9,4 @@ export { match_commands } from "./fuzzy";
 
 import "../commands/builtin"; // registers :quit, :help, :reload at module load
 import "../commands/standup"; // registers :standup with daily|weekly arg
+import "../commands/batch"; // registers :fetch all, :pull all, :push all

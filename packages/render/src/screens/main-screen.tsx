@@ -5,6 +5,8 @@ import { scanAndCollect, captureGraph, collectStats, collectStatus, createRepoWa
 import { RepoList, GitGraph, WidgetContainer, StatusBar, HelpOverlay, type AppMode } from "../components";
 import { PaletteOverlay } from "../components/palette-overlay";
 import { StandupOverlay, type StandupOverlayPayload } from "../components/standup-overlay";
+import { BatchOverlay, type BatchOverlayPayload } from "../components/batch-overlay";
+import type { BatchTask, BatchAction, BatchFilter } from "../lib/batch";
 import { filterTree, sortTree, nextFilter, nextSort, type SortMode, type FilterMode } from "../lib/filter";
 import { createFetchContext } from "../lib/fetch-context";
 import { launchGgi, launchEditor, launchSessionizer } from "../lib/actions";
@@ -72,6 +74,9 @@ export function MainScreen(props: MainScreenProps) {
 	const [paletteOpen, setPaletteOpen] = createSignal(false);
 	const [standupOpen, setStandupOpen] = createSignal(false);
 	const [standupPayload, setStandupPayload] = createSignal<StandupOverlayPayload | null>(null);
+	const [batchOpen, setBatchOpen] = createSignal(false);
+	const [batchPayload, setBatchPayload] = createSignal<BatchOverlayPayload | null>(null);
+	let batch_unsubs: Array<() => void> = [];
 	const [widgetConfigs, setWidgetConfigs] = createSignal<WidgetConfig[]>(defaultWidgetConfig());
 	const [repoVersion, setRepoVersion] = createSignal(0);
 	const [aiProvider, setAiProvider] = createSignal<AIProvider | null>(null);
@@ -128,7 +133,37 @@ export function MainScreen(props: MainScreenProps) {
 				setStandupOpen(true);
 				return;
 			}
-			// future overlays land here (batch). Unknown ids are no-ops with a warn.
+			if (id === "batch") {
+				const cmd_payload = payload as {
+					action: BatchAction;
+					filter: BatchFilter;
+					dry_run: boolean;
+					force: boolean;
+					initial_tasks: readonly BatchTask[];
+					subscribe: (cb: (tasks: readonly BatchTask[]) => void) => () => void;
+					subscribe_done: (cb: () => void) => () => void;
+					abort: () => void;
+				};
+
+				const [tasks, setTasks] = createSignal<readonly BatchTask[]>(cmd_payload.initial_tasks);
+				const [done, setDone] = createSignal(false);
+
+				const unsub_tasks = cmd_payload.subscribe((next) => setTasks(next));
+				const unsub_done = cmd_payload.subscribe_done(() => setDone(true));
+
+				setBatchPayload({
+					action: cmd_payload.action,
+					filter: cmd_payload.filter,
+					dry_run: cmd_payload.dry_run,
+					force: cmd_payload.force,
+					tasks_accessor: tasks,
+					done_accessor: done,
+					abort: cmd_payload.abort,
+				});
+				setBatchOpen(true);
+				batch_unsubs = [unsub_tasks, unsub_done];
+				return;
+			}
 			console.error(`[palette] unknown overlay id: ${id}`);
 		},
 		trigger_rescan: () => { performScan(); },
@@ -277,6 +312,11 @@ export function MainScreen(props: MainScreenProps) {
 
 		if (standupOpen()) {
 			// standup overlay handles its own keys; main-screen suppresses everything else
+			return;
+		}
+
+		if (batchOpen()) {
+			// batch overlay handles its own keys; main-screen suppresses everything else
 			return;
 		}
 
@@ -483,6 +523,17 @@ export function MainScreen(props: MainScreenProps) {
 				payload={standupPayload()}
 				ai_provider={aiProvider()}
 				onClose={() => setStandupOpen(false)}
+			/>
+
+			<BatchOverlay
+				visible={batchOpen()}
+				payload={batchPayload()}
+				onClose={() => {
+					setBatchOpen(false);
+					setBatchPayload(null);
+					for (const fn of batch_unsubs) fn();
+					batch_unsubs = [];
+				}}
 			/>
 		</box>
 	);
