@@ -3,10 +3,13 @@ import { useKeyboard, useTerminalDimensions, useRenderer } from "@opentui/solid"
 import type { RepoNode, GitGraphOutput, OverviewConfig, HealthStatus, WidgetConfig } from "@overview/core";
 import { scanAndCollect, captureGraph, collectStats, collectStatus, createRepoWatcher, collectCommitActivity } from "@overview/core";
 import { RepoList, GitGraph, WidgetContainer, StatusBar, HelpOverlay, type AppMode } from "../components";
+import { PaletteOverlay } from "../components/palette-overlay";
 import { filterTree, sortTree, nextFilter, nextSort, type SortMode, type FilterMode } from "../lib/filter";
 import { createFetchContext } from "../lib/fetch-context";
 import { launchGgi, launchEditor, launchSessionizer } from "../lib/actions";
 import { loadWidgetState, saveWidgetState, defaultWidgetConfig, getWidgetState, updateWidgetState } from "../lib/widget-state";
+import { createCommandContext, type CommandContext, type CommandError } from "../lib/palette";
+import "../lib/palette"; // side-effect import registers built-in commands
 import { theme } from "../theme";
 
 interface MainScreenProps {
@@ -43,6 +46,14 @@ function updateRepoStatus(nodes: RepoNode[], repoPath: string, status: RepoNode[
 	}
 }
 
+function describe_command_error(e: CommandError): string {
+	switch (e.kind) {
+		case "invalid_args": return e.details;
+		case "execution_failed": return e.cause;
+		case "cancelled": return "cancelled";
+	}
+}
+
 export function MainScreen(props: MainScreenProps) {
 	const [repos, setRepos] = createSignal<RepoNode[]>([]);
 	const [selectedNode, setSelectedNode] = createSignal<RepoNode | null>(null);
@@ -56,6 +67,7 @@ export function MainScreen(props: MainScreenProps) {
 	const [sortMode, setSortMode] = createSignal<SortMode>(props.config.sort);
 	const [filterMode, setFilterMode] = createSignal<FilterMode>(props.config.filter);
 	const [showHelp, setShowHelp] = createSignal(false);
+	const [paletteOpen, setPaletteOpen] = createSignal(false);
 	const [widgetConfigs, setWidgetConfigs] = createSignal<WidgetConfig[]>(defaultWidgetConfig());
 	const [repoVersion, setRepoVersion] = createSignal(0);
 
@@ -93,6 +105,25 @@ export function MainScreen(props: MainScreenProps) {
 		const enabled = configs.filter((c) => c.enabled).length;
 		return `${enabled}/${configs.length} widgets`;
 	});
+
+	const command_ctx = createMemo<CommandContext>(() => createCommandContext({
+		config: props.config,
+		get_repos: () => repos(),
+		get_selected_repo: () => selectedNode(),
+		get_ai_provider: () => null, // Phase C will replace
+		emit: (event) => {
+			if (event.kind === "status") setMessage(event.text);
+			if (event.kind === "command_failed") setMessage(`✗ ${event.command_id}: ${describe_command_error(event.error)}`);
+			// command_done: silent — most commands have their own UI surface
+		},
+		open_overlay: (id, _payload) => {
+			if (id === "help") { setShowHelp(true); return; }
+			// future overlays land here (standup, batch). Unknown ids are no-ops with a warn.
+			console.error(`[palette] unknown overlay id: ${id}`);
+		},
+		trigger_rescan: () => { performScan(); },
+		renderer: { suspend: () => renderer.suspend(), resume: () => renderer.resume() },
+	}));
 
 	async function handleWidgetConfigChange(configs: WidgetConfig[]) {
 		setWidgetConfigs(configs);
@@ -222,12 +253,22 @@ export function MainScreen(props: MainScreenProps) {
 	useKeyboard((key) => {
 		const m = mode();
 
+		if (m === "PALETTE") {
+			// palette overlay handles its own keys; main-screen suppresses everything else
+			return;
+		}
+
 		if (key.name === "tab") {
 			cycleFocus();
 			return;
 		}
 
 		if (m === "NORMAL") {
+			if (key.raw === ":") {
+				setMode("PALETTE");
+				setPaletteOpen(true);
+				return;
+			}
 			switch (key.name) {
 				case "q":
 				case "escape":
@@ -405,6 +446,15 @@ export function MainScreen(props: MainScreenProps) {
 			/>
 
 			<HelpOverlay visible={showHelp()} onClose={() => setShowHelp(false)} />
+
+			<PaletteOverlay
+				visible={paletteOpen()}
+				ctx={command_ctx()}
+				onClose={() => {
+					setPaletteOpen(false);
+					setMode("NORMAL");
+				}}
+			/>
 		</box>
 	);
 }

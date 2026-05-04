@@ -1,7 +1,7 @@
 import { createMemo, Show } from "solid-js";
 import { theme } from "../theme";
 
-export type AppMode = "NORMAL" | "DETAIL" | "SEARCH" | "HELP";
+export type AppMode = "NORMAL" | "DETAIL" | "SEARCH" | "HELP" | "PALETTE";
 
 interface StatusBarProps {
 	mode: AppMode;
@@ -18,6 +18,7 @@ const KEY_HINTS: Record<AppMode, string> = {
 	DETAIL: "j/k:scroll  h/l:panel  g:ggi  r:refresh  q:back",
 	SEARCH: "type to filter  Esc:cancel",
 	HELP: "q:close",
+	PALETTE: "type to filter  Esc:cancel  Enter:run",
 };
 
 export function StatusBar(props: StatusBarProps) {
