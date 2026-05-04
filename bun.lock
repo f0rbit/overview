@@ -5,8 +5,6 @@
     "": {
       "name": "overview",
       "dependencies": {
-        "@devpad/api": "^2.0.4",
-        "@f0rbit/corpus": "^0.3.5",
         "@opentui/core": "^0.1.80",
         "@opentui/solid": "^0.1.80",
         "solid-js": "^1.9.11",
@@ -115,7 +113,7 @@
 
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@1.9.4", "", { "os": "win32", "cpu": "x64" }, "sha512-8Y5wMhVIPaWe6jw2H+KlEm4wP/f7EW3810ZLmDlrEEy5KvBsb9ECEfu/kMWD484ijfQ8+nIi0giMgu9g1UAuuA=="],
 
-    "@devpad/api": ["@devpad/api@2.0.4", "", { "dependencies": { "@f0rbit/corpus": "^0.3.5", "zod": "^3.22.4" } }, "sha512-e+fr0P9VPbgnF8XnWZ1MsLcekroZNiRHwE2qG5r7WSBlw2t95lyJgAm1hgioMWi7sZBZ8SN9xN6ABI0hhqNW9Q=="],
+    "@devpad/api": ["@devpad/api@2.1.3", "", { "dependencies": { "@f0rbit/corpus": "^0.3.5", "zod": "^3.22.4" } }, "sha512-dwJtDa8jAptHKA0frnYgUy7TU+/ZIA8CqwjP+Mf0LyFiR8GDh700K9EpXDQ6bN2DFJia5zRz5D9jdGfziDursw=="],
 
     "@dimforge/rapier2d-simd-compat": ["@dimforge/rapier2d-simd-compat@0.17.3", "", {}, "sha512-bijvwWz6NHsNj5e5i1vtd3dU2pDhthSaTUZSh14DUGGKJfw8eMnlWZsxwHBxB/a3AXVNDjL9abuHw1k9FGR+jg=="],
 
@@ -426,10 +424,6 @@
     "yoga-layout": ["yoga-layout@3.2.1", "", {}, "sha512-0LPOt3AxKqMdFBZA3HBAt/t/8vIKq7VaQYbuA8WxCgung+p9TVyKRYdpvCb80HcdTN2NkbIKbhNwKUfm3tQywQ=="],
 
     "zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
-
-    "@overview/core/@devpad/api": ["@devpad/api@2.1.3", "", { "dependencies": { "@f0rbit/corpus": "^0.3.5", "zod": "^3.22.4" } }, "sha512-dwJtDa8jAptHKA0frnYgUy7TU+/ZIA8CqwjP+Mf0LyFiR8GDh700K9EpXDQ6bN2DFJia5zRz5D9jdGfziDursw=="],
-
-    "@overview/render/@devpad/api": ["@devpad/api@2.1.3", "", { "dependencies": { "@f0rbit/corpus": "^0.3.5", "zod": "^3.22.4" } }, "sha512-dwJtDa8jAptHKA0frnYgUy7TU+/ZIA8CqwjP+Mf0LyFiR8GDh700K9EpXDQ6bN2DFJia5zRz5D9jdGfziDursw=="],
 
     "babel-plugin-jsx-dom-expressions/@babel/helper-module-imports": ["@babel/helper-module-imports@7.18.6", "", { "dependencies": { "@babel/types": "^7.18.6" } }, "sha512-0NFvs3VkuSYbFi1x2Vd6tKrywq+z/cLeYC/RJNFrIX/30Bf5aiGYbtvGXolEktzJH8o5E5KJ3tT+nkxuuZFVlA=="],
 
