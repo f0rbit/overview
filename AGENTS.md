@@ -74,7 +74,7 @@ packages/
 - **`WidgetSizeHint`** has `span: "full" | "half" | "auto"` and `min_height: number`
 - **No `allocated_rows`** — widgets self-size, scrollbox handles overflow
 - **Grid layout** computed by pure functions in `widget-grid.ts` (`computeRows`, `buildBorderLine`, etc.)
-- **Shared borders** — widgets only draw left/right borders; horizontal borders are `<text>` elements with junction characters
+- **Shared borders** — widgets draw ONLY their outer-perimeter left/right borders. Inner vertical dividers between widgets in a row are dedicated 1-cell `<box>` elements (always gray, never highlight). Horizontal borders are `<text>` elements with junction characters. This split is required because opentui's `<box>` only supports a single `borderColor` per box — no per-side colors — so coloring outer-perimeter blue while keeping inner dividers gray needs separate ownership.
 
 ### Command Palette
 
