@@ -4,6 +4,7 @@ import type { RepoNode, GitGraphOutput, OverviewConfig, HealthStatus, WidgetConf
 import { scanAndCollect, captureGraph, collectStats, collectStatus, createRepoWatcher, collectCommitActivity } from "@overview/core";
 import { RepoList, GitGraph, WidgetContainer, StatusBar, HelpOverlay, type AppMode } from "../components";
 import { PaletteOverlay } from "../components/palette-overlay";
+import { StandupOverlay, type StandupOverlayPayload } from "../components/standup-overlay";
 import { filterTree, sortTree, nextFilter, nextSort, type SortMode, type FilterMode } from "../lib/filter";
 import { createFetchContext } from "../lib/fetch-context";
 import { launchGgi, launchEditor, launchSessionizer } from "../lib/actions";
@@ -68,6 +69,8 @@ export function MainScreen(props: MainScreenProps) {
 	const [filterMode, setFilterMode] = createSignal<FilterMode>(props.config.filter);
 	const [showHelp, setShowHelp] = createSignal(false);
 	const [paletteOpen, setPaletteOpen] = createSignal(false);
+	const [standupOpen, setStandupOpen] = createSignal(false);
+	const [standupPayload, setStandupPayload] = createSignal<StandupOverlayPayload | null>(null);
 	const [widgetConfigs, setWidgetConfigs] = createSignal<WidgetConfig[]>(defaultWidgetConfig());
 	const [repoVersion, setRepoVersion] = createSignal(0);
 
@@ -116,9 +119,14 @@ export function MainScreen(props: MainScreenProps) {
 			if (event.kind === "command_failed") setMessage(`✗ ${event.command_id}: ${describe_command_error(event.error)}`);
 			// command_done: silent — most commands have their own UI surface
 		},
-		open_overlay: (id, _payload) => {
+		open_overlay: (id, payload) => {
 			if (id === "help") { setShowHelp(true); return; }
-			// future overlays land here (standup, batch). Unknown ids are no-ops with a warn.
+			if (id === "standup") {
+				setStandupPayload(payload as StandupOverlayPayload);
+				setStandupOpen(true);
+				return;
+			}
+			// future overlays land here (batch). Unknown ids are no-ops with a warn.
 			console.error(`[palette] unknown overlay id: ${id}`);
 		},
 		trigger_rescan: () => { performScan(); },
@@ -255,6 +263,11 @@ export function MainScreen(props: MainScreenProps) {
 
 		if (m === "PALETTE") {
 			// palette overlay handles its own keys; main-screen suppresses everything else
+			return;
+		}
+
+		if (standupOpen()) {
+			// standup overlay handles its own keys; main-screen suppresses everything else
 			return;
 		}
 
@@ -454,6 +467,12 @@ export function MainScreen(props: MainScreenProps) {
 					setPaletteOpen(false);
 					setMode("NORMAL");
 				}}
+			/>
+
+			<StandupOverlay
+				visible={standupOpen()}
+				payload={standupPayload()}
+				onClose={() => setStandupOpen(false)}
 			/>
 		</box>
 	);

@@ -18,6 +18,7 @@ export * from "./github";
 export * from "./devpad";
 export * from "./concurrency";
 export * from "./ocn";
+export * from "./activity";
 
 export type ScanAndCollectError = ScanError;
 

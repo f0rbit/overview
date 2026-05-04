@@ -8,3 +8,4 @@ export { parse_input } from "./parser";
 export { match_commands } from "./fuzzy";
 
 import "../commands/builtin"; // registers :quit, :help, :reload at module load
+import "../commands/standup"; // registers :standup with daily|weekly arg

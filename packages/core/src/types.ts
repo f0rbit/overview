@@ -175,6 +175,7 @@ export interface OverviewConfig {
 		editor: string;
 		sessionizer: string | null;
 	};
+	plugins?: readonly string[];
 }
 
 // Default config factory
@@ -195,5 +196,6 @@ export function defaultConfig(): OverviewConfig {
 			editor: "$EDITOR",
 			sessionizer: null,
 		},
+		plugins: [],
 	};
 }
