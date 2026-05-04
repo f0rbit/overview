@@ -378,12 +378,13 @@ describe("buildBorderLine", () => {
 		}
 	});
 
-	test("top border, 2-col next row → has ┬ at midpoint", () => {
+	test("top border, 2-col next row → has ┬ at divider column", () => {
 		const line = buildBorderLine("top", W, null, twoCol);
 		expect(line.length).toBe(W);
 		expect(line[0]!).toBe("╭");
 		expect(line[W - 1]!).toBe("╮");
-		expect(line[10]!).toBe("┬");
+		// 2-col layout: widgets share W-1 cells; divider sits at floor((W-1)/2) = 9
+		expect(line[9]!).toBe("┬");
 	});
 
 	test("bottom border, 1-col prev row → corners only", () => {
@@ -396,36 +397,36 @@ describe("buildBorderLine", () => {
 		}
 	});
 
-	test("bottom border, 2-col prev row → has ┴ at midpoint", () => {
+	test("bottom border, 2-col prev row → has ┴ at divider column", () => {
 		const line = buildBorderLine("bottom", W, twoCol, null);
 		expect(line.length).toBe(W);
 		expect(line[0]!).toBe("╰");
 		expect(line[W - 1]!).toBe("╯");
-		expect(line[10]!).toBe("┴");
+		expect(line[9]!).toBe("┴");
 	});
 
-	test("mid border, 2-col prev → 1-col next → ┴ at midpoint", () => {
+	test("mid border, 2-col prev → 1-col next → ┴ at divider column", () => {
 		const line = buildBorderLine("mid", W, twoCol, oneCol);
 		expect(line.length).toBe(W);
 		expect(line[0]!).toBe("├");
 		expect(line[W - 1]!).toBe("┤");
-		expect(line[10]!).toBe("┴");
+		expect(line[9]!).toBe("┴");
 	});
 
-	test("mid border, 1-col prev → 2-col next → ┬ at midpoint", () => {
+	test("mid border, 1-col prev → 2-col next → ┬ at divider column", () => {
 		const line = buildBorderLine("mid", W, oneCol, twoCol);
 		expect(line.length).toBe(W);
 		expect(line[0]!).toBe("├");
 		expect(line[W - 1]!).toBe("┤");
-		expect(line[10]!).toBe("┬");
+		expect(line[9]!).toBe("┬");
 	});
 
-	test("mid border, 2-col prev → 2-col next → ┼ at midpoint", () => {
+	test("mid border, 2-col prev → 2-col next → ┼ at divider column", () => {
 		const line = buildBorderLine("mid", W, twoCol, twoCol);
 		expect(line.length).toBe(W);
 		expect(line[0]!).toBe("├");
 		expect(line[W - 1]!).toBe("┤");
-		expect(line[10]!).toBe("┼");
+		expect(line[9]!).toBe("┼");
 	});
 
 	test("mid border, 1-col prev → 1-col next → no junction", () => {
@@ -460,11 +461,11 @@ describe("buildBorderLine", () => {
 		}
 	});
 
-	test("odd total_width: junction at floor(width/2)", () => {
+	test("odd total_width: 2-col divider at floor((width-1)/2)", () => {
 		const odd_w = 21;
 		const line = buildBorderLine("top", odd_w, null, twoCol);
 		expect(line.length).toBe(odd_w);
-		expect(line[Math.floor(odd_w / 2)]!).toBe("┬");
+		expect(line[Math.floor((odd_w - 1) / 2)]!).toBe("┬");
 		expect(line[0]!).toBe("╭");
 		expect(line[odd_w - 1]!).toBe("╮");
 	});
@@ -475,8 +476,9 @@ describe("buildBorderLine", () => {
 		expect(line.length).toBe(W);
 		expect(line[0]!).toBe("╭");
 		expect(line[W - 1]!).toBe("╮");
-		expect(line[10]!).toBe("┬"); // Math.floor(30/3) = 10
-		expect(line[20]!).toBe("┬"); // Math.floor(60/3) = 20
+		// 3-col layout: widgets share W-2 cells; dividers at floor(28/3)=9 and floor(56/3)+1=19
+		expect(line[9]!).toBe("┬");
+		expect(line[19]!).toBe("┬");
 	});
 
 	test("bottom border, 3-col prev row → has two ┴ junctions", () => {
@@ -485,8 +487,8 @@ describe("buildBorderLine", () => {
 		expect(line.length).toBe(W);
 		expect(line[0]!).toBe("╰");
 		expect(line[W - 1]!).toBe("╯");
-		expect(line[10]!).toBe("┴");
-		expect(line[20]!).toBe("┴");
+		expect(line[9]!).toBe("┴");
+		expect(line[19]!).toBe("┴");
 	});
 
 	test("mid border, 3-col → 3-col → has two ┼ junctions", () => {
@@ -495,8 +497,8 @@ describe("buildBorderLine", () => {
 		expect(line.length).toBe(W);
 		expect(line[0]!).toBe("├");
 		expect(line[W - 1]!).toBe("┤");
-		expect(line[10]!).toBe("┼");
-		expect(line[20]!).toBe("┼");
+		expect(line[9]!).toBe("┼");
+		expect(line[19]!).toBe("┼");
 	});
 
 	test("mid border, 3-col → 1-col → two ┴ junctions", () => {
@@ -505,8 +507,8 @@ describe("buildBorderLine", () => {
 		expect(line.length).toBe(W);
 		expect(line[0]!).toBe("├");
 		expect(line[W - 1]!).toBe("┤");
-		expect(line[10]!).toBe("┴");
-		expect(line[20]!).toBe("┴");
+		expect(line[9]!).toBe("┴");
+		expect(line[19]!).toBe("┴");
 	});
 
 	test("mid border, 1-col → 3-col → two ┬ junctions", () => {
@@ -515,24 +517,24 @@ describe("buildBorderLine", () => {
 		expect(line.length).toBe(W);
 		expect(line[0]!).toBe("├");
 		expect(line[W - 1]!).toBe("┤");
-		expect(line[10]!).toBe("┬");
-		expect(line[20]!).toBe("┬");
+		expect(line[9]!).toBe("┬");
+		expect(line[19]!).toBe("┬");
 	});
 
 	test("mid border, 3-col → 2-col → mixed junctions", () => {
-		// 3-col junctions at 10, 20 (for W=30)
-		// 2-col junction at 15 (for W=30)
-		// At 10: in prev only → ┴
-		// At 15: in next only → ┬
-		// At 20: in prev only → ┴
+		// W=30. 3-col dividers at 9 and 19 (widgets share W-2=28 cells).
+		// 2-col divider at floor((W-1)/2) = floor(29/2) = 14.
+		// At 9: in prev only → ┴
+		// At 14: in next only → ┬
+		// At 19: in prev only → ┴
 		const W = 30;
 		const line = buildBorderLine("mid", W, threeCol, twoCol);
 		expect(line.length).toBe(W);
 		expect(line[0]!).toBe("├");
 		expect(line[W - 1]!).toBe("┤");
-		expect(line[10]!).toBe("┴");  // from 3-col above only
-		expect(line[15]!).toBe("┬");  // from 2-col below only
-		expect(line[20]!).toBe("┴");  // from 3-col above only
+		expect(line[9]!).toBe("┴");
+		expect(line[14]!).toBe("┬");
+		expect(line[19]!).toBe("┴");
 	});
 
 	test("mid border, 2-col → 3-col → mixed junctions", () => {
@@ -541,9 +543,9 @@ describe("buildBorderLine", () => {
 		expect(line.length).toBe(W);
 		expect(line[0]!).toBe("├");
 		expect(line[W - 1]!).toBe("┤");
-		expect(line[10]!).toBe("┬");  // from 3-col below only
-		expect(line[15]!).toBe("┴");  // from 2-col above only
-		expect(line[20]!).toBe("┬");  // from 3-col below only
+		expect(line[9]!).toBe("┬");   // from 3-col below only
+		expect(line[14]!).toBe("┴");  // from 2-col above only
+		expect(line[19]!).toBe("┬");  // from 3-col below only
 	});
 });
 
@@ -590,34 +592,34 @@ describe("buildBorderLineWithTitle", () => {
 // ── getWidgetBorderSides ───────────────────────────────────────────────────
 
 describe("getWidgetBorderSides", () => {
-	test("single-column row gets both sides", () => {
+	test("single-column row gets both outer sides", () => {
 		const r: GridRow = { widgets: [makeWidget("git-status", "full")], columns: 1 };
 		expect(getWidgetBorderSides(r, 0)).toEqual(["left", "right"]);
 	});
 
-	test("two-column row: left widget gets left only", () => {
+	test("two-column row: left widget gets left (outer) only", () => {
 		const r: GridRow = { widgets: [makeWidget("git-status", "half"), makeWidget("repo-meta", "half")], columns: 2 };
 		expect(getWidgetBorderSides(r, 0)).toEqual(["left"]);
 	});
 
-	test("two-column row: right widget gets left and right", () => {
+	test("two-column row: right widget gets right (outer) only", () => {
 		const r: GridRow = { widgets: [makeWidget("git-status", "half"), makeWidget("repo-meta", "half")], columns: 2 };
-		expect(getWidgetBorderSides(r, 1)).toEqual(["left", "right"]);
+		expect(getWidgetBorderSides(r, 1)).toEqual(["right"]);
 	});
 
-	test("three-column row: left widget gets left only", () => {
+	test("three-column row: left widget gets left (outer) only", () => {
 		const r: GridRow = { widgets: [makeWidget("git-status", "third"), makeWidget("repo-meta", "third"), makeWidget("github-ci", "third")], columns: 3 };
 		expect(getWidgetBorderSides(r, 0)).toEqual(["left"]);
 	});
 
-	test("three-column row: middle widget gets left only", () => {
+	test("three-column row: middle widget has no outer sides", () => {
 		const r: GridRow = { widgets: [makeWidget("git-status", "third"), makeWidget("repo-meta", "third"), makeWidget("github-ci", "third")], columns: 3 };
-		expect(getWidgetBorderSides(r, 1)).toEqual(["left"]);
+		expect(getWidgetBorderSides(r, 1)).toEqual([]);
 	});
 
-	test("three-column row: right widget gets left and right", () => {
+	test("three-column row: right widget gets right (outer) only", () => {
 		const r: GridRow = { widgets: [makeWidget("git-status", "third"), makeWidget("repo-meta", "third"), makeWidget("github-ci", "third")], columns: 3 };
-		expect(getWidgetBorderSides(r, 2)).toEqual(["left", "right"]);
+		expect(getWidgetBorderSides(r, 2)).toEqual(["right"]);
 	});
 });
 

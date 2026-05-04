@@ -206,7 +206,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 
 									return (
 										<>
-											<text fg={props.focused ? theme.border_highlight : theme.border} content={top_line()} />
+											<text fg={(props.focused && is_first()) ? theme.border_highlight : theme.border} content={top_line()} />
 
 											<box ref={(el: Renderable) => { row_refs.set(row_index(), el); }} flexDirection="row" alignItems="stretch" width={content_width()}>
 												<For each={row.widgets}>
@@ -215,56 +215,70 @@ export function WidgetContainer(props: WidgetContainerProps) {
 														if (!def) return null;
 
 														const focused = () => isFocused(gw.id);
+														const widgets_total_width = () => content_width() - (row.columns - 1);
 														const box_width = () => {
-															if (row.columns === 1) return content_width();
+															if (row.columns === 1) return widgets_total_width();
+															const wt = widgets_total_width();
 															if (row.columns === 2) {
-																const junction = Math.floor(content_width() / 2);
+																const junction = Math.floor(wt / 2);
 																if (widget_idx() === 0) return junction;
-																return content_width() - junction;
+																return wt - junction;
 															}
 															// 3-column
-															const j1 = Math.floor(content_width() / 3);
-															const j2 = Math.floor(2 * content_width() / 3);
+															const j1 = Math.floor(wt / 3);
+															const j2 = Math.floor(2 * wt / 3);
 															if (widget_idx() === 0) return j1;
 															if (widget_idx() === 1) return j2 - j1;
-															return content_width() - j2;
+															return wt - j2;
 														};
 														const widget_content_width = () => {
 															const sides = getWidgetBorderSides(row, widget_idx());
 															return Math.max(1, box_width() - sides.length);
 														};
+														const has_divider_after = () => widget_idx() < row.columns - 1;
 
 														return (
-															<box
-																width={box_width()}
-																border={getWidgetBorderSides(row, widget_idx())}
-																borderStyle="rounded"
-																borderColor={(focused() || props.focused) ? theme.border_highlight : theme.border}
-																backgroundColor={focused() ? theme.bg_highlight : undefined}
-																flexDirection="column"
-																minHeight={gw.size_hint.min_height}
-																overflow="hidden"
-															>
-																<Show
-																	when={!gw.config.collapsed}
-																	fallback={
+															<>
+																<box
+																	width={box_width()}
+																	border={getWidgetBorderSides(row, widget_idx())}
+																	borderStyle="rounded"
+																	borderColor={(focused() || props.focused) ? theme.border_highlight : theme.border}
+																	backgroundColor={focused() ? theme.bg_highlight : undefined}
+																	flexDirection="column"
+																	minHeight={gw.size_hint.min_height}
+																	overflow="hidden"
+																>
+																	<Show
+																		when={!gw.config.collapsed}
+																		fallback={
+																			<text
+																				fg={focused() ? theme.yellow : theme.fg_dim}
+																				content={focused() ? `▸ [>] ${def.label} (collapsed)` : `[>] ${def.label} (collapsed)`}
+																			/>
+																		}
+																	>
 																		<text
 																			fg={focused() ? theme.yellow : theme.fg_dim}
-																			content={focused() ? `▸ [>] ${def.label} (collapsed)` : `[>] ${def.label} (collapsed)`}
+																			content={focused() ? `▸ ${def.label}` : `  ${def.label}`}
 																		/>
-																	}
-																>
-																	<text
-																		fg={focused() ? theme.yellow : theme.fg_dim}
-																		content={focused() ? `▸ ${def.label}` : `  ${def.label}`}
-																	/>
-																	<def.component
-																		width={widget_content_width()}
-																		focused={focused()}
-																		status={props.status}
+																		<def.component
+																			width={widget_content_width()}
+																			focused={focused()}
+																			status={props.status}
+																		/>
+																	</Show>
+																</box>
+																<Show when={has_divider_after()}>
+																	<box
+																		width={1}
+																		border={["left"]}
+																		borderStyle="rounded"
+																		borderColor={theme.border}
+																		flexShrink={0}
 																	/>
 																</Show>
-															</box>
+															</>
 														);
 													}}
 												</For>

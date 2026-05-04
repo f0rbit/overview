@@ -276,15 +276,16 @@ describe("widget grid rendering (integration)", () => {
 		expect(frame).toContain("Half D");
 		expect(frame).toContain("Half E");
 
-		// Mid border has junctions from both rows:
-		// 3-col junctions at 20, 40 (from above)
-		// 2-col junction at 30 (from below)
+		// Mid border has junctions from both rows.
+		// Widgets share content_width minus (cols-1) inner divider cells.
+		// 3-col (W=60): widgets share 58, dividers at floor(58/3)=19 and floor(116/3)+1=39.
+		// 2-col (W=60): widgets share 59, divider at floor(59/2)=29.
 		const mid_border = buildBorderLine("mid", width, threeColRow, twoColRow);
 		expect(mid_border[0]).toBe("├");
 		expect(mid_border[width - 1]).toBe("┤");
-		expect(mid_border[j_third_1]).toBe("┴");  // from 3-col above only
-		expect(mid_border[j_half]).toBe("┬");     // from 2-col below only
-		expect(mid_border[j_third_2]).toBe("┴");  // from 3-col above only
+		expect(mid_border[19]).toBe("┴");  // from 3-col above only
+		expect(mid_border[29]).toBe("┬");  // from 2-col below only
+		expect(mid_border[39]).toBe("┴");  // from 3-col above only
 		expect(frame).toContain(mid_border);
 	});
 

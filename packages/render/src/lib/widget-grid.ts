@@ -109,8 +109,18 @@ function cornerChar(type: "top" | "mid" | "bottom", side: "left" | "right"): str
 
 function junctionColumns(row: GridRow | null, total_width: number): Set<number> {
 	if (!row) return new Set();
-	if (row.columns === 2) return new Set([Math.floor(total_width / 2)]);
-	if (row.columns === 3) return new Set([Math.floor(total_width / 3), Math.floor(2 * total_width / 3)]);
+	// Widgets share total_width with (columns - 1) inner divider cells.
+	// Column boundaries fall at the divider positions inside that layout.
+	if (row.columns === 2) {
+		const widgets_width = total_width - 1;
+		return new Set([Math.floor(widgets_width / 2)]);
+	}
+	if (row.columns === 3) {
+		const widgets_width = total_width - 2;
+		const j1 = Math.floor(widgets_width / 3);
+		const j2 = Math.floor(2 * widgets_width / 3) + 1;
+		return new Set([j1, j2]);
+	}
 	return new Set();
 }
 
@@ -175,14 +185,19 @@ export function buildBorderLineWithTitle(line: string, title: string): string {
 // ── Widget border sides ──
 
 export function getWidgetBorderSides(row: GridRow, widget_index: number): BorderSides[] {
+	// Widgets draw only their OUTER (perimeter) sides.
+	// Inner dividers between widgets are rendered as dedicated <box> elements
+	// in widget-container so the perimeter can highlight independently.
 	if (row.columns === 1) {
 		return ["left", "right"];
 	}
-	// Multi-column row: last widget gets both sides, others get left only
-	if (widget_index === row.columns - 1) {
-		return ["left", "right"];
+	if (widget_index === 0) {
+		return ["left"];
 	}
-	return ["left"];
+	if (widget_index === row.columns - 1) {
+		return ["right"];
+	}
+	return [];
 }
 
 // ── Content width calculation ──
