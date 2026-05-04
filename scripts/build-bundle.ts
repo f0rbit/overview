@@ -5,7 +5,7 @@ const result = await Bun.build({
 	outdir: "dist",
 	target: "bun",
 	format: "esm",
-	external: ["@opentui/*", "solid-js", "solid-js/*"],
+	external: ["@opentui/*"],
 	plugins: [solidPlugin],
 });
 
