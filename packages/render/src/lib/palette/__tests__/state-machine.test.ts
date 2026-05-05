@@ -1,14 +1,16 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
-import { ok, err } from "@f0rbit/corpus";
-import { z } from "zod";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { err, ok } from "@f0rbit/corpus";
 import { defaultConfig } from "@overview/core";
-import { parse_input } from "../parser";
-import { get_command, register_command, _clear_registry_for_tests } from "../registry";
-import type { Command, PaletteEvent } from "../types";
+import { z } from "zod";
 import type { CommandContext } from "../context";
+import { parse_input } from "../parser";
+import { _clear_registry_for_tests, get_command, register_command } from "../registry";
+import type { Command, PaletteEvent } from "../types";
 
 // Helper to create a fake CommandContext with in-memory event log
-function make_fake_context(overrides?: Partial<CommandContext & { events: PaletteEvent[] }>): CommandContext & { events: PaletteEvent[] } {
+function make_fake_context(
+	overrides?: Partial<CommandContext & { events: PaletteEvent[] }>,
+): CommandContext & { events: PaletteEvent[] } {
 	const events: PaletteEvent[] = [];
 	return {
 		config: defaultConfig(),
@@ -173,7 +175,7 @@ describe("state machine integration", () => {
 	test("command can call open_overlay", async () => {
 		const ctx = make_fake_context();
 		let overlay_called = false;
-		let overlay_id: string = "";
+		let overlay_id = "";
 		let overlay_payload: unknown;
 
 		const ctx_with_overlay = make_fake_context({

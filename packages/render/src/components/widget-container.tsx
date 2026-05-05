@@ -1,18 +1,18 @@
-import { For, Show, createMemo, createSignal, createEffect, on } from "solid-js";
+import type { Renderable, ScrollBoxRenderable } from "@opentui/core";
 import { useKeyboard } from "@opentui/solid";
-import type { ScrollBoxRenderable, Renderable } from "@opentui/core";
 import type { RepoStatus, WidgetConfig, WidgetId } from "@overview/core";
+import { For, Show, createEffect, createMemo, createSignal, on } from "solid-js";
 import { getWidget } from "./widgets/registry";
 import "./widgets/index";
-import { theme } from "../theme";
 import {
-	computeGridLayout,
+	type GridRow,
+	type GridWidget,
 	buildBorderLine,
 	buildBorderLineWithTitle,
+	computeGridLayout,
 	getWidgetBorderSides,
-	type GridWidget,
-	type GridRow,
 } from "../lib/widget-grid";
+import { theme } from "../theme";
 
 interface WidgetContainerProps {
 	status: RepoStatus | null;
@@ -31,9 +31,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 	const row_refs = new Map<number, Renderable>();
 
 	const enabled_widgets = createMemo(() => {
-		const configs = props.widgetConfigs
-			.filter((c) => c.enabled)
-			.sort((a, b) => a.priority - b.priority);
+		const configs = props.widgetConfigs.filter((c) => c.enabled).sort((a, b) => a.priority - b.priority);
 		return configs
 			.map((c): GridWidget | null => {
 				const def = getWidget(c.id);
@@ -45,9 +43,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 
 	const content_width = createMemo(() => props.availableWidth - 1);
 
-	const grid_layout = createMemo(() =>
-		computeGridLayout(enabled_widgets(), content_width()),
-	);
+	const grid_layout = createMemo(() => computeGridLayout(enabled_widgets(), content_width()));
 
 	const flat_widget_ids = createMemo(() => {
 		const rows = grid_layout().rows;
@@ -148,9 +144,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 		if (key.raw === "c") {
 			const widget_id = ids[focused_idx()];
 			if (widget_id) {
-				const updated = props.widgetConfigs.map((c) =>
-					c.id === widget_id ? { ...c, collapsed: !c.collapsed } : c,
-				);
+				const updated = props.widgetConfigs.map((c) => (c.id === widget_id ? { ...c, collapsed: !c.collapsed } : c));
 				props.onWidgetConfigChange?.(updated);
 			}
 			return;
@@ -178,20 +172,14 @@ export function WidgetContainer(props: WidgetContainerProps) {
 
 	return (
 		<box flexDirection="column" width={props.availableWidth} height={props.height}>
-			<Show
-				when={!props.loading}
-				fallback={<text fg={theme.fg_dim} content="loading..." />}
-			>
-				<Show
-					when={props.status}
-					fallback={<text fg={theme.fg_dim} content="(select a repo)" />}
-				>
+			<Show when={!props.loading} fallback={<text fg={theme.fg_dim} content="loading..." />}>
+				<Show when={props.status} fallback={<text fg={theme.fg_dim} content="(select a repo)" />}>
 					<scrollbox ref={scrollbox_ref} flexGrow={1}>
 						<box flexDirection="column" width={content_width()} flexShrink={0}>
 							<For each={grid_layout().rows}>
 								{(row, row_index) => {
 									const rows = grid_layout().rows;
-									const prev_row = () => row_index() > 0 ? rows[row_index() - 1]! : null;
+									const prev_row = () => (row_index() > 0 ? rows[row_index() - 1]! : null);
 									const is_first = () => row_index() === 0;
 									const is_last = () => row_index() === rows.length - 1;
 
@@ -225,7 +213,14 @@ export function WidgetContainer(props: WidgetContainerProps) {
 												<text fg={props.focused ? theme.border_highlight : theme.border} content={top_line()} />
 											</Show>
 
-											<box ref={(el: Renderable) => { row_refs.set(row_index(), el); }} flexDirection="row" alignItems="stretch" width={content_width()}>
+											<box
+												ref={(el: Renderable) => {
+													row_refs.set(row_index(), el);
+												}}
+												flexDirection="row"
+												alignItems="stretch"
+												width={content_width()}
+											>
 												<For each={row.widgets}>
 													{(gw, widget_idx) => {
 														const def = getWidget(gw.id);
@@ -243,7 +238,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 															}
 															// 3-column
 															const j1 = Math.floor(wt / 3);
-															const j2 = Math.floor(2 * wt / 3);
+															const j2 = Math.floor((2 * wt) / 3);
 															if (widget_idx() === 0) return j1;
 															if (widget_idx() === 1) return j2 - j1;
 															return wt - j2;
@@ -260,7 +255,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 																	width={box_width()}
 																	border={getWidgetBorderSides(row, widget_idx())}
 																	borderStyle="rounded"
-																	borderColor={(focused() || props.focused) ? theme.border_highlight : theme.border}
+																	borderColor={focused() || props.focused ? theme.border_highlight : theme.border}
 																	backgroundColor={focused() ? theme.bg_highlight : undefined}
 																	flexDirection="column"
 																	minHeight={gw.size_hint.min_height}
@@ -271,7 +266,9 @@ export function WidgetContainer(props: WidgetContainerProps) {
 																		fallback={
 																			<text
 																				fg={focused() ? theme.yellow : theme.fg_dim}
-																				content={focused() ? `▸ [>] ${def.label} (collapsed)` : `[>] ${def.label} (collapsed)`}
+																				content={
+																					focused() ? `▸ [>] ${def.label} (collapsed)` : `[>] ${def.label} (collapsed)`
+																				}
 																			/>
 																		}
 																	>
@@ -302,7 +299,10 @@ export function WidgetContainer(props: WidgetContainerProps) {
 											</box>
 
 											<Show when={is_last()}>
-												<text fg={props.focused ? theme.border_highlight : theme.border} content={borderLine("bottom", row, null)} />
+												<text
+													fg={props.focused ? theme.border_highlight : theme.border}
+													content={borderLine("bottom", row, null)}
+												/>
 											</Show>
 										</>
 									);

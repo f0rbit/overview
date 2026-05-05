@@ -1,19 +1,32 @@
-import { createSignal, createEffect, createMemo, onMount, onCleanup, Show } from "solid-js";
-import { useKeyboard, useTerminalDimensions, useRenderer } from "@opentui/solid";
-import type { RepoNode, GitGraphOutput, OverviewConfig, HealthStatus, WidgetConfig } from "@overview/core";
-import { scanAndCollect, captureGraph, collectStats, collectStatus, createRepoWatcher, collectCommitActivity } from "@overview/core";
-import { RepoList, GitGraph, WidgetContainer, StatusBar, HelpOverlay, type AppMode } from "../components";
+import { useKeyboard, useRenderer, useTerminalDimensions } from "@opentui/solid";
+import type { GitGraphOutput, HealthStatus, OverviewConfig, RepoNode, WidgetConfig } from "@overview/core";
+import {
+	captureGraph,
+	collectCommitActivity,
+	collectStats,
+	collectStatus,
+	createRepoWatcher,
+	scanAndCollect,
+} from "@overview/core";
+import { Show, createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { type AppMode, GitGraph, HelpOverlay, RepoList, StatusBar, WidgetContainer } from "../components";
+import { BatchOverlay, type BatchOverlayPayload } from "../components/batch-overlay";
 import { PaletteOverlay } from "../components/palette-overlay";
 import { StandupOverlay, type StandupOverlayPayload } from "../components/standup-overlay";
-import { BatchOverlay, type BatchOverlayPayload } from "../components/batch-overlay";
-import type { BatchTask, BatchAction, BatchFilter } from "../lib/batch";
-import { filterTree, sortTree, nextFilter, nextSort, type SortMode, type FilterMode } from "../lib/filter";
+import { launchEditor, launchGgi, launchSessionizer } from "../lib/actions";
+import type { BatchAction, BatchFilter, BatchTask } from "../lib/batch";
 import { createFetchContext } from "../lib/fetch-context";
-import { launchGgi, launchEditor, launchSessionizer } from "../lib/actions";
-import { loadWidgetState, saveWidgetState, defaultWidgetConfig, getWidgetState, updateWidgetState } from "../lib/widget-state";
-import { createCommandContext, type CommandContext, type CommandError } from "../lib/palette";
+import { type FilterMode, type SortMode, filterTree, nextFilter, nextSort, sortTree } from "../lib/filter";
+import { type CommandContext, type CommandError, createCommandContext } from "../lib/palette";
+import {
+	defaultWidgetConfig,
+	getWidgetState,
+	loadWidgetState,
+	saveWidgetState,
+	updateWidgetState,
+} from "../lib/widget-state";
 import "../lib/palette"; // side-effect import registers built-in commands
-import { createProvider, type AIProvider } from "../lib/ai";
+import { type AIProvider, createProvider } from "../lib/ai";
 import { theme } from "../theme";
 
 interface MainScreenProps {
@@ -21,10 +34,7 @@ interface MainScreenProps {
 }
 
 function countNodes(nodes: RepoNode[]): number {
-	return nodes.reduce(
-		(acc, n) => acc + (n.type === "directory" ? countNodes(n.children) : 1),
-		0,
-	);
+	return nodes.reduce((acc, n) => acc + (n.type === "directory" ? countNodes(n.children) : 1), 0);
 }
 
 function countByHealth(nodes: RepoNode[], pred: (h: HealthStatus) => boolean): number {
@@ -35,9 +45,7 @@ function countByHealth(nodes: RepoNode[], pred: (h: HealthStatus) => boolean): n
 }
 
 function collectRepoPaths(nodes: RepoNode[]): string[] {
-	return nodes.flatMap((n) =>
-		n.type === "directory" ? collectRepoPaths(n.children) : [n.path],
-	);
+	return nodes.flatMap((n) => (n.type === "directory" ? collectRepoPaths(n.children) : [n.path]));
 }
 
 function updateRepoStatus(nodes: RepoNode[], repoPath: string, status: RepoNode["status"]): void {
@@ -52,9 +60,12 @@ function updateRepoStatus(nodes: RepoNode[], repoPath: string, status: RepoNode[
 
 function describe_command_error(e: CommandError): string {
 	switch (e.kind) {
-		case "invalid_args": return e.details;
-		case "execution_failed": return e.cause;
-		case "cancelled": return "cancelled";
+		case "invalid_args":
+			return e.details;
+		case "execution_failed":
+			return e.cause;
+		case "cancelled":
+			return "cancelled";
 	}
 }
 
@@ -116,59 +127,67 @@ export function MainScreen(props: MainScreenProps) {
 		return `${enabled}/${configs.length} widgets`;
 	});
 
-	const command_ctx = createMemo<CommandContext>(() => createCommandContext({
-		config: props.config,
-		get_repos: () => repos(),
-		get_selected_repo: () => selectedNode(),
-		get_ai_provider: () => aiProvider(),
-		emit: (event) => {
-			if (event.kind === "status") setMessage(event.text);
-			if (event.kind === "command_failed") setMessage(`✗ ${event.command_id}: ${describe_command_error(event.error)}`);
-			// command_done: silent — most commands have their own UI surface
-		},
-		open_overlay: (id, payload) => {
-			if (id === "help") { setShowHelp(true); return; }
-			if (id === "standup") {
-				setStandupPayload(payload as StandupOverlayPayload);
-				setStandupOpen(true);
-				return;
-			}
-			if (id === "batch") {
-				const cmd_payload = payload as {
-					action: BatchAction;
-					filter: BatchFilter;
-					dry_run: boolean;
-					force: boolean;
-					initial_tasks: readonly BatchTask[];
-					subscribe: (cb: (tasks: readonly BatchTask[]) => void) => () => void;
-					subscribe_done: (cb: () => void) => () => void;
-					abort: () => void;
-				};
+	const command_ctx = createMemo<CommandContext>(() =>
+		createCommandContext({
+			config: props.config,
+			get_repos: () => repos(),
+			get_selected_repo: () => selectedNode(),
+			get_ai_provider: () => aiProvider(),
+			emit: (event) => {
+				if (event.kind === "status") setMessage(event.text);
+				if (event.kind === "command_failed")
+					setMessage(`✗ ${event.command_id}: ${describe_command_error(event.error)}`);
+				// command_done: silent — most commands have their own UI surface
+			},
+			open_overlay: (id, payload) => {
+				if (id === "help") {
+					setShowHelp(true);
+					return;
+				}
+				if (id === "standup") {
+					setStandupPayload(payload as StandupOverlayPayload);
+					setStandupOpen(true);
+					return;
+				}
+				if (id === "batch") {
+					const cmd_payload = payload as {
+						action: BatchAction;
+						filter: BatchFilter;
+						dry_run: boolean;
+						force: boolean;
+						initial_tasks: readonly BatchTask[];
+						subscribe: (cb: (tasks: readonly BatchTask[]) => void) => () => void;
+						subscribe_done: (cb: () => void) => () => void;
+						abort: () => void;
+					};
 
-				const [tasks, setTasks] = createSignal<readonly BatchTask[]>(cmd_payload.initial_tasks);
-				const [done, setDone] = createSignal(false);
+					const [tasks, setTasks] = createSignal<readonly BatchTask[]>(cmd_payload.initial_tasks);
+					const [done, setDone] = createSignal(false);
 
-				const unsub_tasks = cmd_payload.subscribe((next) => setTasks(next));
-				const unsub_done = cmd_payload.subscribe_done(() => setDone(true));
+					const unsub_tasks = cmd_payload.subscribe((next) => setTasks(next));
+					const unsub_done = cmd_payload.subscribe_done(() => setDone(true));
 
-				setBatchPayload({
-					action: cmd_payload.action,
-					filter: cmd_payload.filter,
-					dry_run: cmd_payload.dry_run,
-					force: cmd_payload.force,
-					tasks_accessor: tasks,
-					done_accessor: done,
-					abort: cmd_payload.abort,
-				});
-				setBatchOpen(true);
-				batch_unsubs = [unsub_tasks, unsub_done];
-				return;
-			}
-			console.error(`[palette] unknown overlay id: ${id}`);
-		},
-		trigger_rescan: () => { performScan(); },
-		renderer: { suspend: () => renderer.suspend(), resume: () => renderer.resume() },
-	}));
+					setBatchPayload({
+						action: cmd_payload.action,
+						filter: cmd_payload.filter,
+						dry_run: cmd_payload.dry_run,
+						force: cmd_payload.force,
+						tasks_accessor: tasks,
+						done_accessor: done,
+						abort: cmd_payload.abort,
+					});
+					setBatchOpen(true);
+					batch_unsubs = [unsub_tasks, unsub_done];
+					return;
+				}
+				console.error(`[palette] unknown overlay id: ${id}`);
+			},
+			trigger_rescan: () => {
+				performScan();
+			},
+			renderer: { suspend: () => renderer.suspend(), resume: () => renderer.resume() },
+		}),
+	);
 
 	async function handleWidgetConfigChange(configs: WidgetConfig[]) {
 		setWidgetConfigs(configs);
@@ -246,8 +265,8 @@ export function MainScreen(props: MainScreenProps) {
 		on_change: (repoPath) => {
 			collectStatus(repoPath, props.config.scan_dirs[0]!).then((result) => {
 				if (result.ok) {
-				updateRepoStatus(repos(), repoPath, result.value);
-				setRepoVersion(v => v + 1);
+					updateRepoStatus(repos(), repoPath, result.value);
+					setRepoVersion((v) => v + 1);
 				}
 			});
 		},
@@ -336,23 +355,23 @@ export function MainScreen(props: MainScreenProps) {
 				case "escape":
 					process.exit(0);
 					break;
-			case "return": {
-				const node = selectedNode();
-				if (node && node.type !== "directory") {
-					setMode("DETAIL");
-					setFocusPanel("graph");
+				case "return": {
+					const node = selectedNode();
+					if (node && node.type !== "directory") {
+						setMode("DETAIL");
+						setFocusPanel("graph");
+					}
+					break;
 				}
-				break;
-			}
-			case "l": {
-				const node = selectedNode();
-				if (node && node.type !== "directory") {
-					setMode("DETAIL");
-					setFocusPanel("graph");
+				case "l": {
+					const node = selectedNode();
+					if (node && node.type !== "directory") {
+						setMode("DETAIL");
+						setFocusPanel("graph");
+					}
+					break;
 				}
-				break;
-			}
-			case "r":
+				case "r":
 					_details_request_id++;
 					clearTimeout(_details_timer);
 					fetchDetails(selectedNode());
@@ -401,14 +420,14 @@ export function MainScreen(props: MainScreenProps) {
 					setMode("NORMAL");
 					setFocusPanel("list");
 					break;
-			case "h":
-				if (focusPanel() === "graph") {
-					setMode("NORMAL");
-					setFocusPanel("list");
-				} else {
-					setFocusPanel("graph");
-				}
-				break;
+				case "h":
+					if (focusPanel() === "graph") {
+						setMode("NORMAL");
+						setFocusPanel("list");
+					} else {
+						setFocusPanel("graph");
+					}
+					break;
 				case "l":
 					setFocusPanel("stats");
 					break;
@@ -466,12 +485,13 @@ export function MainScreen(props: MainScreenProps) {
 			{/* Main content */}
 			<box flexDirection="row" flexGrow={1}>
 				{/* Left panel */}
-				<box width={leftWidth()} flexDirection="column" borderStyle="rounded" borderColor={focusPanel() === "list" ? theme.border_highlight : theme.border}>
-					<RepoList
-						repos={processedRepos()}
-						focused={focusPanel() === "list"}
-						onSelect={handleSelect}
-					/>
+				<box
+					width={leftWidth()}
+					flexDirection="column"
+					borderStyle="rounded"
+					borderColor={focusPanel() === "list" ? theme.border_highlight : theme.border}
+				>
+					<RepoList repos={processedRepos()} focused={focusPanel() === "list"} onSelect={handleSelect} />
 				</box>
 
 				{/* Right panels */}

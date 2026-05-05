@@ -1,4 +1,4 @@
-import { ok, err, type Result } from "@f0rbit/corpus";
+import { type Result, err, ok } from "@f0rbit/corpus";
 import type { AIProvider, ProviderError, SummarizeInput, SummaryStream } from "./types";
 
 const DEFAULT_RESPONSE =
@@ -18,9 +18,7 @@ export interface InMemoryProvider extends AIProvider {
 	call_count: number;
 }
 
-export function createInMemoryProvider(
-	opts: InMemoryProviderOptions = {},
-): InMemoryProvider {
+export function createInMemoryProvider(opts: InMemoryProviderOptions = {}): InMemoryProvider {
 	const response = opts.response ?? DEFAULT_RESPONSE;
 	const delay_ms = opts.delay_ms ?? 0;
 	const chunk_size = opts.chunk_size ?? 50;
@@ -39,11 +37,7 @@ export function createInMemoryProvider(
 	return provider;
 }
 
-function make_stream(
-	text: string,
-	delay_ms: number,
-	chunk_size: number,
-): SummaryStream {
+function make_stream(text: string, delay_ms: number, chunk_size: number): SummaryStream {
 	let aborted = false;
 
 	async function* iterate(): AsyncGenerator<string> {

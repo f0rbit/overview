@@ -1,8 +1,8 @@
+import type { RepoStatus, WidgetRenderProps } from "@overview/core";
 import { Show } from "solid-js";
-import type { WidgetRenderProps, RepoStatus } from "@overview/core";
-import { registerWidget } from "./registry";
-import { theme } from "../../theme";
 import { formatBytes } from "../../lib/format";
+import { theme } from "../../theme";
+import { registerWidget } from "./registry";
 
 const size_hint = { span: "third" as const, min_height: 2 };
 
@@ -13,12 +13,7 @@ function RepoMetaWidget(props: WidgetRenderProps & { status: RepoStatus | null }
 
 	return (
 		<box flexDirection="column">
-			<Show
-				when={s()}
-				fallback={
-					<text fg={theme.fg_dim} content="(no data)" />
-				}
-			>
+			<Show when={s()} fallback={<text fg={theme.fg_dim} content="(no data)" />}>
 				{(status) => {
 					const latest_tag = () => status().tags[0] ?? null;
 					const tag_is_semver = () => {
@@ -56,10 +51,7 @@ function RepoMetaWidget(props: WidgetRenderProps & { status: RepoStatus | null }
 							<Show when={latest_tag()}>
 								<box flexDirection="row" height={1} gap={1}>
 									<text fg={theme.fg_dim} content="latest:" />
-									<text
-										fg={tag_is_semver() ? theme.green : theme.fg}
-										content={latest_tag()!}
-									/>
+									<text fg={tag_is_semver() ? theme.green : theme.fg} content={latest_tag()!} />
 								</box>
 							</Show>
 						</>

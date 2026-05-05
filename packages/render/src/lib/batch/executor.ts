@@ -67,7 +67,11 @@ async function run_git(action: BatchAction, cwd: string): Promise<ExecResult> {
 	if (exit_code === 0) {
 		return { ok: true, message: summarize_output(action, stdout, stderr), cause: "" };
 	}
-	const first_err = (stderr || stdout).split("\n").map((l) => l.trim()).filter(Boolean)[0] ?? "git failed";
+	const first_err =
+		(stderr || stdout)
+			.split("\n")
+			.map((l) => l.trim())
+			.filter(Boolean)[0] ?? "git failed";
 	return { ok: false, message: "", cause: first_err };
 }
 
@@ -77,6 +81,9 @@ function build_args(action: BatchAction): string[] {
 }
 
 function summarize_output(action: BatchAction, stdout: string, stderr: string): string {
-	const lines = (stdout + stderr).split("\n").map((l) => l.trim()).filter(Boolean);
+	const lines = (stdout + stderr)
+		.split("\n")
+		.map((l) => l.trim())
+		.filter(Boolean);
 	return lines[lines.length - 1] ?? `${action} ok`;
 }

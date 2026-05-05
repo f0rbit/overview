@@ -1,13 +1,7 @@
-import { ok, err, try_catch_async, format_error, type Result } from "@f0rbit/corpus";
+import { type Result, err, format_error, ok, try_catch_async } from "@f0rbit/corpus";
 import type { RepoNode } from "../../types";
-import type {
-	ActivitySource,
-	ActivitySection,
-	ActivityItem,
-	StandupRange,
-	ActivityError,
-} from "../types";
 import { register_activity_source } from "../registry";
+import type { ActivityError, ActivityItem, ActivitySection, ActivitySource, StandupRange } from "../types";
 
 interface CommitMeta {
 	full_sha: string;
@@ -35,10 +29,7 @@ export const git_source: ActivitySource = {
 
 register_activity_source(git_source);
 
-async function run_git(
-	args: readonly string[],
-	cwd: string,
-): Promise<Result<string, ActivityError>> {
+async function run_git(args: readonly string[], cwd: string): Promise<Result<string, ActivityError>> {
 	const spawn_result = await try_catch_async(
 		async () => {
 			const proc = Bun.spawn(["git", ...args], {
@@ -78,8 +69,8 @@ export function parse_commit_metadata(output: string): CommitMeta[] {
 			if (parts.length < 6) return [];
 			const [full_sha, short_sha, author, email, ts, ...rest] = parts;
 			const subject = rest.join("\t");
-			const timestamp = parseInt(ts ?? "0", 10);
-			if (!full_sha || !short_sha || isNaN(timestamp)) return [];
+			const timestamp = Number.parseInt(ts ?? "0", 10);
+			if (!full_sha || !short_sha || Number.isNaN(timestamp)) return [];
 			return [
 				{
 					full_sha,
@@ -98,9 +89,9 @@ export function parse_shortstat_line(line: string): CommitStat {
 	const ins_match = line.match(/(\d+)\s+insertions?\(\+\)/);
 	const del_match = line.match(/(\d+)\s+deletions?\(-\)/);
 	return {
-		files_changed: files_match ? parseInt(files_match[1] ?? "0", 10) : 0,
-		insertions: ins_match ? parseInt(ins_match[1] ?? "0", 10) : 0,
-		deletions: del_match ? parseInt(del_match[1] ?? "0", 10) : 0,
+		files_changed: files_match ? Number.parseInt(files_match[1] ?? "0", 10) : 0,
+		insertions: ins_match ? Number.parseInt(ins_match[1] ?? "0", 10) : 0,
+		deletions: del_match ? Number.parseInt(del_match[1] ?? "0", 10) : 0,
 	};
 }
 
@@ -132,11 +123,7 @@ async function collect_git_section(
 	const since_iso = range.since.toISOString();
 
 	const meta_r = await run_git(
-		[
-			"log",
-			`--since=${since_iso}`,
-			"--pretty=format:%H%x09%h%x09%an%x09%ae%x09%at%x09%s",
-		],
+		["log", `--since=${since_iso}`, "--pretty=format:%H%x09%h%x09%an%x09%ae%x09%at%x09%s"],
 		repo_path,
 	);
 	if (!meta_r.ok) return err(meta_r.error);
@@ -144,10 +131,7 @@ async function collect_git_section(
 	const commits = parse_commit_metadata(meta_r.value);
 	if (commits.length === 0) return ok(null);
 
-	const stats_r = await run_git(
-		["log", `--since=${since_iso}`, "--shortstat", "--pretty=format:%H"],
-		repo_path,
-	);
+	const stats_r = await run_git(["log", `--since=${since_iso}`, "--shortstat", "--pretty=format:%H"], repo_path);
 	const stats_map = stats_r.ok ? parse_shortstat_output(stats_r.value) : new Map<string, CommitStat>();
 
 	const items: ActivityItem[] = commits.map((c) => {
@@ -167,18 +151,9 @@ async function collect_git_section(
 		};
 	});
 
-	const total_insertions = commits.reduce(
-		(a, c) => a + (stats_map.get(c.full_sha)?.insertions ?? 0),
-		0,
-	);
-	const total_deletions = commits.reduce(
-		(a, c) => a + (stats_map.get(c.full_sha)?.deletions ?? 0),
-		0,
-	);
-	const total_files = commits.reduce(
-		(a, c) => a + (stats_map.get(c.full_sha)?.files_changed ?? 0),
-		0,
-	);
+	const total_insertions = commits.reduce((a, c) => a + (stats_map.get(c.full_sha)?.insertions ?? 0), 0);
+	const total_deletions = commits.reduce((a, c) => a + (stats_map.get(c.full_sha)?.deletions ?? 0), 0);
+	const total_files = commits.reduce((a, c) => a + (stats_map.get(c.full_sha)?.files_changed ?? 0), 0);
 
 	const commit_word = commits.length === 1 ? "commit" : "commits";
 	const summary_line = `${commits.length} ${commit_word}, +${total_insertions}/-${total_deletions}`;

@@ -33,10 +33,7 @@ export type ActivityError =
 export interface ActivitySource {
 	id: string;
 	label: string;
-	collect(
-		repo: RepoNode,
-		range: StandupRange,
-	): Promise<Result<ActivitySection | null, ActivityError>>;
+	collect(repo: RepoNode, range: StandupRange): Promise<Result<ActivitySection | null, ActivityError>>;
 }
 
 export interface RepoActivity {

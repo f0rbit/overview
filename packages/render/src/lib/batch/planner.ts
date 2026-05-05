@@ -5,12 +5,7 @@ export type BatchFilter = "all" | "dirty" | "clean" | "ahead" | "behind";
 
 // `nothing_to_push` — push action with `ahead === 0`.
 // `no_remote` — repo has no upstream (executor-detected; not produced by the planner).
-export type BatchSkipReason =
-	| "filter_excluded"
-	| "would_conflict"
-	| "no_remote"
-	| "dry_run"
-	| "nothing_to_push";
+export type BatchSkipReason = "filter_excluded" | "would_conflict" | "no_remote" | "dry_run" | "nothing_to_push";
 
 export interface BatchTask {
 	repo_path: string;
@@ -85,9 +80,13 @@ function filter_passes(repo: RepoNode, filter: BatchFilter): boolean {
 	const h = repo.status?.health;
 	if (!h) return false;
 	switch (filter) {
-		case "dirty": return h !== "clean";
-		case "clean": return h === "clean";
-		case "ahead": return h === "ahead" || h === "diverged";
-		case "behind": return h === "behind" || h === "diverged";
+		case "dirty":
+			return h !== "clean";
+		case "clean":
+			return h === "clean";
+		case "ahead":
+			return h === "ahead" || h === "diverged";
+		case "behind":
+			return h === "behind" || h === "diverged";
 	}
 }

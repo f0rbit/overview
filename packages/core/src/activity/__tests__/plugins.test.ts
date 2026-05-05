@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { load_plugins } from "../plugins";
 
 describe("load_plugins", () => {
@@ -9,9 +9,7 @@ describe("load_plugins", () => {
 		expect(err).toBeDefined();
 		if (err) {
 			expect(err.kind).toBe("import_failed");
-			expect(err.package_name).toBe(
-				"definitely-not-a-real-package-xyz-123",
-			);
+			expect(err.package_name).toBe("definitely-not-a-real-package-xyz-123");
 		}
 	});
 

@@ -1,10 +1,10 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { ok } from "@f0rbit/corpus";
-import { defaultConfig, type RepoNode, type RepoStatus } from "@overview/core";
-import { register_command, get_command, _clear_registry_for_tests } from "../../palette/registry";
-import type { CommandContext } from "../../palette/context";
-import type { PaletteEvent } from "../../palette/types";
+import { type RepoNode, type RepoStatus, defaultConfig } from "@overview/core";
 import type { BatchTask } from "../../batch/planner";
+import type { CommandContext } from "../../palette/context";
+import { _clear_registry_for_tests, get_command, register_command } from "../../palette/registry";
+import type { PaletteEvent } from "../../palette/types";
 import { resolve_batch_args } from "../batch";
 
 // Register batch commands (these would normally be imported from batch.ts)
@@ -12,7 +12,12 @@ import { resolve_batch_args } from "../batch";
 import { z } from "zod";
 import { plan } from "../../batch/planner";
 
-const batch_args_schema: z.ZodSchema<{ target: "all"; filter: "all" | "dirty" | "clean" | "ahead" | "behind"; dry_run: boolean; force: boolean }> = z
+const batch_args_schema: z.ZodSchema<{
+	target: "all";
+	filter: "all" | "dirty" | "clean" | "ahead" | "behind";
+	dry_run: boolean;
+	force: boolean;
+}> = z
 	.object({
 		target: z.literal("all").optional(),
 		filter: z.enum(["all", "dirty", "clean", "ahead", "behind"]).optional(),
@@ -20,7 +25,9 @@ const batch_args_schema: z.ZodSchema<{ target: "all"; filter: "all" | "dirty" | 
 		force: z.boolean().optional(),
 	})
 	.transform(
-		(data): { target: "all"; filter: "all" | "dirty" | "clean" | "ahead" | "behind"; dry_run: boolean; force: boolean } => ({
+		(
+			data,
+		): { target: "all"; filter: "all" | "dirty" | "clean" | "ahead" | "behind"; dry_run: boolean; force: boolean } => ({
 			target: "all",
 			filter: data.filter ?? "all",
 			dry_run: data.dry_run ?? false,
@@ -28,7 +35,12 @@ const batch_args_schema: z.ZodSchema<{ target: "all"; filter: "all" | "dirty" | 
 		}),
 	) as any;
 
-type BatchArgs = { target: "all"; filter: "all" | "dirty" | "clean" | "ahead" | "behind"; dry_run: boolean; force: boolean };
+type BatchArgs = {
+	target: "all";
+	filter: "all" | "dirty" | "clean" | "ahead" | "behind";
+	dry_run: boolean;
+	force: boolean;
+};
 
 function batch_command(action: "fetch" | "pull" | "push", label: string) {
 	const cmd_label = label.charAt(0).toUpperCase() + label.slice(1);
@@ -94,11 +106,7 @@ function make_status(overrides: Partial<RepoStatus> = {}): RepoStatus {
 }
 
 // Helper to create a minimal RepoNode
-function make_repo_node(
-	name: string,
-	path: string = `/tmp/${name}`,
-	status: RepoStatus | null = make_status(),
-): RepoNode {
+function make_repo_node(name: string, path = `/tmp/${name}`, status: RepoStatus | null = make_status()): RepoNode {
 	return {
 		type: "repo",
 		name,
@@ -186,10 +194,7 @@ describe("batch commands integration", () => {
 			],
 		});
 
-		const result = await cmd!.execute(
-			{ target: "all", filter: "clean", dry_run: false, force: false },
-			fake_ctx,
-		);
+		const result = await cmd!.execute({ target: "all", filter: "clean", dry_run: false, force: false }, fake_ctx);
 
 		expect(result.ok).toBe(true);
 
@@ -210,9 +215,7 @@ describe("batch commands integration", () => {
 		expect(cmd).toBeDefined();
 
 		const fake_ctx = make_fake_context({
-			repos: () => [
-				make_repo_node("diverged", "/tmp/diverged", make_status({ health: "diverged", ahead: 3 })),
-			],
+			repos: () => [make_repo_node("diverged", "/tmp/diverged", make_status({ health: "diverged", ahead: 3 }))],
 		});
 
 		// Without force
@@ -250,10 +253,7 @@ describe("batch commands integration", () => {
 			],
 		});
 
-		const result = await cmd!.execute(
-			{ target: "all", filter: "clean", dry_run: false, force: false },
-			fake_ctx,
-		);
+		const result = await cmd!.execute({ target: "all", filter: "clean", dry_run: false, force: false }, fake_ctx);
 
 		expect(result.ok).toBe(true);
 
@@ -285,10 +285,7 @@ describe("batch commands integration", () => {
 			repos: () => [dir],
 		});
 
-		const result = await cmd!.execute(
-			{ target: "all", filter: "all", dry_run: false, force: false },
-			fake_ctx,
-		);
+		const result = await cmd!.execute({ target: "all", filter: "all", dry_run: false, force: false }, fake_ctx);
 
 		expect(result.ok).toBe(true);
 
@@ -319,10 +316,7 @@ describe("batch commands integration", () => {
 			repos: () => [make_repo_node("test", "/tmp/test", make_status({ ahead: 3 }))],
 		});
 
-		const result = await cmd!.execute(
-			{ target: "all", filter: "all", dry_run: false, force: false },
-			fake_ctx,
-		);
+		const result = await cmd!.execute({ target: "all", filter: "all", dry_run: false, force: false }, fake_ctx);
 
 		expect(result.ok).toBe(true);
 

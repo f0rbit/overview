@@ -1,8 +1,8 @@
+import type { RepoStatus, WidgetRenderProps } from "@overview/core";
 import { For, Show } from "solid-js";
-import type { WidgetRenderProps, RepoStatus } from "@overview/core";
-import { registerWidget } from "./registry";
+import { formatRelativeTime, truncate } from "../../lib/format";
 import { theme } from "../../theme";
-import { truncate, formatRelativeTime } from "../../lib/format";
+import { registerWidget } from "./registry";
 
 const size_hint = { span: "half" as const, min_height: 2 };
 const MAX_VISIBLE = 8;
@@ -14,7 +14,7 @@ function RecentCommitsWidget(props: WidgetRenderProps & { status: RepoStatus | n
 
 	const format_line = (commit: { hash: string; message: string; time: number }) => {
 		const hash_short = commit.hash.slice(0, 7);
-		const time_str = " " + formatRelativeTime(commit.time);
+		const time_str = ` ${formatRelativeTime(commit.time)}`;
 		const available = props.width - hash_short.length - 1 - time_str.length;
 		const msg = truncate(commit.message, Math.max(1, available));
 		return { hash_short, msg, time_str };
@@ -46,9 +46,9 @@ function RecentCommitsWidget(props: WidgetRenderProps & { status: RepoStatus | n
 						);
 					}}
 				</For>
-			<Show when={overflow() > 0}>
-				<text fg={theme.fg_dim} content={`+${overflow()} more`} />
-			</Show>
+				<Show when={overflow() > 0}>
+					<text fg={theme.fg_dim} content={`+${overflow()} more`} />
+				</Show>
 			</Show>
 		</box>
 	);

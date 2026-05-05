@@ -1,6 +1,6 @@
-import { createSignal, createMemo, createEffect, For } from "solid-js";
 import { useKeyboard } from "@opentui/solid";
 import type { RepoNode } from "@overview/core";
+import { For, createEffect, createMemo, createSignal } from "solid-js";
 import { theme } from "../theme";
 import { StatusBadge } from "./status-badge";
 
@@ -16,7 +16,7 @@ interface FlatNode {
 	is_last: boolean;
 }
 
-function flattenTree(nodes: RepoNode[], depth: number = 0): FlatNode[] {
+function flattenTree(nodes: RepoNode[], depth = 0): FlatNode[] {
 	return nodes.flatMap((node, i) => {
 		const entry: FlatNode = { node, depth, is_last: i === nodes.length - 1 };
 		if (node.type === "directory" && node.expanded && node.children.length > 0) {
@@ -109,12 +109,7 @@ export function RepoList(props: RepoListProps) {
 					const label = `${indent}${conn} ${prefix}${entry.node.name}`;
 
 					return (
-						<box
-							flexDirection="row"
-							width="100%"
-							height={1}
-							backgroundColor={selected() ? theme.selection : undefined}
-						>
+						<box flexDirection="row" width="100%" height={1} backgroundColor={selected() ? theme.selection : undefined}>
 							<text fg={selected() ? theme.fg : theme.fg_dark} content={label} />
 							<box flexGrow={1} />
 							<StatusBadge status={entry.node.status} />

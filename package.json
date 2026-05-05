@@ -1,40 +1,37 @@
 {
-  "name": "@f0rbit/overview",
-  "version": "0.1.0",
-  "description": "Terminal UI dashboard for multi-repo git health",
-  "workspaces": ["packages/*"],
-  "bin": {
-    "overview": "bin/overview"
-  },
-  "files": [
-    "dist/",
-    "bin/"
-  ],
-  "scripts": {
-    "dev": "bun run --filter @overview/render dev",
-    "typecheck": "bun run --filter '*' typecheck",
-    "lint": "biome check .",
-    "test": "bun run --filter '*' test",
-    "build": "bun build packages/render/src/overview.tsx --compile --outfile overview",
-    "build:bundle": "rm -rf dist && bun scripts/build-bundle.ts"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/f0rbit/overview.git"
-  },
-  "license": "MIT",
-  "keywords": ["git", "tui", "terminal", "dashboard", "bun", "solidjs"],
-  "engines": {
-    "bun": ">=1.0.0"
-  },
-  "dependencies": {
-    "@opentui/core": "^0.1.80",
-    "@opentui/solid": "^0.1.80",
-    "solid-js": "^1.9.11"
-  },
-  "devDependencies": {
-    "typescript": "^5.7.0",
-    "@types/bun": "latest",
-    "@biomejs/biome": "^1.9.0"
-  }
+	"name": "@f0rbit/overview",
+	"version": "0.1.0",
+	"description": "Terminal UI dashboard for multi-repo git health",
+	"workspaces": ["packages/*"],
+	"bin": {
+		"overview": "bin/overview"
+	},
+	"files": ["dist/", "bin/"],
+	"scripts": {
+		"dev": "bun run --filter @overview/render dev",
+		"typecheck": "bun run --filter '*' typecheck",
+		"lint": "biome check .",
+		"test": "bun run --filter '*' test",
+		"build": "bun build packages/render/src/overview.tsx --compile --outfile overview",
+		"build:bundle": "rm -rf dist && bun scripts/build-bundle.ts"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/f0rbit/overview.git"
+	},
+	"license": "MIT",
+	"keywords": ["git", "tui", "terminal", "dashboard", "bun", "solidjs"],
+	"engines": {
+		"bun": ">=1.0.0"
+	},
+	"dependencies": {
+		"@opentui/core": "^0.1.80",
+		"@opentui/solid": "^0.1.80",
+		"solid-js": "^1.9.11"
+	},
+	"devDependencies": {
+		"typescript": "^5.7.0",
+		"@types/bun": "latest",
+		"@biomejs/biome": "^1.9.0"
+	}
 }

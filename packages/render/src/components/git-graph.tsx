@@ -1,5 +1,5 @@
-import { Show, For } from "solid-js";
 import type { GitGraphOutput } from "@overview/core";
+import { For, Show } from "solid-js";
 import { theme } from "../theme";
 
 interface GitGraphProps {
@@ -85,9 +85,7 @@ function GraphLine(props: { line: string }) {
 
 	return (
 		<box flexDirection="row" height={1}>
-			<For each={segments()}>
-				{(seg) => <text fg={seg.color} content={seg.text} />}
-			</For>
+			<For each={segments()}>{(seg) => <text fg={seg.color} content={seg.text} />}</For>
 		</box>
 	);
 }
@@ -105,22 +103,14 @@ export function GitGraph(props: GitGraphProps) {
 		>
 			<Show
 				when={!props.loading && props.graph && props.graph.lines.length > 0}
-				fallback={
-				<text fg={theme.fg_dim} content={props.loading ? "loading..." : "(no commits)"} />
-				}
+				fallback={<text fg={theme.fg_dim} content={props.loading ? "loading..." : "(no commits)"} />}
 			>
-				<scrollbox
-					focused={props.focused}
-					viewportCulling={true}
-					flexGrow={1}
-				>
-					<For each={props.graph!.lines}>
-						{(line) => <GraphLine line={line} />}
-					</For>
+				<scrollbox focused={props.focused} viewportCulling={true} flexGrow={1}>
+					<For each={props.graph!.lines}>{(line) => <GraphLine line={line} />}</For>
 				</scrollbox>
-			<box height={1}>
-				<text fg={theme.fg_dim} content={`(${props.graph!.total_lines} commits)`} />
-			</box>
+				<box height={1}>
+					<text fg={theme.fg_dim} content={`(${props.graph!.total_lines} commits)`} />
+				</box>
 			</Show>
 		</box>
 	);

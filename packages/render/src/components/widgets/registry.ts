@@ -1,5 +1,5 @@
+import type { RepoStatus, WidgetId, WidgetRenderProps, WidgetSizeHint } from "@overview/core";
 import type { Component } from "solid-js";
-import type { WidgetId, WidgetSizeHint, WidgetRenderProps, RepoStatus } from "@overview/core";
 
 export interface WidgetDefinition {
 	id: WidgetId;

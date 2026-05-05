@@ -38,7 +38,9 @@ export function createFetchContext<T>(
 	}
 
 	return {
-		get request_id() { return _request_id; },
+		get request_id() {
+			return _request_id;
+		},
 
 		trigger(fn) {
 			clearTimeout(_timer);

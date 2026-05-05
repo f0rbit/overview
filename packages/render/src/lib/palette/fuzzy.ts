@@ -15,10 +15,7 @@ function build_haystack(cmd: Command<unknown>): string {
 	return parts.join(" ");
 }
 
-export function match_commands(
-	query: string,
-	commands: readonly Command<unknown>[],
-): MatchResult[] {
+export function match_commands(query: string, commands: readonly Command<unknown>[]): MatchResult[] {
 	// Empty query: return all commands sorted by id ascending with score 0 and empty positions.
 	const trimmed = query.trim();
 	if (!trimmed) {

@@ -1,13 +1,8 @@
-import { describe, test, expect, beforeAll, afterAll } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { collectStatus } from "../../src/git-status";
-import {
-	createTempDir,
-	cleanupTempDir,
-	initRepo,
-	stashChanges,
-} from "../helpers";
+import { cleanupTempDir, createTempDir, initRepo, stashChanges } from "../helpers";
 
 describe("git-status integration", () => {
 	let temp_dir: string;

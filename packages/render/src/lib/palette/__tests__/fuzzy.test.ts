@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { ok } from "@f0rbit/corpus";
 import { match_commands } from "../fuzzy";
 import type { Command } from "../types";

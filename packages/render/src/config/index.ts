@@ -1,8 +1,8 @@
-import { ok, err, merge_deep, type Result, type DeepPartial } from "@f0rbit/corpus";
-import { type OverviewConfig, defaultConfig } from "@overview/core";
-import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { join } from "node:path";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
+import { join } from "node:path";
+import { type DeepPartial, type Result, err, merge_deep, ok } from "@f0rbit/corpus";
+import { type OverviewConfig, defaultConfig } from "@overview/core";
 
 export type ConfigError =
 	| { kind: "parse_error"; path: string; cause: string }
@@ -11,8 +11,7 @@ export type ConfigError =
 const CONFIG_DIR = join(homedir(), ".config", "overview");
 const CONFIG_PATH = join(CONFIG_DIR, "config.json");
 
-const expandTilde = (p: string): string =>
-	p.startsWith("~/") ? join(homedir(), p.slice(2)) : p;
+const expandTilde = (p: string): string => (p.startsWith("~/") ? join(homedir(), p.slice(2)) : p);
 
 const expandPaths = (config: OverviewConfig): OverviewConfig => ({
 	...config,
@@ -50,7 +49,7 @@ export async function writeDefaultConfig(): Promise<Result<void, ConfigError>> {
 	} catch (e) {
 		if (!isEnoent(e)) return err({ kind: "write_error", path: CONFIG_PATH, cause: String(e) });
 		await mkdir(CONFIG_DIR, { recursive: true });
-		await writeFile(CONFIG_PATH, JSON.stringify(defaultConfig(), null, 2) + "\n", "utf-8");
+		await writeFile(CONFIG_PATH, `${JSON.stringify(defaultConfig(), null, 2)}\n`, "utf-8");
 		return ok(undefined);
 	}
 }
@@ -74,7 +73,7 @@ export function parseCliArgs(argv: string[]): CliArgs {
 			result.dir = next;
 			i++;
 		} else if (flag === "--depth" && next) {
-			result.depth = parseInt(next, 10);
+			result.depth = Number.parseInt(next, 10);
 			i++;
 		} else if (flag === "--sort" && next) {
 			result.sort = next as CliArgs["sort"];

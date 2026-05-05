@@ -1,10 +1,10 @@
-import { describe, test, expect, afterEach } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import { ok } from "@f0rbit/corpus";
 import {
-	register_activity_source,
+	_clear_activity_registry_for_tests,
 	get_activity_source,
 	list_activity_sources,
-	_clear_activity_registry_for_tests,
+	register_activity_source,
 } from "../registry";
 import type { ActivitySource } from "../types";
 

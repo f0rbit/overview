@@ -36,9 +36,13 @@ export function createPool(concurrency: number) {
 		},
 
 		/** Current number of active tasks */
-		get active_count() { return active; },
+		get active_count() {
+			return active;
+		},
 
 		/** Current number of queued tasks */
-		get queue_length() { return queue.length; },
+		get queue_length() {
+			return queue.length;
+		},
 	};
 }

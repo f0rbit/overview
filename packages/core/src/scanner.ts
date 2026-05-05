@@ -1,6 +1,6 @@
-import { readdir, stat, lstat } from "node:fs/promises";
-import { join, basename } from "node:path";
-import { ok, err, try_catch_async, format_error, type Result } from "@f0rbit/corpus";
+import { lstat, readdir, stat } from "node:fs/promises";
+import { basename, join } from "node:path";
+import { type Result, err, format_error, ok, try_catch_async } from "@f0rbit/corpus";
 import type { RepoNode } from "./types";
 
 export type ScanError =
@@ -78,7 +78,8 @@ async function walkDirectory(
 					depth: current_depth,
 					expanded: current_depth <= 1,
 				} as RepoNode;
-			} else if (children.length > 0) {
+			}
+			if (children.length > 0) {
 				return {
 					name: entry.name,
 					path: full_path,
@@ -111,8 +112,7 @@ export async function scanDirectory(
 	);
 
 	if (!root_stat.ok) return root_stat;
-	if (!root_stat.value.isDirectory())
-		return err({ kind: "invalid_path", path: root, message: "Not a directory" });
+	if (!root_stat.value.isDirectory()) return err({ kind: "invalid_path", path: root, message: "Not a directory" });
 
 	return walkDirectory(root, 0, options.depth, options.ignore);
 }

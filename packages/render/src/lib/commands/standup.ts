@@ -1,15 +1,15 @@
-import { z } from "zod";
-import { ok, err, type Result } from "@f0rbit/corpus";
+import { type Result, err, ok } from "@f0rbit/corpus";
 import {
-	list_activity_sources,
-	range_daily,
-	range_weekly,
 	type ActivitySection,
 	type RepoActivity,
 	type RepoNode,
 	type StandupRange,
+	list_activity_sources,
+	range_daily,
+	range_weekly,
 } from "@overview/core";
 import { createPool } from "@overview/core";
+import { z } from "zod";
 import { register_command } from "../palette/registry";
 import type { CommandError } from "../palette/types";
 
@@ -20,12 +20,9 @@ const standup_args_schema = z.object({
 
 export type StandupRawArgs = z.infer<typeof standup_args_schema>;
 
-export function resolve_standup_range(
-	raw: StandupRawArgs,
-): Result<{ range: "daily" | "weekly" }, CommandError> {
+export function resolve_standup_range(raw: StandupRawArgs): Result<{ range: "daily" | "weekly" }, CommandError> {
 	const positional = raw._?.[0];
-	const range_from_positional =
-		positional === "daily" || positional === "weekly" ? positional : undefined;
+	const range_from_positional = positional === "daily" || positional === "weekly" ? positional : undefined;
 	const range = raw.range ?? range_from_positional;
 	if (!range) {
 		return err({
@@ -53,9 +50,7 @@ register_command<StandupRawArgs>({
 		const pool = createPool(8);
 		const sources = list_activity_sources();
 
-		const activities = await Promise.all(
-			repos.map((repo) => pool.run(() => collect_for_repo(repo, window, sources))),
-		);
+		const activities = await Promise.all(repos.map((repo) => pool.run(() => collect_for_repo(repo, window, sources))));
 
 		ctx.open_overlay("standup", { window, activities });
 		return ok(undefined);
@@ -67,13 +62,9 @@ async function collect_for_repo(
 	range: StandupRange,
 	sources: ReturnType<typeof list_activity_sources>,
 ): Promise<RepoActivity> {
-	const results = await Promise.all(
-		sources.map((s) => s.collect(repo, range)),
-	);
+	const results = await Promise.all(sources.map((s) => s.collect(repo, range)));
 
-	const sections = results
-		.map((r) => (r.ok ? r.value : null))
-		.filter((s): s is ActivitySection => s !== null);
+	const sections = results.map((r) => (r.ok ? r.value : null)).filter((s): s is ActivitySection => s !== null);
 
 	return {
 		repo_path: repo.path,

@@ -1,6 +1,6 @@
 import type { Result } from "@f0rbit/corpus";
-import type { ZodSchema } from "zod";
 import type { OverviewConfig, RepoNode } from "@overview/core";
+import type { ZodSchema } from "zod";
 import type { CommandContext } from "./context";
 
 // Phase C will replace this with the real interface in lib/ai/provider.ts

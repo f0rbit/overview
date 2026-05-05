@@ -1,6 +1,6 @@
-import { describe, test, expect, afterEach } from "bun:test";
+import { afterEach, describe, expect, test } from "bun:test";
 import { ok } from "@f0rbit/corpus";
-import { register_command, get_command, list_commands, _clear_registry_for_tests } from "../registry";
+import { _clear_registry_for_tests, get_command, list_commands, register_command } from "../registry";
 import type { Command } from "../types";
 
 afterEach(() => {

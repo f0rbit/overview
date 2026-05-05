@@ -1,8 +1,8 @@
+import type { HealthStatus, RepoStatus, WidgetRenderProps } from "@overview/core";
 import { Show } from "solid-js";
-import type { WidgetRenderProps, RepoStatus, HealthStatus } from "@overview/core";
-import { registerWidget } from "./registry";
-import { theme } from "../../theme";
 import { formatRelativeTime } from "../../lib/format";
+import { theme } from "../../theme";
+import { registerWidget } from "./registry";
 
 const size_hint = { span: "third" as const, min_height: 2 };
 
@@ -32,21 +32,12 @@ function GitStatusWidget(props: WidgetRenderProps & { status: RepoStatus | null 
 
 	return (
 		<box flexDirection="column">
-			<Show
-				when={s()}
-				fallback={
-					<text fg={theme.fg_dim} content="no repo selected" />
-				}
-			>
+			<Show when={s()} fallback={<text fg={theme.fg_dim} content="no repo selected" />}>
 				{(status) => {
 					const color = () => health_color[status().health];
 					const has_sync = () => status().ahead > 0 || status().behind > 0;
-					const has_wt = () =>
-						status().modified_count > 0 ||
-						status().staged_count > 0;
-					const has_extra = () =>
-						status().untracked_count > 0 ||
-						status().conflict_count > 0;
+					const has_wt = () => status().modified_count > 0 || status().staged_count > 0;
+					const has_extra = () => status().untracked_count > 0 || status().conflict_count > 0;
 					const has_stash = () => status().stash_count > 0;
 
 					return (

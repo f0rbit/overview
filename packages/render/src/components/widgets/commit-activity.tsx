@@ -1,7 +1,7 @@
+import type { RepoStatus, WidgetRenderProps } from "@overview/core";
 import { Show, createMemo } from "solid-js";
-import type { WidgetRenderProps, RepoStatus } from "@overview/core";
-import { registerWidget } from "./registry";
 import { theme } from "../../theme";
+import { registerWidget } from "./registry";
 
 const size_hint = { span: "third" as const, min_height: 2 };
 
@@ -63,12 +63,7 @@ function CommitActivityWidget(props: WidgetRenderProps & { status: RepoStatus | 
 
 	return (
 		<box flexDirection="column">
-			<Show
-				when={activity()}
-				fallback={
-					<text fg={theme.fg_dim} content="(no activity data)" />
-				}
-			>
+			<Show when={activity()} fallback={<text fg={theme.fg_dim} content="(no activity data)" />}>
 				{/* Row 1: Sparkline */}
 				<box flexDirection="row" height={1}>
 					{sparkline_colored().map((s) => (

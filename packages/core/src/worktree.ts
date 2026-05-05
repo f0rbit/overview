@@ -1,14 +1,11 @@
-import { ok, err, type Result } from "@f0rbit/corpus";
+import { type Result, err, ok } from "@f0rbit/corpus";
 import type { WorktreeInfo } from "./types";
 
 export type WorktreeError =
 	| { kind: "not_a_repo"; path: string }
 	| { kind: "worktree_failed"; path: string; cause: string };
 
-async function gitCommand(
-	args: string[],
-	cwd: string,
-): Promise<Result<string, WorktreeError>> {
+async function gitCommand(args: string[], cwd: string): Promise<Result<string, WorktreeError>> {
 	const proc = Bun.spawn(["git", ...args], {
 		cwd,
 		stdout: "pipe",
@@ -19,9 +16,7 @@ async function gitCommand(
 
 	if (proc.exitCode !== 0) {
 		const stderr = await new Response(proc.stderr).text();
-		const is_not_repo =
-			stderr.includes("not a git repository") ||
-			stderr.includes("not a git repo");
+		const is_not_repo = stderr.includes("not a git repository") || stderr.includes("not a git repo");
 		if (is_not_repo) {
 			return err({ kind: "not_a_repo", path: cwd });
 		}
@@ -36,13 +31,8 @@ async function gitCommand(
 	return ok(stdout);
 }
 
-function parseWorktreeBlock(
-	lines: string[],
-	is_main: boolean,
-): WorktreeInfo | null {
-	const path = lines
-		.find((l) => l.startsWith("worktree "))
-		?.slice("worktree ".length);
+function parseWorktreeBlock(lines: string[], is_main: boolean): WorktreeInfo | null {
+	const path = lines.find((l) => l.startsWith("worktree "))?.slice("worktree ".length);
 	if (!path) return null;
 
 	const head_line = lines.find((l) => l.startsWith("HEAD "));
@@ -50,18 +40,12 @@ function parseWorktreeBlock(
 
 	const branch_line = lines.find((l) => l.startsWith("branch "));
 	const is_bare = lines.some((l) => l === "bare");
-	const branch = branch_line
-		? branch_line.slice("branch refs/heads/".length)
-		: is_bare
-			? "bare"
-			: "detached";
+	const branch = branch_line ? branch_line.slice("branch refs/heads/".length) : is_bare ? "bare" : "detached";
 
 	return { path, branch, head, is_bare, is_main };
 }
 
-export async function detectWorktrees(
-	repoPath: string,
-): Promise<Result<WorktreeInfo[], WorktreeError>> {
+export async function detectWorktrees(repoPath: string): Promise<Result<WorktreeInfo[], WorktreeError>> {
 	const result = await gitCommand(["worktree", "list", "--porcelain"], repoPath);
 	if (!result.ok) return result;
 

@@ -1,6 +1,6 @@
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { testRender } from "@opentui/solid";
-import { buildBorderLine, resolveSpan, type GridRow } from "../../../lib/widget-grid";
+import { type GridRow, buildBorderLine, resolveSpan } from "../../../lib/widget-grid";
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -185,7 +185,7 @@ describe("widget grid rendering (integration)", () => {
 	test("three third-width widgets render side-by-side with correct borders", async () => {
 		const width = 90;
 		const j1 = Math.floor(width / 3); // 30
-		const j2 = Math.floor(2 * width / 3); // 60
+		const j2 = Math.floor((2 * width) / 3); // 60
 		const { renderOnce, captureCharFrame } = await testRender(
 			() => (
 				<box flexDirection="column" width={width}>
@@ -235,7 +235,7 @@ describe("widget grid rendering (integration)", () => {
 	test("mixed 3-col and 2-col rows have correct junction characters", async () => {
 		const width = 60;
 		const j_third_1 = Math.floor(width / 3); // 20
-		const j_third_2 = Math.floor(2 * width / 3); // 40
+		const j_third_2 = Math.floor((2 * width) / 3); // 40
 		const j_half = Math.floor(width / 2); // 30
 		const { renderOnce, captureCharFrame } = await testRender(
 			() => (
@@ -283,9 +283,9 @@ describe("widget grid rendering (integration)", () => {
 		const mid_border = buildBorderLine("mid", width, threeColRow, twoColRow);
 		expect(mid_border[0]).toBe("├");
 		expect(mid_border[width - 1]).toBe("┤");
-		expect(mid_border[19]).toBe("┴");  // from 3-col above only
-		expect(mid_border[29]).toBe("┬");  // from 2-col below only
-		expect(mid_border[39]).toBe("┴");  // from 3-col above only
+		expect(mid_border[19]).toBe("┴"); // from 3-col above only
+		expect(mid_border[29]).toBe("┬"); // from 2-col below only
+		expect(mid_border[39]).toBe("┴"); // from 3-col above only
 		expect(frame).toContain(mid_border);
 	});
 

@@ -1,5 +1,5 @@
-import type { ActivitySource } from "./types";
 import { register_activity_source } from "./registry";
+import type { ActivitySource } from "./types";
 
 export interface PluginInit {
 	register_activity_source: (source: ActivitySource) => void;
@@ -14,9 +14,7 @@ export type PluginLoadError =
 	| { kind: "no_default_export"; package_name: string }
 	| { kind: "init_failed"; package_name: string; cause: string };
 
-export async function load_plugins(
-	package_names: readonly string[],
-): Promise<readonly PluginLoadError[]> {
+export async function load_plugins(package_names: readonly string[]): Promise<readonly PluginLoadError[]> {
 	const errors: PluginLoadError[] = [];
 	const deps: PluginInit = { register_activity_source };
 

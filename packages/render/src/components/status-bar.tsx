@@ -1,4 +1,4 @@
-import { createMemo, Show } from "solid-js";
+import { Show, createMemo } from "solid-js";
 import { theme } from "../theme";
 
 export type AppMode = "NORMAL" | "DETAIL" | "SEARCH" | "HELP" | "PALETTE";

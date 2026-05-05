@@ -1,6 +1,6 @@
-import { describe, test, expect } from "bun:test";
-import { build_user_prompt, DEFAULT_SYSTEM_PROMPT } from "../prompt";
+import { describe, expect, test } from "bun:test";
 import type { RepoActivity } from "@overview/core";
+import { DEFAULT_SYSTEM_PROMPT, build_user_prompt } from "../prompt";
 
 const empty_activities: readonly RepoActivity[] = [];
 

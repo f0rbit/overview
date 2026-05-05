@@ -1,9 +1,9 @@
+import type { RepoStatus, WidgetRenderProps } from "@overview/core";
 import { Show, createMemo } from "solid-js";
-import type { WidgetRenderProps, RepoStatus } from "@overview/core";
-import { registerWidget } from "./registry";
-import { theme } from "../../theme";
-import { useGithub } from "../../lib/use-github";
 import { formatRelativeTime } from "../../lib/format";
+import { useGithub } from "../../lib/use-github";
+import { theme } from "../../theme";
+import { registerWidget } from "./registry";
 
 const size_hint = { span: "third" as const, min_height: 1 };
 
@@ -22,12 +22,7 @@ function GithubReleaseWidget(props: WidgetRenderProps & { status: RepoStatus | n
 	return (
 		<box flexDirection="column">
 			<Show when={!github.error()}>
-				<Show
-					when={github.data()?.latest_release}
-					fallback={
-						<text fg={theme.fg_dim} content="no releases" />
-					}
-				>
+				<Show when={github.data()?.latest_release} fallback={<text fg={theme.fg_dim} content="no releases" />}>
 					{(release) => (
 						<>
 							{/* Row 1: tag + published date */}

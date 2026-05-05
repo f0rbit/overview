@@ -1,9 +1,9 @@
-import { For, Show, Switch, Match, createMemo } from "solid-js";
-import type { WidgetRenderProps, RepoStatus, GithubPR } from "@overview/core";
-import { registerWidget } from "./registry";
-import { theme } from "../../theme";
+import type { GithubPR, RepoStatus, WidgetRenderProps } from "@overview/core";
+import { For, Match, Show, Switch, createMemo } from "solid-js";
 import { truncate } from "../../lib/format";
 import { useGithub } from "../../lib/use-github";
+import { theme } from "../../theme";
+import { registerWidget } from "./registry";
 
 const size_hint = { span: "half" as const, min_height: 2 };
 const MAX_VISIBLE = 10;
@@ -71,12 +71,7 @@ function GithubPRsWidget(props: WidgetRenderProps & { status: RepoStatus | null 
 				</Match>
 				<Match when={true}>
 					<text fg={theme.fg_dark} content={`GitHub PRs (${prs().length})`} />
-					<Show
-						when={prs().length > 0}
-						fallback={
-							<text fg={theme.fg_dim} content="(no open PRs)" />
-						}
-					>
+					<Show when={prs().length > 0} fallback={<text fg={theme.fg_dim} content="(no open PRs)" />}>
 						<For each={visible()}>
 							{(pr) => {
 								const line = () => formatPrLine(pr);
@@ -85,16 +80,8 @@ function GithubPRsWidget(props: WidgetRenderProps & { status: RepoStatus | null 
 										<text fg={line().si.color} content={`${line().si.char} `} />
 										<text fg={theme.fg_dim} content={line().number_str} />
 										<text content={` ${line().title}`} />
-										<Show when={line().ci}>
-											{(ci) => (
-												<text fg={ci().color} content={` ${ci().char}`} />
-											)}
-										</Show>
-										<Show when={line().rv}>
-											{(rv) => (
-												<text fg={rv().color} content={` ${rv().char}`} />
-											)}
-										</Show>
+										<Show when={line().ci}>{(ci) => <text fg={ci().color} content={` ${ci().char}`} />}</Show>
+										<Show when={line().rv}>{(rv) => <text fg={rv().color} content={` ${rv().char}`} />}</Show>
 									</box>
 								);
 							}}

@@ -1,4 +1,4 @@
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { createPool } from "../src/concurrency";
 
 describe("createPool", () => {
@@ -14,13 +14,7 @@ describe("createPool", () => {
 			current--;
 		};
 
-		await Promise.all([
-			pool.run(task),
-			pool.run(task),
-			pool.run(task),
-			pool.run(task),
-			pool.run(task),
-		]);
+		await Promise.all([pool.run(task), pool.run(task), pool.run(task), pool.run(task), pool.run(task)]);
 
 		expect(max_concurrent).toBe(2);
 		expect(current).toBe(0);
@@ -81,7 +75,12 @@ describe("createPool", () => {
 
 		// Create tasks that block until we release them
 		const make_blocking = () =>
-			pool.run(() => new Promise<void>((resolve) => { started.push(resolve); }));
+			pool.run(
+				() =>
+					new Promise<void>((resolve) => {
+						started.push(resolve);
+					}),
+			);
 
 		const p1 = make_blocking();
 		const p2 = make_blocking();

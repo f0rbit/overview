@@ -1,6 +1,6 @@
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { defaultConfig } from "@overview/core";
-import { parseCliArgs, mergeCliArgs } from "../../config/index";
+import { mergeCliArgs, parseCliArgs } from "../../config/index";
 
 // ── parseCliArgs ───────────────────────────────────────────────────────────
 
@@ -30,7 +30,18 @@ describe("parseCliArgs", () => {
 	});
 
 	test("multiple flags together", () => {
-		const result = parseCliArgs(["bun", "s", "--dir", "/tmp", "--depth", "2", "--sort", "last-commit", "--filter", "ahead"]);
+		const result = parseCliArgs([
+			"bun",
+			"s",
+			"--dir",
+			"/tmp",
+			"--depth",
+			"2",
+			"--sort",
+			"last-commit",
+			"--filter",
+			"ahead",
+		]);
 		expect(result).toEqual({
 			dir: "/tmp",
 			depth: 2,

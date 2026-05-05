@@ -1,21 +1,14 @@
-import { For, Show, Switch, Match, createMemo } from "solid-js";
-import type { WidgetRenderProps, RepoStatus, GithubIssue } from "@overview/core";
-import { registerWidget } from "./registry";
-import { theme } from "../../theme";
+import type { GithubIssue, RepoStatus, WidgetRenderProps } from "@overview/core";
+import { For, Match, Show, Switch, createMemo } from "solid-js";
 import { truncate } from "../../lib/format";
 import { useGithub } from "../../lib/use-github";
+import { theme } from "../../theme";
+import { registerWidget } from "./registry";
 
 const size_hint = { span: "half" as const, min_height: 2 };
 const MAX_VISIBLE = 10;
 
-const label_colors = [
-	theme.cyan,
-	theme.magenta,
-	theme.yellow,
-	theme.green,
-	theme.red,
-	theme.orange,
-] as const;
+const label_colors = [theme.cyan, theme.magenta, theme.yellow, theme.green, theme.red, theme.orange] as const;
 
 function labelColor(index: number): string {
 	return label_colors[index % label_colors.length]!;
@@ -59,12 +52,7 @@ function GithubIssuesWidget(props: WidgetRenderProps & { status: RepoStatus | nu
 				</Match>
 				<Match when={true}>
 					<text fg={theme.fg_dark} content={`Issues (${issues().length})`} />
-					<Show
-						when={issues().length > 0}
-						fallback={
-							<text fg={theme.fg_dim} content="(no issues)" />
-						}
-					>
+					<Show when={issues().length > 0} fallback={<text fg={theme.fg_dim} content="(no issues)" />}>
 						<For each={visible()}>
 							{(issue) => {
 								const line = () => formatIssueLine(issue);
@@ -72,11 +60,7 @@ function GithubIssuesWidget(props: WidgetRenderProps & { status: RepoStatus | nu
 									<box flexDirection="row" height={1}>
 										<text fg={theme.fg_dim} content={`${line().number_str} `} />
 										<text fg={theme.fg} content={line().title} />
-										<For each={issue.labels}>
-											{(_, i) => (
-												<text fg={labelColor(i())} content=" ●" />
-											)}
-										</For>
+										<For each={issue.labels}>{(_, i) => <text fg={labelColor(i())} content=" ●" />}</For>
 									</box>
 								);
 							}}

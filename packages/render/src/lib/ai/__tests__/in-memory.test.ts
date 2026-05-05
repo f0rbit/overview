@@ -1,6 +1,6 @@
-import { describe, test, expect } from "bun:test";
-import { createInMemoryProvider } from "../in-memory";
+import { describe, expect, test } from "bun:test";
 import type { RepoActivity } from "@overview/core";
+import { createInMemoryProvider } from "../in-memory";
 
 describe("createInMemoryProvider", () => {
 	test("summarize records last_input and increments call_count", async () => {

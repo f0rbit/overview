@@ -1,21 +1,12 @@
-import { ok, err, type Result } from "@f0rbit/corpus";
 import { basename, relative } from "node:path";
-import type {
-	RepoStatus,
-	GitFileChange,
-	BranchInfo,
-	StashEntry,
-	HealthStatus,
-} from "./types";
+import { type Result, err, ok } from "@f0rbit/corpus";
+import type { BranchInfo, GitFileChange, HealthStatus, RepoStatus, StashEntry } from "./types";
 
 export type GitStatusError =
 	| { kind: "not_a_repo"; path: string }
 	| { kind: "git_failed"; path: string; command: string; cause: string };
 
-async function git(
-	args: string[],
-	cwd: string,
-): Promise<Result<string, GitStatusError>> {
+async function git(args: string[], cwd: string): Promise<Result<string, GitStatusError>> {
 	const proc = Bun.spawn(["git", ...args], {
 		cwd,
 		stdout: "pipe",
@@ -26,10 +17,7 @@ async function git(
 
 	if (proc.exitCode !== 0) {
 		const stderr = await new Response(proc.stderr).text();
-		if (
-			stderr.includes("not a git repository") ||
-			stderr.includes("not a git repo")
-		) {
+		if (stderr.includes("not a git repository") || stderr.includes("not a git repo")) {
 			return err({ kind: "not_a_repo", path: cwd });
 		}
 		return err({
@@ -80,9 +68,7 @@ function parseFileStatus(line: string): GitFileChange | null {
 	return null;
 }
 
-function parseXY(
-	xy: string,
-): GitFileChange["status"] {
+function parseXY(xy: string): GitFileChange["status"] {
 	const x = xy[0] ?? ".";
 	const y = xy[1] ?? ".";
 	const code = x !== "." ? x : y;
@@ -124,7 +110,6 @@ function parseStatusPorcelain(raw: string): {
 				behind = Number.parseInt(match[2] ?? "0", 10);
 			}
 		} else if (line.startsWith("#")) {
-			continue;
 		} else {
 			const change = parseFileStatus(line);
 			if (change) changes.push(change);
@@ -201,44 +186,33 @@ function deriveHealth(
 	return "clean";
 }
 
-export async function collectStatus(
-	repoPath: string,
-	scanRoot: string,
-): Promise<Result<RepoStatus, GitStatusError>> {
-	const [status_result, log_result, stash_result, branches_result, remote_result] =
-		await Promise.all([
-			git(["status", "--porcelain=v2", "--branch"], repoPath),
-			git(["log", "-1", "--format=%H:%s:%at"], repoPath),
-			git(["stash", "list", "--format=%gd:%gs"], repoPath),
-			git(["branch", "-a", "--format=%(refname:short)"], repoPath),
-			git(["remote", "get-url", "origin"], repoPath),
-		]);
+export async function collectStatus(repoPath: string, scanRoot: string): Promise<Result<RepoStatus, GitStatusError>> {
+	const [status_result, log_result, stash_result, branches_result, remote_result] = await Promise.all([
+		git(["status", "--porcelain=v2", "--branch"], repoPath),
+		git(["log", "-1", "--format=%H:%s:%at"], repoPath),
+		git(["stash", "list", "--format=%gd:%gs"], repoPath),
+		git(["branch", "-a", "--format=%(refname:short)"], repoPath),
+		git(["remote", "get-url", "origin"], repoPath),
+	]);
 
 	if (!status_result.ok) return status_result;
 	if (!log_result.ok) return log_result;
 	if (!stash_result.ok) return stash_result;
 	if (!branches_result.ok) return branches_result;
 
-	const { branch, ahead, behind, changes } = parseStatusPorcelain(
-		status_result.value,
-	);
+	const { branch, ahead, behind, changes } = parseStatusPorcelain(status_result.value);
 
 	const log_parts = log_result.value.trim().split(":");
 	const head_commit = log_parts[0] ?? "";
-	const head_message = log_parts.slice(1, -1).join(":") ;
+	const head_message = log_parts.slice(1, -1).join(":");
 	const head_time = Number.parseInt(log_parts.at(-1) ?? "0", 10);
 
 	const stashes = parseStashList(stash_result.value);
-	const { branches, local_count, remote_count } = parseBranches(
-		branches_result.value,
-	);
+	const { branches, local_count, remote_count } = parseBranches(branches_result.value);
 
-	const current_branch =
-		branch === "(detached)" || branch === "HEAD" ? "HEAD (detached)" : branch;
+	const current_branch = branch === "(detached)" || branch === "HEAD" ? "HEAD (detached)" : branch;
 
-	const current_idx = branches.findIndex(
-		(b) => b.name === current_branch || b.name === branch,
-	);
+	const current_idx = branches.findIndex((b) => b.name === current_branch || b.name === branch);
 	if (current_idx >= 0 && branches[current_idx]) {
 		branches[current_idx].is_current = true;
 	}
@@ -249,28 +223,13 @@ export async function collectStatus(
 		(c) => !c.staged && c.status !== "untracked" && c.status !== "conflicted",
 	).length;
 	const staged_count = changes.filter((c) => c.staged).length;
-	const untracked_count = changes.filter(
-		(c) => c.status === "untracked",
-	).length;
-	const conflict_count = changes.filter(
-		(c) => c.status === "conflicted",
-	).length;
+	const untracked_count = changes.filter((c) => c.status === "untracked").length;
+	const conflict_count = changes.filter((c) => c.status === "conflicted").length;
 
 	const is_clean =
-		modified_count === 0 &&
-		staged_count === 0 &&
-		untracked_count === 0 &&
-		conflict_count === 0 &&
-		ahead === 0;
+		modified_count === 0 && staged_count === 0 && untracked_count === 0 && conflict_count === 0 && ahead === 0;
 
-	const health = deriveHealth(
-		ahead,
-		behind,
-		modified_count,
-		staged_count,
-		untracked_count,
-		conflict_count,
-	);
+	const health = deriveHealth(ahead, behind, modified_count, staged_count, untracked_count, conflict_count);
 
 	return ok({
 		path: repoPath,

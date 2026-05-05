@@ -1,6 +1,6 @@
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import type { RepoNode, RepoStatus } from "@overview/core";
-import { filterTree, sortTree, searchRepos, nextFilter, nextSort } from "../filter";
+import { filterTree, nextFilter, nextSort, searchRepos, sortTree } from "../filter";
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
@@ -150,10 +150,7 @@ describe("sortTree", () => {
 	});
 
 	test("'last-commit' uses name as tiebreaker", () => {
-		const repos = [
-			makeRepo("beta", "clean", { head_time: 100 }),
-			makeRepo("alpha", "clean", { head_time: 100 }),
-		];
+		const repos = [makeRepo("beta", "clean", { head_time: 100 }), makeRepo("alpha", "clean", { head_time: 100 })];
 		const result = sortTree(repos, "last-commit");
 		expect(result.map((n) => n.name)).toEqual(["alpha", "beta"]);
 	});
@@ -174,10 +171,7 @@ describe("sortTree", () => {
 	});
 
 	test("children inside directories are also sorted", () => {
-		const dir = makeDir("proj", [
-			makeRepo("zeta", "clean"),
-			makeRepo("alpha", "clean"),
-		]);
+		const dir = makeDir("proj", [makeRepo("zeta", "clean"), makeRepo("alpha", "clean")]);
 		const result = sortTree([dir], "name");
 		expect(result[0]!.children.map((n) => n.name)).toEqual(["alpha", "zeta"]);
 	});

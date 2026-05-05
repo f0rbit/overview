@@ -1,4 +1,4 @@
-import { ok, err, type Result } from "@f0rbit/corpus";
+import { type Result, err, ok } from "@f0rbit/corpus";
 
 export type ActionError =
 	| { kind: "not_found"; command: string }
@@ -53,9 +53,7 @@ export async function launchEditor(
 	editorCommand: string,
 	callbacks: SuspendCallbacks,
 ): Promise<Result<void, ActionError>> {
-	const resolved = editorCommand === "$EDITOR"
-		? (process.env.EDITOR ?? process.env.VISUAL ?? "vim")
-		: editorCommand;
+	const resolved = editorCommand === "$EDITOR" ? (process.env.EDITOR ?? process.env.VISUAL ?? "vim") : editorCommand;
 	return launchSubprocess(resolved, ["."], repoPath, callbacks);
 }
 

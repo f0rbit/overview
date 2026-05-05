@@ -1,5 +1,5 @@
-import { describe, test, expect } from "bun:test";
-import { range_daily, range_weekly, range_custom } from "../range";
+import { describe, expect, test } from "bun:test";
+import { range_custom, range_daily, range_weekly } from "../range";
 
 describe("range_daily", () => {
 	test("returns kind === 'daily'", () => {

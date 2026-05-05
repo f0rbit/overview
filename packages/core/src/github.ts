@@ -1,4 +1,4 @@
-import { ok, err, type Result } from "@f0rbit/corpus";
+import { type Result, err, ok } from "@f0rbit/corpus";
 
 export type GithubError =
 	| { kind: "not_github_repo" }
@@ -108,13 +108,9 @@ export interface RawPR {
 
 export function deriveCiStatus(checks: RawPR["statusCheckRollup"]): GithubPR["ci_status"] {
 	if (!checks || checks.length === 0) return "none";
-	const has_failure = checks.some(
-		(c) => c.conclusion === "FAILURE" || c.conclusion === "failure",
-	);
+	const has_failure = checks.some((c) => c.conclusion === "FAILURE" || c.conclusion === "failure");
 	if (has_failure) return "failure";
-	const all_success = checks.every(
-		(c) => c.conclusion === "SUCCESS" || c.conclusion === "success",
-	);
+	const all_success = checks.every((c) => c.conclusion === "SUCCESS" || c.conclusion === "success");
 	if (all_success) return "success";
 	return "pending";
 }
@@ -152,10 +148,7 @@ interface RawIssue {
 }
 
 export async function collectIssues(cwd: string): Promise<Result<GithubIssue[], GithubError>> {
-	const result = await gh(
-		["issue", "list", "--json", "number,title,labels,createdAt", "--limit", "10"],
-		cwd,
-	);
+	const result = await gh(["issue", "list", "--json", "number,title,labels,createdAt", "--limit", "10"], cwd);
 	if (!result.ok) return result;
 
 	const parsed = safeJsonParse<RawIssue[]>(result.value);
@@ -179,10 +172,7 @@ interface RawWorkflowRun {
 }
 
 export async function collectCIRuns(cwd: string): Promise<Result<GithubWorkflowRun[], GithubError>> {
-	const result = await gh(
-		["run", "list", "--json", "name,status,conclusion,headBranch", "--limit", "10"],
-		cwd,
-	);
+	const result = await gh(["run", "list", "--json", "name,status,conclusion,headBranch", "--limit", "10"], cwd);
 	if (!result.ok) return result;
 
 	const parsed = safeJsonParse<RawWorkflowRun[]>(result.value);
@@ -217,15 +207,12 @@ async function countCommitsSince(tag: string, cwd: string): Promise<number> {
 
 	if (exit_code !== 0) return 0;
 
-	const count = parseInt(stdout.trim(), 10);
+	const count = Number.parseInt(stdout.trim(), 10);
 	return Number.isNaN(count) ? 0 : count;
 }
 
 export async function collectRelease(cwd: string): Promise<Result<GithubRelease | null, GithubError>> {
-	const result = await gh(
-		["release", "view", "--json", "tagName,publishedAt,name"],
-		cwd,
-	);
+	const result = await gh(["release", "view", "--json", "tagName,publishedAt,name"], cwd);
 	if (!result.ok) {
 		if (result.error.kind === "api_error" && result.error.cause.includes("no releases")) {
 			return ok(null);

@@ -1,10 +1,10 @@
-import { ok, type Result } from "@f0rbit/corpus";
-import type { RepoNode, OcnStatus } from "./types";
-import { scanDirectory, type ScanError } from "./scanner";
-import { collectStatus } from "./git-status";
-import { detectWorktrees } from "./worktree";
+import { type Result, ok } from "@f0rbit/corpus";
 import { createPool } from "./concurrency";
+import { collectStatus } from "./git-status";
 import { readOcnStates } from "./ocn";
+import { type ScanError, scanDirectory } from "./scanner";
+import type { OcnStatus, RepoNode } from "./types";
+import { detectWorktrees } from "./worktree";
 
 export * from "./types";
 export * from "./scanner";

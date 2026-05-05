@@ -1,32 +1,16 @@
-import {
-	ok,
-	err,
-	try_catch,
-	try_catch_async,
-	format_error,
-	type Result,
-} from "@f0rbit/corpus";
-import type {
-	AIProvider,
-	AIProviderConfig,
-	ProviderError,
-	SummarizeInput,
-	SummaryStream,
-} from "./types";
-import { build_user_prompt, DEFAULT_SYSTEM_PROMPT } from "./prompt";
+import { type Result, err, format_error, ok, try_catch, try_catch_async } from "@f0rbit/corpus";
+import { DEFAULT_SYSTEM_PROMPT, build_user_prompt } from "./prompt";
+import type { AIProvider, AIProviderConfig, ProviderError, SummarizeInput, SummaryStream } from "./types";
 
 type BedrockModule = typeof import("@aws-sdk/client-bedrock-runtime");
 type BedrockClient = InstanceType<BedrockModule["BedrockRuntimeClient"]>;
-type ResponseStreamEvent =
-	import("@aws-sdk/client-bedrock-runtime").ResponseStream;
+type ResponseStreamEvent = import("@aws-sdk/client-bedrock-runtime").ResponseStream;
 
 const DEFAULT_REGION = "us-east-1";
 const DEFAULT_MAX_TOKENS = 2048;
 const ANTHROPIC_BEDROCK_VERSION = "bedrock-2023-05-31";
 
-export async function createBedrockProvider(
-	cfg: AIProviderConfig,
-): Promise<Result<AIProvider, ProviderError>> {
+export async function createBedrockProvider(cfg: AIProviderConfig): Promise<Result<AIProvider, ProviderError>> {
 	if (cfg.aws_profile && !process.env.AWS_PROFILE) {
 		process.env.AWS_PROFILE = cfg.aws_profile;
 	}
@@ -91,11 +75,8 @@ async function summarize_impl(
 
 function map_aws_error(e: unknown): ProviderError {
 	const name = (e as { name?: string } | null)?.name;
-	const message =
-		(e as { message?: string } | null)?.message ?? format_error(e);
-	const status = (
-		e as { $metadata?: { httpStatusCode?: number } } | null
-	)?.$metadata?.httpStatusCode;
+	const message = (e as { message?: string } | null)?.message ?? format_error(e);
+	const status = (e as { $metadata?: { httpStatusCode?: number } } | null)?.$metadata?.httpStatusCode;
 
 	if (name === "ExpiredTokenException" || name === "UnrecognizedClientException") {
 		return {
@@ -115,9 +96,7 @@ function map_aws_error(e: unknown): ProviderError {
 	return { kind: "network_failed", cause: format_error(e) };
 }
 
-function adapt_stream(
-	response_body: AsyncIterable<ResponseStreamEvent>,
-): SummaryStream {
+function adapt_stream(response_body: AsyncIterable<ResponseStreamEvent>): SummaryStream {
 	let aborted = false;
 	let collected = "";
 

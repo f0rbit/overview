@@ -1,7 +1,7 @@
-import { watch, type FSWatcher } from "node:fs";
 import type { EventEmitter } from "node:events";
+import { type FSWatcher, watch } from "node:fs";
+import { lstat, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { readFile, lstat } from "node:fs/promises";
 
 export interface WatcherOptions {
 	/** Debounce interval in ms (default 500) */
@@ -39,11 +39,7 @@ async function resolveGitDir(repo_path: string): Promise<string | null> {
 	}
 }
 
-function tryWatch(
-	target: string,
-	options: { recursive?: boolean },
-	callback: () => void,
-): FSWatcher | null {
+function tryWatch(target: string, options: { recursive?: boolean }, callback: () => void): FSWatcher | null {
 	try {
 		const watcher = watch(target, options, callback);
 		(watcher as unknown as EventEmitter).on("error", () => {});

@@ -52,9 +52,7 @@ export function matchRepoToProject(
 ): DevpadProject | null {
 	if (remote_url) {
 		const normalized = normalizeGitUrl(remote_url);
-		const match = projects.find(
-			(p) => p.repo_url && normalizeGitUrl(p.repo_url) === normalized,
-		);
+		const match = projects.find((p) => p.repo_url && normalizeGitUrl(p.repo_url) === normalized);
 		if (match) return match;
 	}
 	return projects.find((p) => p.project_id === repo_name) ?? null;

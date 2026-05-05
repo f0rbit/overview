@@ -1,5 +1,5 @@
-import { describe, test, expect } from "bun:test";
-import { createFetchContext, InFlightDedup } from "../fetch-context";
+import { describe, expect, test } from "bun:test";
+import { InFlightDedup, createFetchContext } from "../fetch-context";
 
 describe("createFetchContext", () => {
 	test("trigger fires after delay", async () => {
@@ -134,11 +134,7 @@ describe("InFlightDedup", () => {
 		};
 
 		// Fire 3 concurrent requests for the same key
-		const [r1, r2, r3] = await Promise.all([
-			dedup.run("key1", fn),
-			dedup.run("key1", fn),
-			dedup.run("key1", fn),
-		]);
+		const [r1, r2, r3] = await Promise.all([dedup.run("key1", fn), dedup.run("key1", fn), dedup.run("key1", fn)]);
 
 		// All get the same result
 		expect(r1).toBe("result");
@@ -159,10 +155,7 @@ describe("InFlightDedup", () => {
 			return val;
 		};
 
-		const [r1, r2] = await Promise.all([
-			dedup.run("a", () => fn("alpha")),
-			dedup.run("b", () => fn("beta")),
-		]);
+		const [r1, r2] = await Promise.all([dedup.run("a", () => fn("alpha")), dedup.run("b", () => fn("beta"))]);
 
 		expect(r1).toBe("alpha");
 		expect(r2).toBe("beta");

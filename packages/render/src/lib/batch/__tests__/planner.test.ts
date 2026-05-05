@@ -1,6 +1,6 @@
-import { describe, test, expect } from "bun:test";
-import { plan, type PlanInput, type BatchTask } from "../planner";
+import { describe, expect, test } from "bun:test";
 import type { RepoNode, RepoStatus } from "@overview/core";
+import { type BatchTask, type PlanInput, plan } from "../planner";
 
 // Helper to create a minimal valid RepoStatus
 function make_status(overrides: Partial<RepoStatus> = {}): RepoStatus {
@@ -39,11 +39,7 @@ function make_status(overrides: Partial<RepoStatus> = {}): RepoStatus {
 }
 
 // Helper to create a minimal RepoNode
-function make_repo(
-	name: string,
-	path: string = `/tmp/${name}`,
-	status: RepoStatus | null = make_status(),
-): RepoNode {
+function make_repo(name: string, path = `/tmp/${name}`, status: RepoStatus | null = make_status()): RepoNode {
 	return {
 		type: "repo",
 		name,

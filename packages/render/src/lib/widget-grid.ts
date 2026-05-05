@@ -1,5 +1,5 @@
 import { BorderChars, type BorderSides } from "@opentui/core";
-import type { WidgetId, WidgetSpan, WidgetSizeHint, WidgetConfig } from "@overview/core";
+import type { WidgetConfig, WidgetId, WidgetSizeHint, WidgetSpan } from "@overview/core";
 
 const B = BorderChars.rounded;
 
@@ -118,18 +118,14 @@ function junctionColumns(row: GridRow | null, total_width: number): Set<number> 
 	if (row.columns === 3) {
 		const widgets_width = total_width - 2;
 		const j1 = Math.floor(widgets_width / 3);
-		const j2 = Math.floor(2 * widgets_width / 3) + 1;
+		const j2 = Math.floor((2 * widgets_width) / 3) + 1;
 		return new Set([j1, j2]);
 	}
 	return new Set();
 }
 
-function junctionChar(
-	type: "top" | "mid" | "bottom",
-	in_prev: boolean,
-	in_next: boolean,
-): string {
-	if (type === "top") return B.topT;      // junction only from below
+function junctionChar(type: "top" | "mid" | "bottom", in_prev: boolean, in_next: boolean): string {
+	if (type === "top") return B.topT; // junction only from below
 	if (type === "bottom") return B.bottomT; // junction only from above
 
 	// mid: check both directions

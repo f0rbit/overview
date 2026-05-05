@@ -1,8 +1,8 @@
+import type { BranchInfo, RepoStatus, WidgetRenderProps } from "@overview/core";
 import { For, Show, createMemo } from "solid-js";
-import type { WidgetRenderProps, RepoStatus, BranchInfo } from "@overview/core";
-import { registerWidget } from "./registry";
-import { theme } from "../../theme";
 import { truncate } from "../../lib/format";
+import { theme } from "../../theme";
+import { registerWidget } from "./registry";
 
 const size_hint = { span: "half" as const, min_height: 2 };
 const MAX_VISIBLE = 10;
@@ -21,38 +21,23 @@ function isStale(branch: BranchInfo): boolean {
 }
 
 function BranchListWidget(props: WidgetRenderProps & { status: RepoStatus | null }) {
-	const branches = createMemo(() =>
-		props.status ? sortBranches(props.status.branches) : []
-	);
+	const branches = createMemo(() => (props.status ? sortBranches(props.status.branches) : []));
 	const visible = () => branches().slice(0, MAX_VISIBLE);
 	const overflow = () => Math.max(0, branches().length - MAX_VISIBLE);
 	const has_sync = (b: BranchInfo) => b.ahead > 0 || b.behind > 0;
 
 	return (
 		<box flexDirection="column">
-			<Show
-				when={props.status}
-				fallback={
-					<text fg={theme.fg_dim} content="no repo selected" />
-				}
-			>
+			<Show when={props.status} fallback={<text fg={theme.fg_dim} content="no repo selected" />}>
 				{(status) => (
 					<>
 						<text fg={theme.fg_dark} content={`Branches (${status().branches.length})`} />
 
-						<Show
-							when={branches().length > 0}
-							fallback={
-								<text fg={theme.fg_dim} content="(no branches)" />
-							}
-						>
+						<Show when={branches().length > 0} fallback={<text fg={theme.fg_dim} content="(no branches)" />}>
 							<For each={visible()}>
 								{(branch) => (
 									<box flexDirection="row" height={1}>
-										<text
-											fg={branch.is_current ? theme.green : theme.fg}
-											content={branch.is_current ? "* " : "  "}
-										/>
+										<text fg={branch.is_current ? theme.green : theme.fg} content={branch.is_current ? "* " : "  "} />
 										<text
 											fg={branch.is_current ? theme.green : theme.fg}
 											content={truncate(branch.name, props.width - 20)}

@@ -1,20 +1,20 @@
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { ok } from "@f0rbit/corpus";
 import {
-	register_activity_source,
+	type ActivitySection,
+	type RepoActivity,
+	type RepoNode,
+	type StandupRange,
 	_clear_activity_registry_for_tests,
+	createPool,
 	defaultConfig,
 	list_activity_sources,
 	range_daily,
 	range_weekly,
-	createPool,
-	type ActivitySection,
-	type RepoNode,
-	type RepoActivity,
-	type StandupRange,
+	register_activity_source,
 } from "@overview/core";
-import { register_command, get_command, _clear_registry_for_tests } from "../../palette/registry";
 import type { CommandContext } from "../../palette/context";
+import { _clear_registry_for_tests, get_command, register_command } from "../../palette/registry";
 import type { PaletteEvent } from "../../palette/types";
 import { resolve_standup_range } from "../standup";
 
@@ -68,13 +68,9 @@ async function collect_for_repo(
 	range: StandupRange,
 	sources: ReturnType<typeof list_activity_sources>,
 ): Promise<RepoActivity> {
-	const results = await Promise.all(
-		sources.map((s) => s.collect(repo, range)),
-	);
+	const results = await Promise.all(sources.map((s) => s.collect(repo, range)));
 
-	const sections = results
-		.map((r) => (r.ok ? r.value : null))
-		.filter((s): s is ActivitySection => s !== null);
+	const sections = results.map((r) => (r.ok ? r.value : null)).filter((s): s is ActivitySection => s !== null);
 
 	return {
 		repo_path: repo.path,

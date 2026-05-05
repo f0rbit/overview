@@ -1,5 +1,5 @@
-import { Show, For } from "solid-js";
 import { useKeyboard } from "@opentui/solid";
+import { For, Show } from "solid-js";
 import { theme } from "../theme";
 
 interface HelpOverlayProps {
@@ -63,8 +63,8 @@ function Section(props: { title: string; items: ReadonlyArray<{ key: string; des
 			<For each={props.items}>
 				{(item) => (
 					<box flexDirection="row" height={1}>
-					<text fg={theme.blue} content={item.key.padEnd(16)} />
-					<text fg={theme.fg} content={item.desc} />
+						<text fg={theme.blue} content={item.key.padEnd(16)} />
+						<text fg={theme.fg} content={item.desc} />
 					</box>
 				)}
 			</For>
@@ -99,9 +99,7 @@ export function HelpOverlay(props: HelpOverlayProps) {
 				gap={1}
 				zIndex={100}
 			>
-				<For each={SECTIONS}>
-					{(section) => <Section title={section.title} items={section.items} />}
-				</For>
+				<For each={SECTIONS}>{(section) => <Section title={section.title} items={section.items} />}</For>
 			</box>
 		</Show>
 	);

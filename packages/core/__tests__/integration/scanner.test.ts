@@ -1,15 +1,8 @@
-import { describe, test, expect, beforeAll, afterAll } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { mkdir } from "node:fs/promises";
 import { join } from "node:path";
-import { scanDirectory, scanAndCollect } from "../../src/index";
-import {
-	createTempDir,
-	cleanupTempDir,
-	initRepo,
-	addCommit,
-	modifyFile,
-	addUntracked,
-} from "../helpers";
+import { scanAndCollect, scanDirectory } from "../../src/index";
+import { addCommit, addUntracked, cleanupTempDir, createTempDir, initRepo, modifyFile } from "../helpers";
 
 describe("scanner integration", () => {
 	let temp_dir: string;

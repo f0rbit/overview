@@ -1,14 +1,14 @@
-import { createSignal, createEffect, type Accessor } from "solid-js";
 import ApiClient from "@devpad/api";
 import type { Project, TaskWithDetails } from "@devpad/api";
 import {
 	DataCache,
-	matchRepoToProject,
-	type DevpadProject,
-	type DevpadTask,
 	type DevpadMilestone,
+	type DevpadProject,
 	type DevpadRepoData,
+	type DevpadTask,
+	matchRepoToProject,
 } from "@overview/core";
+import { type Accessor, createEffect, createSignal } from "solid-js";
 import { InFlightDedup } from "./fetch-context";
 import { getWidgetState } from "./widget-state";
 
@@ -107,9 +107,7 @@ export function useDevpad(
 			]);
 
 			const tasks: DevpadTask[] = tasks_result.ok
-				? tasks_result.value
-						.map(toDevpadTask)
-						.filter((t) => t.progress !== "COMPLETED")
+				? tasks_result.value.map(toDevpadTask).filter((t) => t.progress !== "COMPLETED")
 				: [];
 
 			const raw_milestones: ApiMilestone[] = milestones_result.ok

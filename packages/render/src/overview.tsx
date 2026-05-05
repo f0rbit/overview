@@ -1,6 +1,6 @@
 import { render } from "@opentui/solid";
-import { loadConfig, parseCliArgs, mergeCliArgs } from "./config";
 import { load_plugins } from "@overview/core";
+import { loadConfig, mergeCliArgs, parseCliArgs } from "./config";
 import { MainScreen } from "./screens";
 
 const configResult = await loadConfig();
@@ -14,9 +14,7 @@ const config = mergeCliArgs(configResult.value, cliArgs);
 
 const plugin_errors = await load_plugins(config.plugins ?? []);
 for (const e of plugin_errors) {
-	console.error(
-		`[plugin ${e.package_name}] ${e.kind}: ${"cause" in e ? e.cause : ""}`,
-	);
+	console.error(`[plugin ${e.package_name}] ${e.kind}: ${"cause" in e ? e.cause : ""}`);
 }
 
 const App = () => <MainScreen config={config} />;

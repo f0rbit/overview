@@ -1,9 +1,9 @@
-import { describe, test, expect, afterAll } from "bun:test";
+import { afterAll, describe, expect, test } from "bun:test";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { execute } from "../executor";
 import { createPool } from "@overview/core";
+import { execute } from "../executor";
 import type { BatchTask } from "../planner";
 
 describe("batch executor", () => {

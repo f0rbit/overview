@@ -7,8 +7,8 @@
 //   bg_dark    — overlay background
 // All tokens verified present in `packages/render/src/theme/index.ts`.
 
-import { Show, For, createMemo } from "solid-js";
 import { useKeyboard } from "@opentui/solid";
+import { For, Show, createMemo } from "solid-js";
 import type { BatchAction, BatchFilter, BatchTask } from "../lib/batch";
 import { theme } from "../theme";
 
@@ -59,7 +59,7 @@ function row_message(task: BatchTask): string {
 function pad_or_truncate(s: string, n: number): string {
 	if (s.length === n) return s;
 	if (s.length < n) return s.padEnd(n, " ");
-	return s.slice(0, Math.max(0, n - 1)) + "…";
+	return `${s.slice(0, Math.max(0, n - 1))}…`;
 }
 
 function pad_left(s: string, n: number): string {
@@ -72,7 +72,11 @@ function format_duration(task: BatchTask): string {
 	return `${task.duration_ms}ms`;
 }
 
-function header_text(payload: BatchOverlayPayload, completed: number, total: number): {
+function header_text(
+	payload: BatchOverlayPayload,
+	completed: number,
+	total: number,
+): {
 	action_segment: string;
 	meta_segment: string;
 } {
@@ -103,11 +107,11 @@ export function BatchOverlay(props: BatchOverlayProps) {
 
 	const counts = createMemo(() => {
 		const ts = tasks();
-		let succeeded = 0,
-			failed = 0,
-			skipped = 0,
-			running = 0,
-			queued = 0;
+		let succeeded = 0;
+		let failed = 0;
+		let skipped = 0;
+		let running = 0;
+		let queued = 0;
 		for (const t of ts) {
 			if (t.status === "succeeded") succeeded++;
 			else if (t.status === "failed") failed++;
@@ -175,10 +179,7 @@ export function BatchOverlay(props: BatchOverlayProps) {
 					/>
 				</box>
 
-				<Show
-					when={tasks().length > 0}
-					fallback={<text content="(no tasks to run)" fg={theme.fg_dim} />}
-				>
+				<Show when={tasks().length > 0} fallback={<text content="(no tasks to run)" fg={theme.fg_dim} />}>
 					<scrollbox flexGrow={1}>
 						<box flexDirection="column" flexShrink={0}>
 							<For each={tasks()}>{(task) => <TaskRow task={task} />}</For>
@@ -187,12 +188,7 @@ export function BatchOverlay(props: BatchOverlayProps) {
 				</Show>
 
 				<box height={1}>
-					<Show
-						when={done()}
-						fallback={
-							<text content="Running... (Esc to abort, q when done)" fg={theme.fg_dim} />
-						}
-					>
+					<Show when={done()} fallback={<text content="Running... (Esc to abort, q when done)" fg={theme.fg_dim} />}>
 						<text
 							content={`${counts().succeeded} succeeded, ${counts().failed} failed, ${counts().skipped} skipped`}
 							fg={counts().failed === 0 ? theme.green : theme.yellow}

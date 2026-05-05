@@ -1,5 +1,5 @@
-import { describe, test, expect } from "bun:test";
-import { truncate, formatBytes, padTo, formatRelativeTime } from "../format";
+import { describe, expect, test } from "bun:test";
+import { formatBytes, formatRelativeTime, padTo, truncate } from "../format";
 
 // ── truncate ───────────────────────────────────────────────────────────────
 

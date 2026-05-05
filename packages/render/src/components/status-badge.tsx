@@ -1,5 +1,5 @@
-import { For } from "solid-js";
 import type { RepoStatus } from "@overview/core";
+import { For } from "solid-js";
 import { theme } from "../theme";
 
 interface StatusBadgeProps {
@@ -62,9 +62,7 @@ export function StatusBadge(props: StatusBadgeProps) {
 
 	return (
 		<box flexDirection="row">
-			<For each={parts()}>
-				{(p) => <text fg={p.color} content={p.text} />}
-			</For>
+			<For each={parts()}>{(p) => <text fg={p.color} content={p.text} />}</For>
 		</box>
 	);
 }

@@ -25,18 +25,13 @@ export async function initRepo(dir: string, name: string): Promise<string> {
 	await run(["git", "init"], repo_path);
 	await run(["git", "config", "user.email", "test@test.com"], repo_path);
 	await run(["git", "config", "user.name", "Test User"], repo_path);
-	await Bun.write(join(repo_path, "README.md"), "# " + name);
+	await Bun.write(join(repo_path, "README.md"), `# ${name}`);
 	await run(["git", "add", "."], repo_path);
 	await run(["git", "commit", "-m", "initial commit"], repo_path);
 	return repo_path;
 }
 
-export async function addCommit(
-	repoPath: string,
-	filename: string,
-	content: string,
-	message: string,
-): Promise<void> {
+export async function addCommit(repoPath: string, filename: string, content: string, message: string): Promise<void> {
 	await Bun.write(join(repoPath, filename), content);
 	await run(["git", "add", filename], repoPath);
 	await run(["git", "commit", "-m", message], repoPath);

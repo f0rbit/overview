@@ -1,20 +1,20 @@
+import type { GitFileChange, RepoStatus, WidgetRenderProps } from "@overview/core";
 import { For, Show } from "solid-js";
-import type { WidgetRenderProps, RepoStatus, GitFileChange } from "@overview/core";
-import { registerWidget } from "./registry";
-import { theme } from "../../theme";
 import { truncate } from "../../lib/format";
+import { theme } from "../../theme";
+import { registerWidget } from "./registry";
 
 const size_hint = { span: "half" as const, min_height: 2 };
 
 function statusIcon(change: GitFileChange): { icon: string; color: string } {
 	const icons: Record<string, { icon: string; color: string }> = {
-		modified:   { icon: "M", color: theme.status.modified },
-		added:      { icon: "A", color: theme.green },
-		deleted:    { icon: "D", color: theme.red },
-		renamed:    { icon: "R", color: theme.cyan },
-		copied:     { icon: "C", color: theme.magenta },
-		untracked:  { icon: "?", color: theme.status.untracked },
-		ignored:    { icon: "!", color: theme.fg_dim },
+		modified: { icon: "M", color: theme.status.modified },
+		added: { icon: "A", color: theme.green },
+		deleted: { icon: "D", color: theme.red },
+		renamed: { icon: "R", color: theme.cyan },
+		copied: { icon: "C", color: theme.magenta },
+		untracked: { icon: "?", color: theme.status.untracked },
+		ignored: { icon: "!", color: theme.fg_dim },
 		conflicted: { icon: "!", color: theme.status.conflict },
 	};
 	return icons[change.status] ?? { icon: " ", color: theme.fg };
@@ -31,32 +31,22 @@ function FileChangesWidget(props: WidgetRenderProps & { status: RepoStatus | nul
 
 	return (
 		<box flexDirection="column">
-			<Show
-				when={props.status}
-				fallback={
-					<text fg={theme.fg_dim} content="no repo selected" />
-				}
-			>
+			<Show when={props.status} fallback={<text fg={theme.fg_dim} content="no repo selected" />}>
 				<box flexDirection="row" height={1}>
 					<text fg={theme.fg} content={header()} />
 				</box>
 
-				<Show
-					when={changes().length > 0}
-					fallback={
-						<text fg={theme.fg_dim} content="(no changes)" />
-					}
-				>
+				<Show when={changes().length > 0} fallback={<text fg={theme.fg_dim} content="(no changes)" />}>
 					<For each={changes()}>
 						{(change) => {
 							const si = () => statusIcon(change);
-							const staged_prefix = () => change.staged ? "+" : " ";
+							const staged_prefix = () => (change.staged ? "+" : " ");
 							const label = () => truncate(basename(change.path), props.width - 5);
 
 							return (
 								<box flexDirection="row" height={1}>
 									<text fg={change.staged ? theme.green : si().color} content={staged_prefix()} />
-									<text fg={si().color} content={si().icon + " "} />
+									<text fg={si().color} content={`${si().icon} `} />
 									<text fg={theme.fg} content={label()} />
 								</box>
 							);

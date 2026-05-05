@@ -1,9 +1,9 @@
-import { ok, err, try_catch, type Result } from "@f0rbit/corpus";
-import { createSignal } from "solid-js";
+import { mkdir } from "node:fs/promises";
+import { homedir } from "node:os";
+import { join } from "node:path";
+import { type Result, err, ok, try_catch } from "@f0rbit/corpus";
 import type { WidgetConfig } from "@overview/core";
-import { join } from "path";
-import { homedir } from "os";
-import { mkdir } from "fs/promises";
+import { createSignal } from "solid-js";
 
 export interface WidgetStateFile {
 	widgets: WidgetConfig[];
@@ -74,9 +74,7 @@ export async function loadWidgetState(): Promise<Result<WidgetStateFile, string>
 	if (!parse_result.ok) return err(parse_result.error);
 	parsed = parse_result.value as Partial<WidgetStateFile>;
 
-	const widgets = Array.isArray(parsed.widgets)
-		? mergeConfigs(parsed.widgets)
-		: defaultWidgetConfig();
+	const widgets = Array.isArray(parsed.widgets) ? mergeConfigs(parsed.widgets) : defaultWidgetConfig();
 
 	return ok({
 		widgets,

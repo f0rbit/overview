@@ -27,10 +27,9 @@ export function build_user_prompt(input: SummarizeInput): string {
 			for (let i = 0; i < item_count; i++) {
 				const item = section.items[i]!;
 				const meta_str = item.meta
-					? "  " +
-						Object.entries(item.meta)
+					? `  ${Object.entries(item.meta)
 							.map(([k, v]) => `[${k}=${v}]`)
-							.join(" ")
+							.join(" ")}`
 					: "";
 				const author = item.author ? ` — ${item.author}` : "";
 				lines.push(`- ${item.title}${author}${meta_str}`);

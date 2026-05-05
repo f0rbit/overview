@@ -1,5 +1,5 @@
-import { describe, test, expect } from "bun:test";
-import { normalizeGitUrl, matchRepoToProject, type DevpadProject } from "../src/devpad";
+import { describe, expect, test } from "bun:test";
+import { type DevpadProject, matchRepoToProject, normalizeGitUrl } from "../src/devpad";
 
 const project = (overrides: Partial<DevpadProject> = {}): DevpadProject => ({
 	id: "id-1",
@@ -15,51 +15,35 @@ const project = (overrides: Partial<DevpadProject> = {}): DevpadProject => ({
 
 describe("normalizeGitUrl", () => {
 	test("strips .git suffix", () => {
-		expect(normalizeGitUrl("https://github.com/owner/repo.git")).toBe(
-			"https://github.com/owner/repo",
-		);
+		expect(normalizeGitUrl("https://github.com/owner/repo.git")).toBe("https://github.com/owner/repo");
 	});
 
 	test("strips trailing slash", () => {
-		expect(normalizeGitUrl("https://github.com/owner/repo/")).toBe(
-			"https://github.com/owner/repo",
-		);
+		expect(normalizeGitUrl("https://github.com/owner/repo/")).toBe("https://github.com/owner/repo");
 	});
 
 	test("converts SSH to HTTPS", () => {
-		expect(normalizeGitUrl("git@github.com:owner/repo.git")).toBe(
-			"https://github.com/owner/repo",
-		);
+		expect(normalizeGitUrl("git@github.com:owner/repo.git")).toBe("https://github.com/owner/repo");
 	});
 
 	test("lowercases everything", () => {
-		expect(normalizeGitUrl("https://GitHub.COM/Owner/Repo")).toBe(
-			"https://github.com/owner/repo",
-		);
+		expect(normalizeGitUrl("https://GitHub.COM/Owner/Repo")).toBe("https://github.com/owner/repo");
 	});
 
 	test("trims whitespace", () => {
-		expect(normalizeGitUrl("  https://github.com/owner/repo  ")).toBe(
-			"https://github.com/owner/repo",
-		);
+		expect(normalizeGitUrl("  https://github.com/owner/repo  ")).toBe("https://github.com/owner/repo");
 	});
 
 	test("handles already-clean URLs", () => {
-		expect(normalizeGitUrl("https://github.com/owner/repo")).toBe(
-			"https://github.com/owner/repo",
-		);
+		expect(normalizeGitUrl("https://github.com/owner/repo")).toBe("https://github.com/owner/repo");
 	});
 
 	test("strips .git and trailing slash together", () => {
-		expect(normalizeGitUrl("https://github.com/owner/repo.git")).toBe(
-			"https://github.com/owner/repo",
-		);
+		expect(normalizeGitUrl("https://github.com/owner/repo.git")).toBe("https://github.com/owner/repo");
 	});
 
 	test("converts SSH without .git suffix", () => {
-		expect(normalizeGitUrl("git@github.com:owner/repo")).toBe(
-			"https://github.com/owner/repo",
-		);
+		expect(normalizeGitUrl("git@github.com:owner/repo")).toBe("https://github.com/owner/repo");
 	});
 });
 

@@ -1,11 +1,11 @@
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import {
-	parseSize,
-	parseContributors,
-	parseRepoSize,
-	parseTags,
-	parseRecentCommits,
 	bucketIntoDays,
+	parseContributors,
+	parseRecentCommits,
+	parseRepoSize,
+	parseSize,
+	parseTags,
 } from "../src/git-stats";
 
 describe("parseSize", () => {
@@ -108,9 +108,7 @@ describe("parseRecentCommits", () => {
 	test("parses colon-delimited format", () => {
 		const output = "abc123:fix bug:John:1700000000\n";
 		const result = parseRecentCommits(output);
-		expect(result).toEqual([
-			{ hash: "abc123", message: "fix bug", author: "John", time: 1700000000 },
-		]);
+		expect(result).toEqual([{ hash: "abc123", message: "fix bug", author: "John", time: 1700000000 }]);
 	});
 
 	test("multiple commits", () => {

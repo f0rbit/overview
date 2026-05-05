@@ -1,9 +1,9 @@
-import { z } from "zod";
-import { ok, err, type Result } from "@f0rbit/corpus";
+import { type Result, err, ok } from "@f0rbit/corpus";
 import { createPool } from "@overview/core";
+import { z } from "zod";
+import { type BatchAction, type BatchFilter, execute, plan } from "../batch";
 import { register_command } from "../palette/registry";
 import type { CommandError } from "../palette/types";
-import { execute, plan, type BatchAction, type BatchFilter } from "../batch";
 
 const batch_args_schema = z.object({
 	_: z.array(z.string()).optional(),
@@ -20,9 +20,7 @@ interface BatchArgs {
 	force: boolean;
 }
 
-export function resolve_batch_args(
-	raw: BatchRawArgs,
-): Result<BatchArgs, CommandError> {
+export function resolve_batch_args(raw: BatchRawArgs): Result<BatchArgs, CommandError> {
 	const positional = raw._?.[0];
 	if (positional !== undefined && positional !== "all") {
 		return err({
@@ -93,21 +91,15 @@ async function run_batch(
 	ctx.open_overlay("batch", payload);
 
 	// Run executor with progress callback
-	const final_tasks = await execute(
-		tasks,
-		pool,
-		{
-			on_progress: (task) => {
-				current_tasks = current_tasks.map(t =>
-					t.repo_path === task.repo_path && t.action === task.action ? task : t
-				);
-				for (const cb of subscribers) {
-					cb(current_tasks);
-				}
-			},
-			abort_signal: abort_controller.signal,
+	const final_tasks = await execute(tasks, pool, {
+		on_progress: (task) => {
+			current_tasks = current_tasks.map((t) => (t.repo_path === task.repo_path && t.action === task.action ? task : t));
+			for (const cb of subscribers) {
+				cb(current_tasks);
+			}
 		},
-	);
+		abort_signal: abort_controller.signal,
+	});
 
 	current_tasks = final_tasks;
 	for (const cb of subscribers) {

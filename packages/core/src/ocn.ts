@@ -1,7 +1,7 @@
-import { ok, type Result } from "@f0rbit/corpus";
-import { join } from "node:path";
 import { readdir } from "node:fs/promises";
-import type { OcnStatus, OcnSessionStatus } from "./types";
+import { join } from "node:path";
+import { type Result, ok } from "@f0rbit/corpus";
+import type { OcnSessionStatus, OcnStatus } from "./types";
 
 interface OcnStateFile {
 	pid: number;
@@ -60,10 +60,7 @@ export async function readOcnStates(): Promise<Result<Map<string, OcnStatus>, ne
 				status: data.status,
 				session_id: data.session_id,
 			});
-		} catch {
-			// Malformed JSON or read error — skip silently
-			continue;
-		}
+		} catch {}
 	}
 
 	return ok(map);

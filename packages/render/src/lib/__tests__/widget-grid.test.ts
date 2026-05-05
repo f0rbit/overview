@@ -1,19 +1,25 @@
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import type { WidgetId } from "@overview/core";
 import {
-	resolveSpan,
-	computeRows,
+	type GridRow,
+	type GridWidget,
 	buildBorderLine,
 	buildBorderLineWithTitle,
+	computeRows,
 	contentWidth,
 	getWidgetBorderSides,
-	type GridWidget,
-	type GridRow,
+	resolveSpan,
 } from "../widget-grid";
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
-function makeWidget(id: WidgetId, span: "full" | "half" | "third" | "auto", enabled = true, collapsed = false, priority = 0): GridWidget {
+function makeWidget(
+	id: WidgetId,
+	span: "full" | "half" | "third" | "auto",
+	enabled = true,
+	collapsed = false,
+	priority = 0,
+): GridWidget {
 	return {
 		id,
 		size_hint: { span, min_height: 2 },
@@ -81,10 +87,7 @@ describe("resolveSpan", () => {
 
 describe("computeRows", () => {
 	test("two half-width widgets at wide panel → 1 two-column row", () => {
-		const widgets = [
-			makeWidget("git-status", "half", true, false, 0),
-			makeWidget("repo-meta", "half", true, false, 1),
-		];
+		const widgets = [makeWidget("git-status", "half", true, false, 0), makeWidget("repo-meta", "half", true, false, 1)];
 		const rows = computeRows(widgets, 80);
 
 		expect(rows).toHaveLength(1);
@@ -365,7 +368,12 @@ describe("buildBorderLine", () => {
 
 	const oneCol = row(1, makeWidget("git-status", "full"));
 	const twoCol = row(2, makeWidget("git-status", "half"), makeWidget("repo-meta", "half"));
-	const threeCol = row(3, makeWidget("git-status", "third"), makeWidget("repo-meta", "third"), makeWidget("github-ci", "third"));
+	const threeCol = row(
+		3,
+		makeWidget("git-status", "third"),
+		makeWidget("repo-meta", "third"),
+		makeWidget("github-ci", "third"),
+	);
 
 	test("top border, 1-col next row → corners + horizontal fill", () => {
 		const line = buildBorderLine("top", W, null, oneCol);
@@ -543,9 +551,9 @@ describe("buildBorderLine", () => {
 		expect(line.length).toBe(W);
 		expect(line[0]!).toBe("├");
 		expect(line[W - 1]!).toBe("┤");
-		expect(line[9]!).toBe("┬");   // from 3-col below only
-		expect(line[14]!).toBe("┴");  // from 2-col above only
-		expect(line[19]!).toBe("┬");  // from 3-col below only
+		expect(line[9]!).toBe("┬"); // from 3-col below only
+		expect(line[14]!).toBe("┴"); // from 2-col above only
+		expect(line[19]!).toBe("┬"); // from 3-col below only
 	});
 });
 
@@ -608,17 +616,26 @@ describe("getWidgetBorderSides", () => {
 	});
 
 	test("three-column row: left widget gets left (outer) only", () => {
-		const r: GridRow = { widgets: [makeWidget("git-status", "third"), makeWidget("repo-meta", "third"), makeWidget("github-ci", "third")], columns: 3 };
+		const r: GridRow = {
+			widgets: [makeWidget("git-status", "third"), makeWidget("repo-meta", "third"), makeWidget("github-ci", "third")],
+			columns: 3,
+		};
 		expect(getWidgetBorderSides(r, 0)).toEqual(["left"]);
 	});
 
 	test("three-column row: middle widget has no outer sides", () => {
-		const r: GridRow = { widgets: [makeWidget("git-status", "third"), makeWidget("repo-meta", "third"), makeWidget("github-ci", "third")], columns: 3 };
+		const r: GridRow = {
+			widgets: [makeWidget("git-status", "third"), makeWidget("repo-meta", "third"), makeWidget("github-ci", "third")],
+			columns: 3,
+		};
 		expect(getWidgetBorderSides(r, 1)).toEqual([]);
 	});
 
 	test("three-column row: right widget gets right (outer) only", () => {
-		const r: GridRow = { widgets: [makeWidget("git-status", "third"), makeWidget("repo-meta", "third"), makeWidget("github-ci", "third")], columns: 3 };
+		const r: GridRow = {
+			widgets: [makeWidget("git-status", "third"), makeWidget("repo-meta", "third"), makeWidget("github-ci", "third")],
+			columns: 3,
+		};
 		expect(getWidgetBorderSides(r, 2)).toEqual(["right"]);
 	});
 });

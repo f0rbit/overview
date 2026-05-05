@@ -1,4 +1,4 @@
-import { ok, err, type Result } from "@f0rbit/corpus";
+import { type Result, err, ok } from "@f0rbit/corpus";
 import { ZodError } from "zod";
 import { get_command } from "./registry";
 
@@ -15,9 +15,7 @@ interface RawArgs {
 	[key: string]: string | boolean | string[];
 }
 
-export function parse_input(
-	raw: string,
-): Result<{ command_id: string; args: unknown }, ParseError> {
+export function parse_input(raw: string): Result<{ command_id: string; args: unknown }, ParseError> {
 	const trimmed = raw.trim();
 
 	if (!trimmed) {

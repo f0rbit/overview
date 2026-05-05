@@ -1,7 +1,7 @@
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
+import type { Renderable, ScrollBoxRenderable } from "@opentui/core";
 import { testRender } from "@opentui/solid";
-import { createSignal, Show } from "solid-js";
-import type { ScrollBoxRenderable, Renderable } from "@opentui/core";
+import { Show, createSignal } from "solid-js";
 
 describe("scrollbox behavior", () => {
 	// Test 1: Simple case — many text lines in a scrollbox
@@ -161,9 +161,7 @@ describe("scrollbox behavior", () => {
 		expect(sb_ref!.scrollTop).toBe(max_scroll);
 
 		// The last content should be visible (scrollTop + viewport >= content bottom)
-		expect(sb_ref!.scrollTop + (sb_ref!.viewport?.height ?? sb_ref!.height)).toBeGreaterThanOrEqual(
-			content_bottom,
-		);
+		expect(sb_ref!.scrollTop + (sb_ref!.viewport?.height ?? sb_ref!.height)).toBeGreaterThanOrEqual(content_bottom);
 	});
 
 	// Test 4: Fragment children (JSX <> </>) — this is what the widget-container uses
@@ -581,10 +579,7 @@ describe("scrollbox behavior", () => {
 								<>
 									<text content={`── Widget ${i} ──`} />
 									<box flexDirection="column" minHeight={1}>
-										<Show
-											when={data()}
-											fallback={<text content="loading..." />}
-										>
+										<Show when={data()} fallback={<text content="loading..." />}>
 											<text content={`Widget ${i} line 1`} />
 											<text content={`Widget ${i} line 2`} />
 											<text content={`Widget ${i} line 3`} />

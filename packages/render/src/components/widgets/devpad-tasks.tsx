@@ -1,9 +1,9 @@
-import { For, Show, Switch, Match, createMemo } from "solid-js";
-import type { WidgetRenderProps, RepoStatus, DevpadTask } from "@overview/core";
-import { registerWidget } from "./registry";
-import { theme } from "../../theme";
+import type { DevpadTask, RepoStatus, WidgetRenderProps } from "@overview/core";
+import { For, Match, Show, Switch, createMemo } from "solid-js";
 import { truncate } from "../../lib/format";
 import { useDevpad } from "../../lib/use-devpad";
+import { theme } from "../../theme";
+import { registerWidget } from "./registry";
 
 const size_hint = { span: "full" as const, min_height: 2 };
 const MAX_VISIBLE = 10;
@@ -32,9 +32,7 @@ function DevpadTasksWidget(props: WidgetRenderProps & { status: RepoStatus | nul
 	return (
 		<box flexDirection="column">
 			<Switch>
-				<Match when={devpad.error()}>
-					{(err) => <text fg={theme.fg_dim} content={err()} />}
-				</Match>
+				<Match when={devpad.error()}>{(err) => <text fg={theme.fg_dim} content={err()} />}</Match>
 				<Match when={devpad.loading() && !devpad.data()}>
 					<text fg={theme.fg_dim} content="loading…" />
 				</Match>
@@ -43,10 +41,7 @@ function DevpadTasksWidget(props: WidgetRenderProps & { status: RepoStatus | nul
 				</Match>
 				<Match when={true}>
 					<text fg={theme.fg_dark} content={`Tasks (${tasks().length})`} />
-					<Show
-						when={tasks().length > 0}
-						fallback={<text fg={theme.fg_dim} content="(no open tasks)" />}
-					>
+					<Show when={tasks().length > 0} fallback={<text fg={theme.fg_dim} content="(no open tasks)" />}>
 						<For each={visible()}>
 							{(task) => {
 								const pi = () => priority_indicator[task.priority];

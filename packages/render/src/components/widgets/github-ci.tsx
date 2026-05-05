@@ -1,9 +1,9 @@
+import type { GithubWorkflowRun, RepoStatus, WidgetRenderProps } from "@overview/core";
 import { For, Show, createMemo } from "solid-js";
-import type { WidgetRenderProps, RepoStatus, GithubWorkflowRun } from "@overview/core";
-import { registerWidget } from "./registry";
-import { theme } from "../../theme";
 import { truncate } from "../../lib/format";
 import { useGithub } from "../../lib/use-github";
+import { theme } from "../../theme";
+import { registerWidget } from "./registry";
 
 const size_hint = { span: "third" as const, min_height: 1 };
 

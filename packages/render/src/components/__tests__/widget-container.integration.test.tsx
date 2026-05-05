@@ -1,8 +1,8 @@
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
+import type { Renderable, ScrollBoxRenderable } from "@opentui/core";
 import { testRender } from "@opentui/solid";
+import type { RepoStatus, WidgetConfig, WidgetId } from "@overview/core";
 import { createSignal } from "solid-js";
-import type { ScrollBoxRenderable, Renderable } from "@opentui/core";
-import type { WidgetConfig, RepoStatus, WidgetId } from "@overview/core";
 
 import { WidgetContainer } from "../widget-container";
 import "../widgets/index";

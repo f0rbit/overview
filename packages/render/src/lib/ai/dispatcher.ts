@@ -1,9 +1,7 @@
-import { ok, err, type Result } from "@f0rbit/corpus";
+import { type Result, err, ok } from "@f0rbit/corpus";
 import type { AIProvider, AIProviderConfig, ProviderError } from "./types";
 
-export async function createProvider(
-	cfg: AIProviderConfig,
-): Promise<Result<AIProvider | null, ProviderError>> {
+export async function createProvider(cfg: AIProviderConfig): Promise<Result<AIProvider | null, ProviderError>> {
 	if (cfg.provider === null) return ok(null);
 	if (cfg.provider === "anthropic") {
 		const mod = await import("./anthropic");

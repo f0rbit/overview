@@ -1,9 +1,9 @@
-import { describe, test, expect, beforeAll, afterAll } from "bun:test";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { range_custom } from "../range";
 import type { RepoNode } from "../../types";
+import { range_custom } from "../range";
 
 // Import the git_source for testing — deep import is acceptable for tests
 import { git_source } from "../sources/git";
@@ -11,10 +11,7 @@ import { git_source } from "../sources/git";
 let tmp_dir: string;
 
 // Helper to spawn git with environment variables for deterministic timestamps
-async function spawn_git_with_date(
-	iso_date: string,
-	...args: string[]
-): Promise<void> {
+async function spawn_git_with_date(iso_date: string, ...args: string[]): Promise<void> {
 	const timestamp = new Date(iso_date).getTime() / 1000;
 	const timestamp_str = Math.floor(timestamp).toString();
 
@@ -121,10 +118,7 @@ describe("git source", () => {
 			depth: 0,
 			expanded: false,
 		};
-		const range = range_custom(
-			new Date("2026-05-10"),
-			new Date("2026-05-15"),
-		);
+		const range = range_custom(new Date("2026-05-10"), new Date("2026-05-15"));
 
 		const result = await git_source.collect(node, range);
 

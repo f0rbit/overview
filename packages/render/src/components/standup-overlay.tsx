@@ -1,6 +1,6 @@
-import { Show, For, createSignal, createEffect, onCleanup } from "solid-js";
 import { useKeyboard } from "@opentui/solid";
 import type { ActivityItem, RepoActivity, StandupRange } from "@overview/core";
+import { For, Show, createEffect, createSignal, onCleanup } from "solid-js";
 import type { AIProvider, SummaryStream } from "../lib/ai";
 import { theme } from "../theme";
 
@@ -24,7 +24,9 @@ const FOCUS_ORDER: readonly FocusSection[] = ["summary", "ai", "raw"];
 
 function formatted_line(item: ActivityItem): string {
 	const meta_str = item.meta
-		? "  " + Object.entries(item.meta).map(([k, v]) => `[${k}=${v}]`).join(" ")
+		? `  ${Object.entries(item.meta)
+				.map(([k, v]) => `[${k}=${v}]`)
+				.join(" ")}`
 		: "";
 	const author = item.author ? ` — ${item.author}` : "";
 	return `${item.id}  ${item.title}${author}${meta_str}`;
@@ -42,12 +44,7 @@ function SectionHeader(props: {
 	label: string;
 	focused: boolean;
 }) {
-	return (
-		<text
-			content={`${props.open ? "▾" : "▸"} ${props.label}`}
-			fg={props.focused ? theme.yellow : theme.fg_dim}
-		/>
-	);
+	return <text content={`${props.open ? "▾" : "▸"} ${props.label}`} fg={props.focused ? theme.yellow : theme.fg_dim} />;
 }
 
 export function StandupOverlay(props: StandupOverlayProps) {
@@ -157,38 +154,23 @@ export function StandupOverlay(props: StandupOverlayProps) {
 				gap={1}
 				zIndex={110}
 			>
-				<text
-					content={`Standup — ${props.payload!.window.label}`}
-					fg={theme.blue}
-				/>
+				<text content={`Standup — ${props.payload!.window.label}`} fg={theme.blue} />
 
 				<box flexDirection="column">
-					<SectionHeader
-						id="summary"
-						open={summary_open()}
-						label="Summary"
-						focused={focus_section() === "summary"}
-					/>
+					<SectionHeader id="summary" open={summary_open()} label="Summary" focused={focus_section() === "summary"} />
 					<Show when={summary_open()}>
 						<box flexDirection="column">
 							<Show
-								when={
-									props.payload!.activities.some((a) => a.sections.length > 0)
-								}
-								fallback={
-									<text content="(no activity in window)" fg={theme.fg_dim} />
-								}
+								when={props.payload!.activities.some((a) => a.sections.length > 0)}
+								fallback={<text content="(no activity in window)" fg={theme.fg_dim} />}
 							>
 								<For each={props.payload!.activities.filter((a) => a.sections.length > 0)}>
 									{(activity) => (
 										<box flexDirection="column">
-											<text content={"  " + activity.repo_name} fg={theme.fg_dim} />
+											<text content={`  ${activity.repo_name}`} fg={theme.fg_dim} />
 											<For each={activity.sections}>
 												{(section) => (
-													<text
-														content={"    " + section.source_label + "  " + section.summary_line}
-														fg={theme.fg}
-													/>
+													<text content={`    ${section.source_label}  ${section.summary_line}`} fg={theme.fg} />
 												)}
 											</For>
 										</box>
@@ -200,12 +182,7 @@ export function StandupOverlay(props: StandupOverlayProps) {
 				</box>
 
 				<box flexDirection="column">
-					<SectionHeader
-						id="ai"
-						open={ai_open()}
-						label="AI Summary"
-						focused={focus_section() === "ai"}
-					/>
+					<SectionHeader id="ai" open={ai_open()} label="AI Summary" focused={focus_section() === "ai"} />
 					<Show when={ai_open()}>
 						<box flexDirection="column">
 							<Show when={props.ai_provider === null}>
@@ -217,10 +194,14 @@ export function StandupOverlay(props: StandupOverlayProps) {
 							<Show when={props.ai_provider !== null && ai_state() === "streaming" && ai_text() === ""}>
 								<text content="thinking..." fg={theme.fg_dim} />
 							</Show>
-							<Show when={props.ai_provider !== null && (ai_state() === "streaming" || ai_state() === "done") && ai_text() !== ""}>
-								<For each={ai_text().split("\n")}>
-									{(line) => <text content={line} fg={theme.fg} />}
-								</For>
+							<Show
+								when={
+									props.ai_provider !== null &&
+									(ai_state() === "streaming" || ai_state() === "done") &&
+									ai_text() !== ""
+								}
+							>
+								<For each={ai_text().split("\n")}>{(line) => <text content={line} fg={theme.fg} />}</For>
 							</Show>
 							<Show when={props.ai_provider !== null && ai_state() === "error"}>
 								<text content={`AI summary failed: ${ai_error()}`} fg={theme.red} />
@@ -230,12 +211,7 @@ export function StandupOverlay(props: StandupOverlayProps) {
 				</box>
 
 				<box flexDirection="column" flexGrow={1}>
-					<SectionHeader
-						id="raw"
-						open={raw_open()}
-						label="Raw"
-						focused={focus_section() === "raw"}
-					/>
+					<SectionHeader id="raw" open={raw_open()} label="Raw" focused={focus_section() === "raw"} />
 					<Show when={raw_open()}>
 						<scrollbox flexGrow={1}>
 							<box flexDirection="column" flexShrink={0}>
@@ -248,9 +224,7 @@ export function StandupOverlay(props: StandupOverlayProps) {
 													<box flexDirection="column">
 														<text content={`### ${section.source_label}`} fg={theme.blue} />
 														<For each={section.items}>
-															{(item) => (
-																<text content={" " + formatted_line(item)} fg={theme.fg} />
-															)}
+															{(item) => <text content={` ${formatted_line(item)}`} fg={theme.fg} />}
 														</For>
 													</box>
 												)}

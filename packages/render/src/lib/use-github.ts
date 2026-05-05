@@ -1,6 +1,6 @@
-import { createSignal, createEffect, type Accessor } from "solid-js";
 import { DataCache } from "@overview/core/cache";
-import { collectGithubData, type GithubRepoData, type GithubError } from "@overview/core/github";
+import { type GithubError, type GithubRepoData, collectGithubData } from "@overview/core/github";
+import { type Accessor, createEffect, createSignal } from "solid-js";
 import { InFlightDedup } from "./fetch-context";
 
 const cache = new DataCache<GithubRepoData>();

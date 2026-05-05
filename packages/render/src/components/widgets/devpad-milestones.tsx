@@ -1,9 +1,9 @@
-import { For, Show, Switch, Match, createMemo } from "solid-js";
-import type { WidgetRenderProps, RepoStatus, DevpadMilestone } from "@overview/core";
-import { registerWidget } from "./registry";
-import { theme } from "../../theme";
+import type { DevpadMilestone, RepoStatus, WidgetRenderProps } from "@overview/core";
+import { For, Match, Show, Switch, createMemo } from "solid-js";
 import { truncate } from "../../lib/format";
 import { useDevpad } from "../../lib/use-devpad";
+import { theme } from "../../theme";
+import { registerWidget } from "./registry";
 
 const size_hint = { span: "half" as const, min_height: 2 };
 
@@ -26,9 +26,7 @@ function DevpadMilestonesWidget(props: WidgetRenderProps & { status: RepoStatus 
 	return (
 		<box flexDirection="column">
 			<Switch>
-				<Match when={devpad.error()}>
-					{(err) => <text fg={theme.fg_dim} content={err()} />}
-				</Match>
+				<Match when={devpad.error()}>{(err) => <text fg={theme.fg_dim} content={err()} />}</Match>
 				<Match when={devpad.loading() && !devpad.data()}>
 					<text fg={theme.fg_dim} content="loading…" />
 				</Match>
@@ -36,16 +34,10 @@ function DevpadMilestonesWidget(props: WidgetRenderProps & { status: RepoStatus 
 					<text fg={theme.fg_dim} content="no devpad project" />
 				</Match>
 				<Match when={true}>
-					<Show
-						when={milestones().length > 0}
-						fallback={<text fg={theme.fg_dim} content="no milestones" />}
-					>
+					<Show when={milestones().length > 0} fallback={<text fg={theme.fg_dim} content="no milestones" />}>
 						<For each={visible()}>
 							{(ms) => {
-								const pct = () =>
-									ms.goals_total > 0
-										? Math.round((ms.goals_completed / ms.goals_total) * 100)
-										: 0;
+								const pct = () => (ms.goals_total > 0 ? Math.round((ms.goals_completed / ms.goals_total) * 100) : 0);
 								const bar_width = 12;
 								const label = () => {
 									const version_str = ms.target_version ? ` (${ms.target_version})` : "";

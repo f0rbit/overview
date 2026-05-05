@@ -1,4 +1,4 @@
-import { ok, err, type Result } from "@f0rbit/corpus";
+import { type Result, err, ok } from "@f0rbit/corpus";
 import type { GitGraphOutput } from "./types";
 
 export type GitGraphError = { kind: "graph_failed"; path: string; cause: string };
@@ -22,7 +22,7 @@ export async function captureGraph(
 	const limit = options?.limit ?? DEFAULT_LIMIT;
 
 	const proc = Bun.spawn(
-		["git", "log", "--graph", "--all", "--decorate", "--oneline", `-n`, `${limit}`, "--color=never"],
+		["git", "log", "--graph", "--all", "--decorate", "--oneline", "-n", `${limit}`, "--color=never"],
 		{
 			cwd: repoPath,
 			stdout: "pipe",

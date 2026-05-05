@@ -1,5 +1,5 @@
 // Heavyweight on-demand git stats
-import { ok, err, type Result } from "@f0rbit/corpus";
+import { type Result, err, ok } from "@f0rbit/corpus";
 import type { RecentCommit } from "./types";
 
 export type GitStatsError =
@@ -53,7 +53,7 @@ export function parseSize(size_str: string): number {
 	const match = trimmed.match(/^([\d.]+)\s*(\w+)?$/);
 	if (!match) return 0;
 
-	const value = parseFloat(match[1] ?? "0");
+	const value = Number.parseFloat(match[1] ?? "0");
 	const unit = (match[2] ?? "bytes").toLowerCase();
 
 	const multipliers: Record<string, number> = {
@@ -108,14 +108,14 @@ export function parseRecentCommits(output: string): RecentCommit[] {
 				hash: hash ?? "",
 				message: message ?? "",
 				author: author ?? "",
-				time: parseInt(time_str ?? "0", 10),
+				time: Number.parseInt(time_str ?? "0", 10),
 			};
 		});
 }
 
 function parseTotalCommits(output: string): number {
-	const n = parseInt(output.trim(), 10);
-	return isNaN(n) ? 0 : n;
+	const n = Number.parseInt(output.trim(), 10);
+	return Number.isNaN(n) ? 0 : n;
 }
 
 export interface CommitActivity {
@@ -139,9 +139,7 @@ export function bucketIntoDays(timestamps: number[]): number[] {
 	return counts;
 }
 
-export async function collectCommitActivity(
-	repo_path: string,
-): Promise<Result<CommitActivity, GitStatsError>> {
+export async function collectCommitActivity(repo_path: string): Promise<Result<CommitActivity, GitStatsError>> {
 	const log_r = await git(["log", "--format=%at", "--since=14 days ago", "--all"], repo_path);
 
 	if (!log_r.ok) return err(log_r.error);
@@ -150,8 +148,8 @@ export async function collectCommitActivity(
 		.split("\n")
 		.map((l) => l.trim())
 		.filter((l) => l.length > 0)
-		.map((l) => parseInt(l, 10))
-		.filter((n) => !isNaN(n));
+		.map((l) => Number.parseInt(l, 10))
+		.filter((n) => !Number.isNaN(n));
 
 	const daily_counts = bucketIntoDays(timestamps);
 	const total_last_week = daily_counts.slice(0, 7).reduce((a, b) => a + b, 0);
@@ -160,9 +158,7 @@ export async function collectCommitActivity(
 	return ok({ daily_counts, total_this_week, total_last_week });
 }
 
-export async function collectStats(
-	repoPath: string,
-): Promise<Result<ExtendedStats, GitStatsError>> {
+export async function collectStats(repoPath: string): Promise<Result<ExtendedStats, GitStatsError>> {
 	const [shortlog_r, count_objects_r, tags_r, log_r, rev_list_r] = await Promise.all([
 		git(["shortlog", "-sn", "--all"], repoPath),
 		git(["count-objects", "-vH"], repoPath),
@@ -180,9 +176,7 @@ export async function collectStats(
 		? parseContributors(shortlog_r.value)
 		: { contributors: [], contributor_count: 0 };
 
-	const repo_size_bytes = count_objects_r.ok
-		? parseRepoSize(count_objects_r.value)
-		: 0;
+	const repo_size_bytes = count_objects_r.ok ? parseRepoSize(count_objects_r.value) : 0;
 
 	const tags = tags_r.ok ? parseTags(tags_r.value) : [];
 

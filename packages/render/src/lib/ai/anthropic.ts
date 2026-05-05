@@ -1,22 +1,14 @@
-import { ok, err, try_catch_async, format_error, type Result } from "@f0rbit/corpus";
 import type { default as Anthropic } from "@anthropic-ai/sdk";
-import type {
-	AIProvider,
-	AIProviderConfig,
-	ProviderError,
-	SummarizeInput,
-	SummaryStream,
-} from "./types";
-import { build_user_prompt, DEFAULT_SYSTEM_PROMPT } from "./prompt";
+import { type Result, err, format_error, ok, try_catch_async } from "@f0rbit/corpus";
+import { DEFAULT_SYSTEM_PROMPT, build_user_prompt } from "./prompt";
+import type { AIProvider, AIProviderConfig, ProviderError, SummarizeInput, SummaryStream } from "./types";
 
 type AnthropicClient = InstanceType<typeof Anthropic>;
 type SdkStream = ReturnType<AnthropicClient["messages"]["stream"]>;
 
 const DEFAULT_MAX_TOKENS = 2048;
 
-export async function createAnthropicProvider(
-	cfg: AIProviderConfig,
-): Promise<Result<AIProvider, ProviderError>> {
+export async function createAnthropicProvider(cfg: AIProviderConfig): Promise<Result<AIProvider, ProviderError>> {
 	const env_var = cfg.api_key_env ?? "ANTHROPIC_API_KEY";
 	const api_key = process.env[env_var];
 	if (!api_key) {
@@ -60,10 +52,7 @@ function adapt_stream(sdk_stream: SdkStream): SummaryStream {
 		async *chunks(): AsyncGenerator<string> {
 			for await (const event of sdk_stream) {
 				if (aborted) break;
-				if (
-					event.type === "content_block_delta" &&
-					event.delta.type === "text_delta"
-				) {
+				if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
 					yield event.delta.text;
 				}
 			}
@@ -72,9 +61,7 @@ function adapt_stream(sdk_stream: SdkStream): SummaryStream {
 			if (final_promise) return final_promise;
 			final_promise = sdk_stream.finalMessage().then((msg) =>
 				msg.content
-					.filter(
-						(b): b is Extract<typeof b, { type: "text" }> => b.type === "text",
-					)
+					.filter((b): b is Extract<typeof b, { type: "text" }> => b.type === "text")
 					.map((b) => b.text)
 					.join(""),
 			);
@@ -96,9 +83,7 @@ function classify_error(e: unknown): ProviderError {
 	}
 	if (status === 429) {
 		const retry = parse_retry_after(e);
-		return retry !== null
-			? { kind: "rate_limited", retry_after_seconds: retry }
-			: { kind: "rate_limited" };
+		return retry !== null ? { kind: "rate_limited", retry_after_seconds: retry } : { kind: "rate_limited" };
 	}
 	if (typeof status === "number") {
 		return { kind: "api_failed", status, cause: message };

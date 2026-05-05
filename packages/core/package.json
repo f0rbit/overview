@@ -1,14 +1,14 @@
 {
-  "name": "@overview/core",
-  "version": "0.1.0",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
-  "scripts": {
-    "test": "bun test",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "@f0rbit/corpus": "^0.3.5",
-    "@devpad/api": "^2.1.3"
-  }
+	"name": "@overview/core",
+	"version": "0.1.0",
+	"main": "src/index.ts",
+	"types": "src/index.ts",
+	"scripts": {
+		"test": "bun test",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@f0rbit/corpus": "^0.3.5",
+		"@devpad/api": "^2.1.3"
+	}
 }

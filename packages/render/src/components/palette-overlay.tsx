@@ -1,14 +1,8 @@
-import { Show, For, createSignal, createMemo, createEffect } from "solid-js";
-import { useKeyboard } from "@opentui/solid";
 import type { InputRenderable } from "@opentui/core";
+import { useKeyboard } from "@opentui/solid";
+import { For, Show, createEffect, createMemo, createSignal } from "solid-js";
+import { type CommandContext, type MatchResult, list_commands, match_commands, parse_input } from "../lib/palette";
 import { theme } from "../theme";
-import {
-	parse_input,
-	match_commands,
-	list_commands,
-	type CommandContext,
-	type MatchResult,
-} from "../lib/palette";
 
 interface PaletteOverlayProps {
 	visible: boolean;
@@ -19,7 +13,7 @@ interface PaletteOverlayProps {
 const ID_COL_WIDTH = 30;
 
 function pad_or_truncate(str: string, width: number): string {
-	if (str.length >= width) return str.slice(0, width - 1) + "…";
+	if (str.length >= width) return `${str.slice(0, width - 1)}…`;
 	return str.padEnd(width);
 }
 
@@ -53,7 +47,7 @@ export function PaletteOverlay(props: PaletteOverlayProps) {
 		// The ":" prefix is rendered separately as a fixed glyph so the user
 		// sees a clean input. We re-prepend it before parsing so command ids
 		// (which include the ":") match correctly.
-		const raw_input = ":" + query();
+		const raw_input = `:${query()}`;
 		const parsed = parse_input(raw_input);
 
 		let args: unknown = undefined;
@@ -119,20 +113,11 @@ export function PaletteOverlay(props: PaletteOverlayProps) {
 			>
 				<box flexDirection="row" height={1}>
 					<text content=":" fg={theme.blue} />
-					<input
-						ref={input_ref}
-						focused={props.visible}
-						value={query()}
-						onInput={(v) => setQuery(v)}
-						flexGrow={1}
-					/>
+					<input ref={input_ref} focused={props.visible} value={query()} onInput={(v) => setQuery(v)} flexGrow={1} />
 				</box>
 
 				<box flexGrow={1} flexDirection="column">
-					<Show
-						when={matches().length > 0}
-						fallback={<text content="(no matching commands)" fg={theme.fg_dim} />}
-					>
+					<Show when={matches().length > 0} fallback={<text content="(no matching commands)" fg={theme.fg_dim} />}>
 						<scrollbox flexGrow={1}>
 							<box flexDirection="column" flexShrink={0}>
 								<For each={matches()}>
@@ -140,15 +125,10 @@ export function PaletteOverlay(props: PaletteOverlayProps) {
 										<box
 											flexDirection="row"
 											height={1}
-											backgroundColor={
-												selected_idx() === i() ? theme.bg_highlight : undefined
-											}
+											backgroundColor={selected_idx() === i() ? theme.bg_highlight : undefined}
 										>
 											{/* TODO: highlight matched positions from m.positions */}
-											<text
-												content={pad_or_truncate(m.command.id, ID_COL_WIDTH)}
-												fg={theme.yellow}
-											/>
+											<text content={pad_or_truncate(m.command.id, ID_COL_WIDTH)} fg={theme.yellow} />
 											<text content={m.command.label} fg={theme.fg} flexGrow={1} />
 											<text content={m.command.description} fg={theme.fg_dim} />
 										</box>

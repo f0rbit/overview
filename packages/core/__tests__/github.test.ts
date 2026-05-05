@@ -1,12 +1,12 @@
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import {
-	isGithubRemote,
-	parseGhOwnerRepo,
-	deriveCiStatus,
-	mapPR,
-	safeJsonParse,
-	type RawPR,
 	type GithubError,
+	type RawPR,
+	deriveCiStatus,
+	isGithubRemote,
+	mapPR,
+	parseGhOwnerRepo,
+	safeJsonParse,
 } from "../src/github";
 
 describe("isGithubRemote", () => {
@@ -129,9 +129,7 @@ describe("mapPR", () => {
 		title: "Add feature",
 		state: "OPEN",
 		reviewDecision: "APPROVED",
-		statusCheckRollup: [
-			{ state: "COMPLETED", status: "completed", conclusion: "SUCCESS" },
-		],
+		statusCheckRollup: [{ state: "COMPLETED", status: "completed", conclusion: "SUCCESS" }],
 		isDraft: false,
 		author: { login: "testuser" },
 	};
@@ -203,9 +201,7 @@ describe("safeJsonParse", () => {
 		if (!result.ok) {
 			const error = result.error as GithubError;
 			expect(error.kind).toBe("api_error");
-			expect((error as { kind: "api_error"; cause: string }).cause).toBe(
-				"invalid JSON response from gh CLI",
-			);
+			expect((error as { kind: "api_error"; cause: string }).cause).toBe("invalid JSON response from gh CLI");
 		}
 	});
 

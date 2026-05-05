@@ -1,4 +1,4 @@
-import type { RepoNode, HealthStatus } from "@overview/core";
+import type { HealthStatus, RepoNode } from "@overview/core";
 
 export type SortMode = "name" | "status" | "last-commit";
 export type FilterMode = "all" | "dirty" | "clean" | "ahead" | "behind";
@@ -42,9 +42,7 @@ export function filterTree(nodes: RepoNode[], filter: FilterMode): RepoNode[] {
 }
 
 export function sortTree(nodes: RepoNode[], sort: SortMode): RepoNode[] {
-	const dirs = nodes
-		.filter((n) => n.type === "directory")
-		.map((n) => ({ ...n, children: sortTree(n.children, sort) }));
+	const dirs = nodes.filter((n) => n.type === "directory").map((n) => ({ ...n, children: sortTree(n.children, sort) }));
 	const repos = nodes.filter((n) => n.type !== "directory");
 
 	const sorted = [...repos].sort((a, b) => {
@@ -64,20 +62,13 @@ export function sortTree(nodes: RepoNode[], sort: SortMode): RepoNode[] {
 		}
 	});
 
-	return [
-		...dirs.sort((a, b) => a.name.localeCompare(b.name)),
-		...sorted,
-	];
+	return [...dirs.sort((a, b) => a.name.localeCompare(b.name)), ...sorted];
 }
 
 export function searchRepos(nodes: RepoNode[], query: string): RepoNode[] {
 	const q = query.toLowerCase();
 	const flatten = (ns: RepoNode[]): RepoNode[] =>
-		ns.flatMap((n) =>
-			n.type === "directory"
-				? flatten(n.children)
-				: [n],
-		);
+		ns.flatMap((n) => (n.type === "directory" ? flatten(n.children) : [n]));
 	return flatten(nodes).filter((n) => {
 		if (n.name.toLowerCase().includes(q)) return true;
 		if (n.status?.display_path.toLowerCase().includes(q)) return true;
