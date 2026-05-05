@@ -1,7 +1,8 @@
 import { type Result, err, ok } from "@f0rbit/corpus";
 import { createPool } from "@overview/core";
 import { z } from "zod";
-import { type BatchAction, type BatchFilter, execute, plan } from "../batch";
+import { type BatchAction, type BatchFilter, type BatchTask, execute, plan } from "../batch";
+import type { CommandContext } from "../palette/context";
 import { register_command } from "../palette/registry";
 import type { CommandError } from "../palette/types";
 
@@ -38,8 +39,8 @@ export function resolve_batch_args(raw: BatchRawArgs): Result<BatchArgs, Command
 async function run_batch(
 	action: BatchAction,
 	args: BatchArgs,
-	ctx: any, // CommandContext, but typing would create circular import
-): Promise<any> {
+	ctx: CommandContext,
+): Promise<Result<void, CommandError>> {
 	const repos = ctx.repos();
 	const tasks = plan({
 		repos,
@@ -59,9 +60,8 @@ async function run_batch(
 
 	// Track in-progress task updates for subscribers
 	let current_tasks = tasks;
-	const subscribers = new Set<(tasks: readonly any[]) => void>();
+	const subscribers = new Set<(tasks: readonly BatchTask[]) => void>();
 	const done_subscribers = new Set<() => void>();
-	let abort_called = false;
 
 	// Payload for the overlay
 	const payload = {
@@ -70,7 +70,7 @@ async function run_batch(
 		dry_run: args.dry_run,
 		force: args.force,
 		initial_tasks: tasks,
-		subscribe: (cb: (tasks: readonly any[]) => void) => {
+		subscribe: (cb: (tasks: readonly BatchTask[]) => void) => {
 			subscribers.add(cb);
 			return () => {
 				subscribers.delete(cb);
@@ -83,7 +83,6 @@ async function run_batch(
 			};
 		},
 		abort: () => {
-			abort_called = true;
 			abort_controller.abort();
 		},
 	};

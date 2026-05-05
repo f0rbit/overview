@@ -11,7 +11,7 @@ const MAX_VISIBLE = 10;
 const label_colors = [theme.cyan, theme.magenta, theme.yellow, theme.green, theme.red, theme.orange] as const;
 
 function labelColor(index: number): string {
-	return label_colors[index % label_colors.length]!;
+	return label_colors[index % label_colors.length] ?? theme.fg;
 }
 
 function GithubIssuesWidget(props: WidgetRenderProps & { status: RepoStatus | null }) {

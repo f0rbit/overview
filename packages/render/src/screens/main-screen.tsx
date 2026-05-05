@@ -263,7 +263,9 @@ export function MainScreen(props: MainScreenProps) {
 	const watcher = createRepoWatcher({
 		debounce_ms: 500,
 		on_change: (repoPath) => {
-			collectStatus(repoPath, props.config.scan_dirs[0]!).then((result) => {
+			const root = props.config.scan_dirs[0];
+			if (!root) return;
+			collectStatus(repoPath, root).then((result) => {
 				if (result.ok) {
 					updateRepoStatus(repos(), repoPath, result.value);
 					setRepoVersion((v) => v + 1);
@@ -314,7 +316,7 @@ export function MainScreen(props: MainScreenProps) {
 	function cycleFocus() {
 		const current = focusPanel();
 		const idx = FOCUS_ORDER.indexOf(current);
-		setFocusPanel(FOCUS_ORDER[(idx + 1) % FOCUS_ORDER.length]!);
+		setFocusPanel(FOCUS_ORDER[(idx + 1) % FOCUS_ORDER.length] ?? "list");
 	}
 
 	function handleSelect(node: RepoNode) {

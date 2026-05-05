@@ -20,7 +20,8 @@ type AIState = "idle" | "streaming" | "done" | "error";
 
 type FocusSection = "summary" | "ai" | "raw";
 
-const FOCUS_ORDER: readonly FocusSection[] = ["summary", "ai", "raw"];
+const DEFAULT_FOCUS: FocusSection = "summary";
+const FOCUS_ORDER: readonly FocusSection[] = [DEFAULT_FOCUS, "ai", "raw"];
 
 function formatted_line(item: ActivityItem): string {
 	const meta_str = item.meta
@@ -35,7 +36,7 @@ function formatted_line(item: ActivityItem): string {
 function cycle_focus(current: FocusSection, direction: 1 | -1): FocusSection {
 	const idx = FOCUS_ORDER.indexOf(current);
 	const next = (idx + direction + FOCUS_ORDER.length) % FOCUS_ORDER.length;
-	return FOCUS_ORDER[next]!;
+	return FOCUS_ORDER[next] ?? DEFAULT_FOCUS;
 }
 
 function SectionHeader(props: {
@@ -137,106 +138,108 @@ export function StandupOverlay(props: StandupOverlayProps) {
 	});
 
 	return (
-		<Show when={props.visible && props.payload !== null}>
-			<box
-				position="absolute"
-				width="80%"
-				height="85%"
-				left="10%"
-				top="7%"
-				backgroundColor={theme.bg_dark}
-				borderStyle="rounded"
-				borderColor={theme.blue}
-				title="Standup"
-				titleAlignment="center"
-				padding={1}
-				flexDirection="column"
-				gap={1}
-				zIndex={110}
-			>
-				<text content={`Standup — ${props.payload!.window.label}`} fg={theme.blue} />
+		<Show when={props.visible ? props.payload : null}>
+			{(payload) => (
+				<box
+					position="absolute"
+					width="80%"
+					height="85%"
+					left="10%"
+					top="7%"
+					backgroundColor={theme.bg_dark}
+					borderStyle="rounded"
+					borderColor={theme.blue}
+					title="Standup"
+					titleAlignment="center"
+					padding={1}
+					flexDirection="column"
+					gap={1}
+					zIndex={110}
+				>
+					<text content={`Standup — ${payload().window.label}`} fg={theme.blue} />
 
-				<box flexDirection="column">
-					<SectionHeader id="summary" open={summary_open()} label="Summary" focused={focus_section() === "summary"} />
-					<Show when={summary_open()}>
-						<box flexDirection="column">
-							<Show
-								when={props.payload!.activities.some((a) => a.sections.length > 0)}
-								fallback={<text content="(no activity in window)" fg={theme.fg_dim} />}
-							>
-								<For each={props.payload!.activities.filter((a) => a.sections.length > 0)}>
-									{(activity) => (
-										<box flexDirection="column">
-											<text content={`  ${activity.repo_name}`} fg={theme.fg_dim} />
-											<For each={activity.sections}>
-												{(section) => (
-													<text content={`    ${section.source_label}  ${section.summary_line}`} fg={theme.fg} />
-												)}
-											</For>
-										</box>
-									)}
-								</For>
-							</Show>
-						</box>
-					</Show>
-				</box>
-
-				<box flexDirection="column">
-					<SectionHeader id="ai" open={ai_open()} label="AI Summary" focused={focus_section() === "ai"} />
-					<Show when={ai_open()}>
-						<box flexDirection="column">
-							<Show when={props.ai_provider === null}>
-								<text
-									content="(AI provider not configured — set ai_provider in ~/.config/overview/config.json)"
-									fg={theme.fg_dim}
-								/>
-							</Show>
-							<Show when={props.ai_provider !== null && ai_state() === "streaming" && ai_text() === ""}>
-								<text content="thinking..." fg={theme.fg_dim} />
-							</Show>
-							<Show
-								when={
-									props.ai_provider !== null &&
-									(ai_state() === "streaming" || ai_state() === "done") &&
-									ai_text() !== ""
-								}
-							>
-								<For each={ai_text().split("\n")}>{(line) => <text content={line} fg={theme.fg} />}</For>
-							</Show>
-							<Show when={props.ai_provider !== null && ai_state() === "error"}>
-								<text content={`AI summary failed: ${ai_error()}`} fg={theme.red} />
-							</Show>
-						</box>
-					</Show>
-				</box>
-
-				<box flexDirection="column" flexGrow={1}>
-					<SectionHeader id="raw" open={raw_open()} label="Raw" focused={focus_section() === "raw"} />
-					<Show when={raw_open()}>
-						<scrollbox flexGrow={1}>
-							<box flexDirection="column" flexShrink={0}>
-								<For each={props.payload!.activities.filter((a) => a.sections.length > 0)}>
-									{(activity) => (
-										<box flexDirection="column">
-											<text content={`## ${activity.repo_name}`} fg={theme.yellow} />
-											<For each={activity.sections}>
-												{(section) => (
-													<box flexDirection="column">
-														<text content={`### ${section.source_label}`} fg={theme.blue} />
-														<For each={section.items}>
-															{(item) => <text content={` ${formatted_line(item)}`} fg={theme.fg} />}
-														</For>
-													</box>
-												)}
-											</For>
-										</box>
-									)}
-								</For>
+					<box flexDirection="column">
+						<SectionHeader id="summary" open={summary_open()} label="Summary" focused={focus_section() === "summary"} />
+						<Show when={summary_open()}>
+							<box flexDirection="column">
+								<Show
+									when={payload().activities.some((a) => a.sections.length > 0)}
+									fallback={<text content="(no activity in window)" fg={theme.fg_dim} />}
+								>
+									<For each={payload().activities.filter((a) => a.sections.length > 0)}>
+										{(activity) => (
+											<box flexDirection="column">
+												<text content={`  ${activity.repo_name}`} fg={theme.fg_dim} />
+												<For each={activity.sections}>
+													{(section) => (
+														<text content={`    ${section.source_label}  ${section.summary_line}`} fg={theme.fg} />
+													)}
+												</For>
+											</box>
+										)}
+									</For>
+								</Show>
 							</box>
-						</scrollbox>
-					</Show>
+						</Show>
+					</box>
+
+					<box flexDirection="column">
+						<SectionHeader id="ai" open={ai_open()} label="AI Summary" focused={focus_section() === "ai"} />
+						<Show when={ai_open()}>
+							<box flexDirection="column">
+								<Show when={props.ai_provider === null}>
+									<text
+										content="(AI provider not configured — set ai_provider in ~/.config/overview/config.json)"
+										fg={theme.fg_dim}
+									/>
+								</Show>
+								<Show when={props.ai_provider !== null && ai_state() === "streaming" && ai_text() === ""}>
+									<text content="thinking..." fg={theme.fg_dim} />
+								</Show>
+								<Show
+									when={
+										props.ai_provider !== null &&
+										(ai_state() === "streaming" || ai_state() === "done") &&
+										ai_text() !== ""
+									}
+								>
+									<For each={ai_text().split("\n")}>{(line) => <text content={line} fg={theme.fg} />}</For>
+								</Show>
+								<Show when={props.ai_provider !== null && ai_state() === "error"}>
+									<text content={`AI summary failed: ${ai_error()}`} fg={theme.red} />
+								</Show>
+							</box>
+						</Show>
+					</box>
+
+					<box flexDirection="column" flexGrow={1}>
+						<SectionHeader id="raw" open={raw_open()} label="Raw" focused={focus_section() === "raw"} />
+						<Show when={raw_open()}>
+							<scrollbox flexGrow={1}>
+								<box flexDirection="column" flexShrink={0}>
+									<For each={payload().activities.filter((a) => a.sections.length > 0)}>
+										{(activity) => (
+											<box flexDirection="column">
+												<text content={`## ${activity.repo_name}`} fg={theme.yellow} />
+												<For each={activity.sections}>
+													{(section) => (
+														<box flexDirection="column">
+															<text content={`### ${section.source_label}`} fg={theme.blue} />
+															<For each={section.items}>
+																{(item) => <text content={` ${formatted_line(item)}`} fg={theme.fg} />}
+															</For>
+														</box>
+													)}
+												</For>
+											</box>
+										)}
+									</For>
+								</box>
+							</scrollbox>
+						</Show>
+					</box>
 				</box>
-			</box>
+			)}
 		</Show>
 	);
 }

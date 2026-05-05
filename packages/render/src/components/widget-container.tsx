@@ -65,8 +65,8 @@ export function WidgetContainer(props: WidgetContainerProps) {
 
 		// Find which row contains the focused widget
 		let target_row_index = -1;
-		for (let i = 0; i < rows.length; i++) {
-			if (rows[i]!.widgets.some((w) => w.id === focused_id)) {
+		for (const [i, row] of rows.entries()) {
+			if (row.widgets.some((w) => w.id === focused_id)) {
 				target_row_index = i;
 				break;
 			}
@@ -179,7 +179,7 @@ export function WidgetContainer(props: WidgetContainerProps) {
 							<For each={grid_layout().rows}>
 								{(row, row_index) => {
 									const rows = grid_layout().rows;
-									const prev_row = () => (row_index() > 0 ? rows[row_index() - 1]! : null);
+									const prev_row = () => (row_index() > 0 ? (rows[row_index() - 1] ?? null) : null);
 									const is_first = () => row_index() === 0;
 									const is_last = () => row_index() === rows.length - 1;
 

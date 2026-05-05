@@ -95,7 +95,7 @@ export function createRepoWatcher(options: WatcherOptions): RepoWatcher {
 	function removeRepo(repo_path: string) {
 		const repo_watchers = watchers.get(repo_path);
 		if (repo_watchers) {
-			repo_watchers.forEach((w) => w.close());
+			for (const w of repo_watchers) w.close();
 			watchers.delete(repo_path);
 		}
 		const timer = timers.get(repo_path);
@@ -107,12 +107,14 @@ export function createRepoWatcher(options: WatcherOptions): RepoWatcher {
 
 	return {
 		watch(repo_paths: string[]) {
-			repo_paths.forEach((p) => addRepo(p));
+			for (const p of repo_paths) addRepo(p);
 		},
 		close() {
-			watchers.forEach((ws) => ws.forEach((w) => w.close()));
+			for (const ws of watchers.values()) {
+				for (const w of ws) w.close();
+			}
 			watchers.clear();
-			timers.forEach((t) => clearTimeout(t));
+			for (const t of timers.values()) clearTimeout(t);
 			timers.clear();
 		},
 		add(repo_path: string) {

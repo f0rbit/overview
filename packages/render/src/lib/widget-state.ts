@@ -69,10 +69,9 @@ export async function loadWidgetState(): Promise<Result<WidgetStateFile, string>
 	const text = await file.text().catch(() => null);
 	if (text === null) return err("failed to read widget state file");
 
-	let parsed: Partial<WidgetStateFile>;
 	const parse_result = safeParse(text);
 	if (!parse_result.ok) return err(parse_result.error);
-	parsed = parse_result.value as Partial<WidgetStateFile>;
+	const parsed = parse_result.value as Partial<WidgetStateFile>;
 
 	const widgets = Array.isArray(parsed.widgets) ? mergeConfigs(parsed.widgets) : defaultWidgetConfig();
 

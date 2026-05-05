@@ -62,8 +62,10 @@ export function isGithubRemote(remote_url: string | null): boolean {
 
 export function parseGhOwnerRepo(remote_url: string): { owner: string; repo: string } | null {
 	const match = remote_url.match(/github\.com[:/]([^/]+)\/([^/.]+)/);
-	if (match) return { owner: match[1]!, repo: match[2]! };
-	return null;
+	if (!match) return null;
+	const [, owner, repo] = match;
+	if (!owner || !repo) return null;
+	return { owner, repo };
 }
 
 export function safeJsonParse<T>(text: string): Result<T, GithubError> {

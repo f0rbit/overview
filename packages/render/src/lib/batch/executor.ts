@@ -30,25 +30,29 @@ export async function execute(
 }
 
 async function run_task(live: BatchTask[], i: number, opts: ExecuteOptions): Promise<void> {
-	const t = live[i]!;
+	const t = live[i];
+	if (!t) return;
 
 	if (opts.abort_signal?.aborted) {
-		live[i] = { ...t, status: "skipped", skip_reason: "dry_run", result_message: "aborted" };
-		opts.on_progress({ ...live[i]! });
+		const aborted: BatchTask = { ...t, status: "skipped", skip_reason: "dry_run", result_message: "aborted" };
+		live[i] = aborted;
+		opts.on_progress({ ...aborted });
 		return;
 	}
 
-	live[i] = { ...t, status: "running" };
-	opts.on_progress({ ...live[i]! });
+	const running: BatchTask = { ...t, status: "running" };
+	live[i] = running;
+	opts.on_progress({ ...running });
 
 	const start = Date.now();
 	const exec_result = await run_git(t.action, t.repo_path);
 	const duration_ms = Date.now() - start;
 
-	live[i] = exec_result.ok
+	const final: BatchTask = exec_result.ok
 		? { ...t, status: "succeeded", result_message: exec_result.message, duration_ms }
 		: { ...t, status: "failed", result_message: exec_result.cause, duration_ms };
-	opts.on_progress({ ...live[i]! });
+	live[i] = final;
+	opts.on_progress({ ...final });
 }
 
 interface ExecResult {

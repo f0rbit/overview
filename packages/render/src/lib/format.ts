@@ -9,7 +9,7 @@ export function formatBytes(bytes: number): string {
 	if (bytes === 0) return "0 B";
 	const exp = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), BYTE_UNITS.length - 1);
 	const value = bytes / 1024 ** exp;
-	const unit = BYTE_UNITS[exp]!;
+	const unit = BYTE_UNITS[exp] ?? "B";
 	return value < 10 ? `${value.toFixed(1)} ${unit}` : `${Math.round(value)} ${unit}`;
 }
 

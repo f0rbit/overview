@@ -1,5 +1,5 @@
 import type { RepoStatus, WidgetRenderProps } from "@overview/core";
-import { Show, createMemo } from "solid-js";
+import { For, Show, createMemo } from "solid-js";
 import { theme } from "../../theme";
 import { registerWidget } from "./registry";
 
@@ -64,34 +64,36 @@ function CommitActivityWidget(props: WidgetRenderProps & { status: RepoStatus | 
 	return (
 		<box flexDirection="column">
 			<Show when={activity()} fallback={<text fg={theme.fg_dim} content="(no activity data)" />}>
-				{/* Row 1: Sparkline */}
-				<box flexDirection="row" height={1}>
-					{sparkline_colored().map((s) => (
-						<text fg={s.color} content={s.char} />
-					))}
-				</box>
+				{(a) => (
+					<>
+						{/* Row 1: Sparkline */}
+						<box flexDirection="row" height={1}>
+							<For each={sparkline_colored()}>{(s) => <text fg={s.color} content={s.char} />}</For>
+						</box>
 
-				{/* Row 2: Weekly stats */}
-				<box flexDirection="row" height={1} gap={2}>
-					<box flexDirection="row" gap={1}>
-						<text fg={theme.fg_dim} content="this week:" />
-						<text fg={theme.yellow} content={`${activity()!.total_this_week}`} />
-					</box>
-					<box flexDirection="row" gap={1}>
-						<text fg={theme.fg_dim} content="last week:" />
-						<text fg={theme.yellow} content={`${activity()!.total_last_week}`} />
-					</box>
-					<box flexDirection="row" gap={1}>
-						<text fg={theme.fg_dim} content="delta:" />
-						<text fg={delta_color()} content={delta_str()} />
-					</box>
-				</box>
+						{/* Row 2: Weekly stats */}
+						<box flexDirection="row" height={1} gap={2}>
+							<box flexDirection="row" gap={1}>
+								<text fg={theme.fg_dim} content="this week:" />
+								<text fg={theme.yellow} content={`${a().total_this_week}`} />
+							</box>
+							<box flexDirection="row" gap={1}>
+								<text fg={theme.fg_dim} content="last week:" />
+								<text fg={theme.yellow} content={`${a().total_last_week}`} />
+							</box>
+							<box flexDirection="row" gap={1}>
+								<text fg={theme.fg_dim} content="delta:" />
+								<text fg={delta_color()} content={delta_str()} />
+							</box>
+						</box>
 
-				{/* Row 3: Total */}
-				<box flexDirection="row" height={1} gap={1}>
-					<text fg={theme.yellow} content={`${total_14d()}`} />
-					<text fg={theme.fg_dim} content="commits in 14 days" />
-				</box>
+						{/* Row 3: Total */}
+						<box flexDirection="row" height={1} gap={1}>
+							<text fg={theme.yellow} content={`${total_14d()}`} />
+							<text fg={theme.fg_dim} content="commits in 14 days" />
+						</box>
+					</>
+				)}
 			</Show>
 		</box>
 	);

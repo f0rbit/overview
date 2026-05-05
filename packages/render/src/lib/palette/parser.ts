@@ -101,21 +101,25 @@ function parse_args(tokens: string[]): RawArgs {
 
 	// Collect positional args until first --flag
 	for (; i < len; i++) {
-		if (tokens[i]!.startsWith("--")) break;
-		result._.push(tokens[i]!);
+		const tok = tokens[i];
+		if (tok === undefined) break;
+		if (tok.startsWith("--")) break;
+		result._.push(tok);
 	}
 
 	// Parse flags
 	for (; i < len; i++) {
-		const token = tokens[i]!;
+		const token = tokens[i];
+		if (token === undefined) continue;
 		if (!token.startsWith("--")) continue;
 
 		const flag_name = token.slice(2);
 		i++;
 
 		// Check if next token exists and is not a flag
-		if (i < len && !tokens[i]!.startsWith("--")) {
-			result[flag_name] = tokens[i]!;
+		const next_tok = tokens[i];
+		if (i < len && next_tok !== undefined && !next_tok.startsWith("--")) {
+			result[flag_name] = next_tok;
 		} else {
 			result[flag_name] = true;
 			i--; // Compensate for the loop increment

@@ -6,12 +6,13 @@ export type GitGraphError = { kind: "graph_failed"; path: string; cause: string 
 const DEFAULT_LIMIT = 40;
 
 // Strip ANSI escape codes in case git config forces color
+// biome-ignore lint/suspicious/noControlCharactersInRegex: ANSI escape sequences require \x1b control char by definition
 const ANSI_RE = /\x1b\[[0-9;]*m/g;
 const stripAnsi = (s: string): string => s.replace(ANSI_RE, "");
 
 const stripTrailingEmpty = (lines: string[]): string[] => {
 	let end = lines.length;
-	while (end > 0 && lines[end - 1]!.trim() === "") end--;
+	while (end > 0 && (lines[end - 1] ?? "").trim() === "") end--;
 	return lines.slice(0, end);
 };
 

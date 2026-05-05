@@ -49,10 +49,12 @@ function RepoMetaWidget(props: WidgetRenderProps & { status: RepoStatus | null }
 
 							{/* Row 3: latest tag */}
 							<Show when={latest_tag()}>
-								<box flexDirection="row" height={1} gap={1}>
-									<text fg={theme.fg_dim} content="latest:" />
-									<text fg={tag_is_semver() ? theme.green : theme.fg} content={latest_tag()!} />
-								</box>
+								{(tag) => (
+									<box flexDirection="row" height={1} gap={1}>
+										<text fg={theme.fg_dim} content="latest:" />
+										<text fg={tag_is_semver() ? theme.green : theme.fg} content={tag()} />
+									</box>
+								)}
 							</Show>
 						</>
 					);

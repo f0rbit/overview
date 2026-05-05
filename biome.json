@@ -32,6 +32,15 @@
 					},
 					"suspicious": {
 						"noExplicitAny": "off"
+					},
+					"correctness": {
+						"useJsxKeyInIterable": "off"
+					},
+					"complexity": {
+						"noForEach": "off"
+					},
+					"performance": {
+						"noDelete": "off"
 					}
 				}
 			}

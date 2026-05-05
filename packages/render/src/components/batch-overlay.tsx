@@ -151,51 +151,47 @@ export function BatchOverlay(props: BatchOverlayProps) {
 	});
 
 	return (
-		<Show when={props.visible && props.payload !== null}>
-			<box
-				position="absolute"
-				width="70%"
-				height="80%"
-				left="15%"
-				top="10%"
-				backgroundColor={theme.bg_dark}
-				borderStyle="rounded"
-				borderColor={theme.blue}
-				title="Batch operation"
-				titleAlignment="center"
-				padding={1}
-				flexDirection="column"
-				gap={1}
-				zIndex={110}
-			>
-				<box flexDirection="row" height={1}>
-					<text
-						content={header_text(props.payload!, counts().completed, counts().total).action_segment}
-						fg={theme.blue}
-					/>
-					<text
-						content={header_text(props.payload!, counts().completed, counts().total).meta_segment}
-						fg={theme.fg_dim}
-					/>
-				</box>
+		<Show when={props.visible ? props.payload : null}>
+			{(payload) => (
+				<box
+					position="absolute"
+					width="70%"
+					height="80%"
+					left="15%"
+					top="10%"
+					backgroundColor={theme.bg_dark}
+					borderStyle="rounded"
+					borderColor={theme.blue}
+					title="Batch operation"
+					titleAlignment="center"
+					padding={1}
+					flexDirection="column"
+					gap={1}
+					zIndex={110}
+				>
+					<box flexDirection="row" height={1}>
+						<text content={header_text(payload(), counts().completed, counts().total).action_segment} fg={theme.blue} />
+						<text content={header_text(payload(), counts().completed, counts().total).meta_segment} fg={theme.fg_dim} />
+					</box>
 
-				<Show when={tasks().length > 0} fallback={<text content="(no tasks to run)" fg={theme.fg_dim} />}>
-					<scrollbox flexGrow={1}>
-						<box flexDirection="column" flexShrink={0}>
-							<For each={tasks()}>{(task) => <TaskRow task={task} />}</For>
-						</box>
-					</scrollbox>
-				</Show>
-
-				<box height={1}>
-					<Show when={done()} fallback={<text content="Running... (Esc to abort, q when done)" fg={theme.fg_dim} />}>
-						<text
-							content={`${counts().succeeded} succeeded, ${counts().failed} failed, ${counts().skipped} skipped`}
-							fg={counts().failed === 0 ? theme.green : theme.yellow}
-						/>
+					<Show when={tasks().length > 0} fallback={<text content="(no tasks to run)" fg={theme.fg_dim} />}>
+						<scrollbox flexGrow={1}>
+							<box flexDirection="column" flexShrink={0}>
+								<For each={tasks()}>{(task) => <TaskRow task={task} />}</For>
+							</box>
+						</scrollbox>
 					</Show>
+
+					<box height={1}>
+						<Show when={done()} fallback={<text content="Running... (Esc to abort, q when done)" fg={theme.fg_dim} />}>
+							<text
+								content={`${counts().succeeded} succeeded, ${counts().failed} failed, ${counts().skipped} skipped`}
+								fg={counts().failed === 0 ? theme.green : theme.yellow}
+							/>
+						</Show>
+					</box>
 				</box>
-			</box>
+			)}
 		</Show>
 	);
 }

@@ -77,9 +77,9 @@ export function searchRepos(nodes: RepoNode[], query: string): RepoNode[] {
 }
 
 export function nextFilter(current: FilterMode): FilterMode {
-	return FILTER_MODES[(FILTER_MODES.indexOf(current) + 1) % FILTER_MODES.length]!;
+	return FILTER_MODES[(FILTER_MODES.indexOf(current) + 1) % FILTER_MODES.length] ?? "all";
 }
 
 export function nextSort(current: SortMode): SortMode {
-	return SORT_MODES[(SORT_MODES.indexOf(current) + 1) % SORT_MODES.length]!;
+	return SORT_MODES[(SORT_MODES.indexOf(current) + 1) % SORT_MODES.length] ?? "name";
 }

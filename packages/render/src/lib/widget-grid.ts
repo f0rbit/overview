@@ -61,23 +61,30 @@ export function computeRows(widgets: GridWidget[], panel_width: number): GridRow
 
 	// Group thirds into rows of 3; leftovers auto-expand
 	for (let i = 0; i < thirds.length; i += 3) {
-		if (i + 2 < thirds.length) {
-			rows.push({ widgets: [thirds[i]!, thirds[i + 1]!, thirds[i + 2]!], columns: 3 });
-		} else if (i + 1 < thirds.length) {
+		const a = thirds[i];
+		const b = thirds[i + 1];
+		const c = thirds[i + 2];
+		if (!a) continue;
+		if (b && c) {
+			rows.push({ widgets: [a, b, c], columns: 3 });
+		} else if (b) {
 			// 2 leftover thirds → auto-expand to 2-column row
-			rows.push({ widgets: [thirds[i]!, thirds[i + 1]!], columns: 2 });
+			rows.push({ widgets: [a, b], columns: 2 });
 		} else {
 			// 1 leftover third → auto-expand to 1-column row
-			rows.push({ widgets: [thirds[i]!], columns: 1 });
+			rows.push({ widgets: [a], columns: 1 });
 		}
 	}
 
 	// Group halfs into rows of 2; leftover auto-expands
 	for (let i = 0; i < halfs.length; i += 2) {
-		if (i + 1 < halfs.length) {
-			rows.push({ widgets: [halfs[i]!, halfs[i + 1]!], columns: 2 });
+		const a = halfs[i];
+		const b = halfs[i + 1];
+		if (!a) continue;
+		if (b) {
+			rows.push({ widgets: [a, b], columns: 2 });
 		} else {
-			rows.push({ widgets: [halfs[i]!], columns: 1 });
+			rows.push({ widgets: [a], columns: 1 });
 		}
 	}
 

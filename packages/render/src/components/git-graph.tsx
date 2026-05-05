@@ -102,15 +102,19 @@ export function GitGraph(props: GitGraphProps) {
 			height={props.height}
 		>
 			<Show
-				when={!props.loading && props.graph && props.graph.lines.length > 0}
+				when={!props.loading && props.graph && props.graph.lines.length > 0 ? props.graph : null}
 				fallback={<text fg={theme.fg_dim} content={props.loading ? "loading..." : "(no commits)"} />}
 			>
-				<scrollbox focused={props.focused} viewportCulling={true} flexGrow={1}>
-					<For each={props.graph!.lines}>{(line) => <GraphLine line={line} />}</For>
-				</scrollbox>
-				<box height={1}>
-					<text fg={theme.fg_dim} content={`(${props.graph!.total_lines} commits)`} />
-				</box>
+				{(graph) => (
+					<>
+						<scrollbox focused={props.focused} viewportCulling={true} flexGrow={1}>
+							<For each={graph().lines}>{(line) => <GraphLine line={line} />}</For>
+						</scrollbox>
+						<box height={1}>
+							<text fg={theme.fg_dim} content={`(${graph().total_lines} commits)`} />
+						</box>
+					</>
+				)}
 			</Show>
 		</box>
 	);
